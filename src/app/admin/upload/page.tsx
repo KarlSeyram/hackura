@@ -3,8 +3,7 @@
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -42,20 +41,12 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Upload Product
-    </Button>
-  );
-}
-
 export default function UploadProductPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverErrors, setServerErrors] = useState<{ [key: string]: string[] | undefined }>({});
+
   const {
     register,
     handleSubmit,
@@ -65,31 +56,10 @@ export default function UploadProductPage() {
     resolver: zodResolver(FormSchema),
   });
 
-  const [state, formAction, isPending] = useActionState(uploadProduct, {
-    message: null,
-    errors: {},
-  });
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setIsSubmitting(true);
+    setServerErrors({});
 
-  useEffect(() => {
-    if (state?.message) {
-      if (Object.keys(state.errors ?? {}).length === 0) {
-        toast({
-          title: 'Success!',
-          description: state.message,
-        });
-        reset();
-        router.push('/admin/dashboard');
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Upload Failed',
-          description: state.message,
-        });
-      }
-    }
-  }, [state, toast, reset, router]);
-  
-  const onSubmit: SubmitHandler<FormValues> = data => {
     const formData = new FormData();
     formData.append('title', data.title);
     formData.append('description', data.description);
@@ -97,7 +67,35 @@ export default function UploadProductPage() {
     formData.append('image', data.image[0]);
     formData.append('file', data.file[0]);
 
-    formAction(formData);
+    try {
+      const result = await uploadProduct(null, formData);
+
+      if (result.message) {
+        if (result.errors && Object.keys(result.errors).length > 0) {
+           toast({
+            variant: 'destructive',
+            title: 'Upload Failed',
+            description: result.message,
+          });
+          setServerErrors(result.errors);
+        } else {
+          toast({
+            title: 'Success!',
+            description: result.message,
+          });
+          reset();
+          router.push('/admin/dashboard');
+        }
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'An Unexpected Error Occurred',
+        description: 'Something went wrong. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,15 +129,18 @@ export default function UploadProductPage() {
               <Label htmlFor="image">Ebook Cover Image</Label>
               <Input id="image" type="file" {...register('image')} accept="image/jpeg,image/png,image/webp" />
               {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
-              {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
+              {serverErrors?.image && <p className="text-sm text-destructive">{serverErrors.image[0]}</p>}
             </div>
              <div className="space-y-2">
               <Label htmlFor="file">Ebook File (PDF, EPUB)</Label>
               <Input id="file" type="file" {...register('file')} accept=".pdf,.epub" />
               {errors.file && <p className="text-sm text-destructive">{errors.file.message}</p>}
-               {state?.errors?.file && <p className="text-sm text-destructive">{state.errors.file[0]}</p>}
+               {serverErrors?.file && <p className="text-sm text-destructive">{serverErrors.file[0]}</p>}
             </div>
-            <SubmitButton />
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Upload Product
+            </Button>
           </form>
         </CardContent>
       </Card>
