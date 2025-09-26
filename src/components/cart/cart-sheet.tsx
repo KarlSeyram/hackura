@@ -59,12 +59,12 @@ function PaystackButton({
   };
 
   const handleCheckout = () => {
-    if (!paystackPublicKey) {
+    if (!paystackPublicKey || paystackPublicKey === "YOUR_PAYSTACK_PUBLIC_KEY") {
       toast({
         variant: 'destructive',
         title: 'Paystack Key Not Found',
         description:
-          'The Paystack public key is missing. Please check your configuration.',
+          'The Paystack public key is missing. Please add it to your .env file.',
       });
       return;
     }
