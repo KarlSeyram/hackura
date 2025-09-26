@@ -49,18 +49,21 @@ export default function CheckoutPage() {
             <div className="flex flex-col gap-2 mt-2">
               <p>Your download links are ready:</p>
               <ul className="list-disc pl-5">
-                {result.links.map(link => (
-                  <li key={link.id}>
-                    <a
-                      href={link.download_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline flex items-center gap-2"
-                    >
-                      {cartItems.find(item => item.id === link.ebook_id)?.title || 'Ebook'} <Download className="h-4 w-4" />
-                    </a>
-                  </li>
-                ))}
+                {result.links.map(link => {
+                   const item = cartItems.find(item => item.id === link.ebook_id);
+                   return (
+                      <li key={link.id}>
+                        <a
+                          href={link.download_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline flex items-center gap-2"
+                        >
+                          {item?.title || 'Ebook'} <Download className="h-4 w-4" />
+                        </a>
+                      </li>
+                   )
+                })}
               </ul>
               <p className="text-xs text-muted-foreground mt-2">Links expire in 24 hours.</p>
             </div>

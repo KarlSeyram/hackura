@@ -20,7 +20,7 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
         .single();
       
       if (dbError || !ebookData || !ebookData.file_name) {
-        console.error(`Error fetching ebook data for ${item.title}:`, dbError);
+        console.error(`Error fetching ebook data for ${item.title} (ID: ${item.id}):`, dbError);
         return null;
       }
 
@@ -29,7 +29,7 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
         .createSignedUrl(ebookData.file_name, 60 * 60 * 24); // Link expires in 24 hours
 
       if (error) {
-        console.error(`Error creating signed URL for ${item.title}:`, error);
+        console.error(`Error creating signed URL for ${item.title} (File: ${ebookData.file_name}):`, error);
         return null;
       }
       
