@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import ShareButton from '../products/share-button';
 import { createSignedDownloads } from '@/app/actions';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const CheckoutFormSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -30,7 +30,8 @@ const CheckoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof CheckoutFormSchema>;
 
-function PaystackButton({
+// Dedicated component to handle the Paystack payment hook
+function PaystackPaymentButton({
   email,
   amount,
   disabled,
@@ -46,8 +47,8 @@ function PaystackButton({
 
   const config = {
     reference: new Date().getTime().toString(),
-    email: email,
-    amount: amount * 100, // Amount in kobo
+    email,
+    amount: Math.round(amount * 100), // Amount in kobo, rounded to nearest integer
     publicKey: paystackPublicKey,
     currency: 'GHS',
   };
@@ -59,13 +60,14 @@ function PaystackButton({
   };
 
   const handleCheckout = () => {
-    if (!paystackPublicKey || !paystackPublicKey.startsWith('pk_')) {
+    if (!paystackPublicKey || !(paystackPublicKey.startsWith('pk_test_') || paystackPublicKey.startsWith('pk_live_'))) {
       toast({
         variant: 'destructive',
         title: 'Paystack Key Not Configured',
         description:
           'The Paystack public key is missing or invalid. Please check your .env file and restart the server.',
       });
+      console.error('Paystack public key is missing or invalid.');
       return;
     }
     initializePayment({ onSuccess, onClose });
@@ -86,6 +88,11 @@ export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } =
     useCart();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const {
     register,
@@ -128,7 +135,7 @@ export function CartSheetContent() {
                 </li>
               ))}
             </ul>
-             <p className="text-xs text-muted-foreground mt-2">Links expire in 24 hours. A copy has also been sent to your email (feature coming soon).</p>
+             <p className="text-xs text-muted-foreground mt-2">Links expire in 24 hours.</p>
           </div>
         ),
         duration: 30000, // Keep toast open longer
@@ -235,12 +242,14 @@ export function CartSheetContent() {
                 <span>{formattedTotalPrice}</span>
               </div>
 
-              <PaystackButton
-                email={email}
-                amount={totalPrice}
-                disabled={!isValid || totalPrice === 0}
-                onSuccess={handlePaymentSuccess}
-              />
+              {isClient && (
+                <PaystackPaymentButton
+                  email={email}
+                  amount={totalPrice}
+                  disabled={!isValid || totalPrice === 0}
+                  onSuccess={handlePaymentSuccess}
+                />
+              )}
             </form>
             <Button
               variant="outline"
