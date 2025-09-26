@@ -11,92 +11,15 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
-import { Trash2, X, Download } from 'lucide-react';
-import { PaystackButton } from 'react-paystack';
-import { useToast } from '@/hooks/use-toast';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Trash2, X } from 'lucide-react';
 import ShareButton from '../products/share-button';
-import { createSignedDownloads } from '@/app/actions';
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } =
     useCart();
-  const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
-  
-  const componentProps = {
-    email: email,
-    amount: Math.round(totalPrice * 100),
-    currency: paystackCurrency,
-    metadata: {
-      name,
-      cartItems: JSON.stringify(cartItems.map(item => ({id: item.id, title: item.title, quantity: item.quantity}))),
-    },
-    publicKey: paystackPublicKey,
-    text: "Checkout with Paystack",
-    onSuccess: (reference: any) => handlePaymentSuccess(reference),
-    onClose: () => {},
-  };
-  
-  const handlePaymentSuccess = async (reference: any) => {
-    console.log('Payment successful:', reference);
-    
-    try {
-      const productsWithDownloads = await createSignedDownloads(cartItems);
-      
-      toast({
-        title: 'Payment Successful!',
-        description: (
-          <div className="flex flex-col gap-2 mt-2">
-            <p>Your download links are ready:</p>
-            <ul className="list-disc pl-5">
-              {productsWithDownloads.map(product => (
-                <li key={product.id}>
-                  {product.downloadUrl ? (
-                    <a
-                      href={product.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline flex items-center gap-2"
-                    >
-                      {product.title} <Download className="h-4 w-4" />
-                    </a>
-                  ) : (
-                    <span>{product.title} (Link generation failed)</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-             <p className="text-xs text-muted-foreground mt-2">Links expire in 24 hours.</p>
-          </div>
-        ),
-        duration: 30000, // Keep toast open longer
-      });
-
-      clearCart();
-      setName('');
-      setEmail('');
-
-    } catch (error) {
-      console.error('Error creating download links:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error Preparing Downloads',
-        description: 'We received your payment, but there was an issue creating your download links. Please contact support.',
-      });
-    }
-  };
 
   const formattedTotalPrice = new Intl.NumberFormat(undefined, {
     style: 'currency',
@@ -110,8 +33,6 @@ export function CartSheetContent() {
     }).format(price);
   };
   
-  const isFormValid = name.length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
   return (
     <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
       <SheetHeader className="px-6">
@@ -160,38 +81,16 @@ export function CartSheetContent() {
 
           <SheetFooter className="p-6 sm:flex-col sm:items-stretch sm:space-x-0">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder="John Doe" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              <div className="flex justify-between font-semibold mt-4">
+               <div className="flex justify-between font-semibold">
                 <span>Total</span>
                 <span>{formattedTotalPrice}</span>
               </div>
-
-              {isClient && (
-                 <PaystackButton
-                    {...componentProps}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-green-600 text-white hover:bg-green-700 h-10 px-4 py-2 w-full"
-                    disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
-                />
-              )}
+              
+              <SheetClose asChild>
+                <Button asChild>
+                  <Link href="/checkout">Proceed to Checkout</Link>
+                </Button>
+              </SheetClose>
             </div>
             <Button
               variant="outline"
