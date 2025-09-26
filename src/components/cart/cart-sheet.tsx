@@ -14,6 +14,62 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { Trash2, X } from 'lucide-react';
+import { usePaystackPayment } from 'react-paystack';
+import { useToast } from '@/hooks/use-toast';
+
+function PaystackButton() {
+    const { toast } = useToast();
+    const { totalPrice, clearCart } = useCart();
+    
+    // This should be stored in an environment variable
+    const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
+
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: "user@example.com", // You should get this from your user data
+        amount: totalPrice * 100, // Amount in kobo
+        publicKey: publicKey,
+        currency: 'GHS',
+    };
+
+    const initializePayment = usePaystackPayment(config);
+
+    const onSuccess = (reference: any) => {
+        console.log(reference);
+        toast({
+            title: 'Payment Successful',
+            description: 'Thank you for your purchase!',
+        });
+        clearCart();
+    };
+
+    const onClose = () => {
+        console.log('closed');
+        toast({
+            variant: 'destructive',
+            title: 'Payment Canceled',
+            description: 'Your payment was canceled.',
+        });
+    }
+
+    const handleCheckout = () => {
+        if (!publicKey) {
+             toast({
+                variant: 'destructive',
+                title: 'Paystack not configured',
+                description: 'Please set your Paystack public key in the environment variables.',
+            });
+            return;
+        }
+        initializePayment({onSuccess, onClose});
+    }
+
+    return (
+        <Button onClick={handleCheckout} className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white">
+            Checkout with Paystack
+        </Button>
+    )
+}
 
 export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } = useCart();
@@ -73,9 +129,7 @@ export function CartSheetContent() {
               <span>Total</span>
               <span>{formattedTotalPrice}</span>
             </div>
-            <Button className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white">
-              Checkout with Paystack
-            </Button>
+            <PaystackButton />
             <Button
               variant="outline"
               className="mt-2 w-full"
