@@ -10,6 +10,14 @@ import { submitContactRequest } from '@/lib/actions';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { services } from '@/lib/data';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -52,16 +60,36 @@ export default function ContactPage() {
       </div>
 
       <form action={dispatch} className="mt-10 space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" name="name" placeholder="Your Name" />
-          {state.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" placeholder="Your Name" />
+                {state.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" placeholder="your@email.com" />
+                {state.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
+            </div>
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" placeholder="your@email.com" />
-           {state.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
+            <Label htmlFor="service">Service of Interest (Optional)</Label>
+            <Select name="service">
+                <SelectTrigger id="service">
+                    <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">None / General Inquiry</SelectItem>
+                    {services.map(service => (
+                        <SelectItem key={service.id} value={service.title}>
+                            {service.title}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="message">Message</Label>
           <Textarea id="message" name="message" placeholder="Your message..." rows={6} />

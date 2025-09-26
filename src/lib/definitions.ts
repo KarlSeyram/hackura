@@ -24,6 +24,7 @@ export type ContactRequest = {
   id: string;
   name: string;
   email: string;
+  service?: string;
   message: string;
   submittedAt: Date;
 };
