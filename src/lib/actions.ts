@@ -2,8 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 const contactSchema = z.object({
@@ -69,22 +68,7 @@ export async function submitContactRequest(prevState: any, formData: FormData) {
 }
 
 export async function uploadProduct(prevState: any, formData: FormData) {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        return { message: 'Supabase environment variables are not configured.', errors: {} };
-    }
-
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value;
-                },
-            },
-        }
-    );
+    const supabase = createClient();
 
     const validatedFields = productSchema.safeParse({
         title: formData.get('title'),

@@ -1,28 +1,12 @@
 
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import type { CartItem } from '@/lib/definitions';
 
 // This function creates secure, time-limited download links for purchased ebooks.
 export async function createSignedDownloads(cartItems: CartItem[]) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Supabase environment variables are not configured.');
-  }
-
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = createClient();
 
   // Use Promise.all to generate all signed URLs in parallel.
   const productsWithDownloads = await Promise.all(
