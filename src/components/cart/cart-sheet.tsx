@@ -11,15 +11,17 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
-import { Trash2, X } from 'lucide-react';
+import { Trash2, X, Download } from 'lucide-react';
 import { usePaystackPayment } from 'react-paystack';
 import { useToast } from '@/hooks/use-toast';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import ShareButton from '../products/share-button';
+import { createSignedDownloads } from '@/app/actions';
+import Link from 'next/link';
 
 const CheckoutFormSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -32,13 +34,14 @@ function PaystackButton({
   email,
   amount,
   disabled,
+  onSuccess,
 }: {
   email: string;
   amount: number;
   disabled: boolean;
+  onSuccess: (reference: any) => void;
 }) {
   const { toast } = useToast();
-  const { clearCart } = useCart();
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
   const config = {
@@ -50,15 +53,6 @@ function PaystackButton({
   };
 
   const initializePayment = usePaystackPayment(config);
-
-  const onSuccess = (reference: any) => {
-    console.log(reference);
-    toast({
-      title: 'Payment Successful',
-      description: 'Thank you for your purchase!',
-    });
-    clearCart();
-  };
 
   const onClose = () => {
     // Optional: handle payment closure
@@ -91,6 +85,7 @@ function PaystackButton({
 export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } =
     useCart();
+  const { toast } = useToast();
 
   const {
     register,
@@ -104,6 +99,54 @@ export function CartSheetContent() {
 
   const email = watch('email');
 
+  const handlePaymentSuccess = async (reference: any) => {
+    console.log('Payment successful:', reference);
+    
+    try {
+      const productsWithDownloads = await createSignedDownloads(cartItems);
+      
+      toast({
+        title: 'Payment Successful!',
+        description: (
+          <div className="flex flex-col gap-2 mt-2">
+            <p>Your download links are ready:</p>
+            <ul className="list-disc pl-5">
+              {productsWithDownloads.map(product => (
+                <li key={product.id}>
+                  {product.downloadUrl ? (
+                    <a
+                      href={product.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline flex items-center gap-2"
+                    >
+                      {product.title} <Download className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    <span>{product.title} (Link generation failed)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+             <p className="text-xs text-muted-foreground mt-2">Links expire in 24 hours. A copy has also been sent to your email (feature coming soon).</p>
+          </div>
+        ),
+        duration: 30000, // Keep toast open longer
+      });
+
+      clearCart();
+
+    } catch (error) {
+      console.error('Error creating download links:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error Preparing Downloads',
+        description: 'We received your payment, but there was an issue creating your download links. Please contact support.',
+      });
+    }
+  };
+
+
   const formattedTotalPrice = new Intl.NumberFormat('en-GH', {
     style: 'currency',
     currency: 'GHS',
@@ -114,10 +157,6 @@ export function CartSheetContent() {
       style: 'currency',
       currency: 'GHS',
     }).format(price);
-  };
-
-  const onSubmit: SubmitHandler<CheckoutFormValues> = data => {
-    console.log('Form submitted, proceeding to Paystack:', data);
   };
 
   return (
@@ -167,7 +206,7 @@ export function CartSheetContent() {
           </div>
 
           <SheetFooter className="p-6 sm:flex-col sm:items-stretch sm:space-x-0">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(() => {})} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" {...register('name')} placeholder="John Doe" />
@@ -200,6 +239,7 @@ export function CartSheetContent() {
                 email={email}
                 amount={totalPrice}
                 disabled={!isValid || totalPrice === 0}
+                onSuccess={handlePaymentSuccess}
               />
             </form>
             <Button

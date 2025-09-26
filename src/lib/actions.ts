@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import type { CartItem } from '@/lib/definitions';
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -13,20 +14,24 @@ const contactSchema = z.object({
   message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
 });
 
-const fileSchema = z.custom<File>(file => file instanceof File, 'Please upload a file.');
+const fileSchema = z.custom<FileList>(val => val instanceof FileList, 'Please select a file.')
+  .refine(files => files.length > 0, 'File is required.');
 
-const imageSchema = fileSchema.refine(
-  file => file.size === 0 || file.type.startsWith('image/'),
-  'Please upload an image file.'
-);
-
-const ebookFileSchema = fileSchema.refine(
-    file => file.size > 0, "Please upload a file."
-).refine(
-    file => ['application/pdf', 'application/epub+zip'].includes(file.type),
-    'Please upload a PDF or EPUB file.'
-);
-
+const imageSchema = fileSchema
+  .refine(files => files?.[0]?.size > 0, 'File is required.')
+  .refine(files => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
+  .refine(
+    files => ["image/jpeg", "image/png", "image/webp"].includes(files?.[0]?.type),
+    "Only .jpg, .png, and .webp formats are supported."
+  );
+  
+const ebookFileSchema = fileSchema
+ .refine(files => files?.[0]?.size > 0, 'File is required.')
+  .refine(files => files?.[0]?.size <= 25 * 1024 * 1024, `Max file size is 25MB.`)
+  .refine(
+    files => ["application/pdf", "application/epub+zip"].includes(files?.[0]?.type),
+    "Only .pdf and .epub formats are supported."
+  );
 
 const productSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
@@ -35,7 +40,7 @@ const productSchema = z.object({
     val => (val === '' ? undefined : Number(val)),
     z.number().min(0, 'Price must be a positive number.')
   ),
-  image: imageSchema.refine(file => file.size > 0, 'Cover image is required.'),
+  image: imageSchema,
   file: ebookFileSchema,
 });
 
@@ -98,12 +103,16 @@ export async function uploadProduct(prevState: any, formData: FormData) {
     }
 
     const { title, description, price, image, file } = validatedFields.data;
+    
+    // The image from the form is a FileList, get the first file
+    const imageFile = image[0];
+    const ebookFile = file[0];
 
     // 1. Upload cover image
-    const imageFileName = `${Date.now()}-${image.name}`;
+    const imageFileName = `${Date.now()}-${imageFile.name}`;
     const { error: imageError, data: imageData } = await supabase.storage
         .from('ebook-covers')
-        .upload(imageFileName, image);
+        .upload(imageFileName, imageFile);
 
     if (imageError || !imageData) {
         return { message: `Failed to upload cover image: ${imageError?.message}`, errors: {} };
@@ -112,10 +121,10 @@ export async function uploadProduct(prevState: any, formData: FormData) {
 
 
     // 2. Upload ebook file
-    const ebookFileName = `${Date.now()}-${file.name}`;
+    const ebookFileName = `${Date.now()}-${ebookFile.name}`;
     const { error: fileError } = await supabase.storage
         .from('ebook-files')
-        .upload(ebookFileName, file);
+        .upload(ebookFileName, ebookFile);
     
     if (fileError) {
         // Clean up uploaded image if file upload fails
@@ -146,4 +155,54 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         message: 'Product uploaded successfully!',
         errors: {},
     };
+}
+
+// This function creates secure, time-limited download links for purchased ebooks.
+export async function createSignedDownloads(cartItems: CartItem[]) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase environment variables are not configured.');
+  }
+
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  // Use Promise.all to generate all signed URLs in parallel.
+  const productsWithDownloads = await Promise.all(
+    cartItems.map(async (item) => {
+      // We need to fetch the file_name from the database using the product id
+      const { data: ebookData, error: dbError } = await supabase
+        .from('ebooks')
+        .select('file_name')
+        .eq('id', item.id)
+        .single();
+      
+      if (dbError || !ebookData) {
+        console.error(`Error fetching ebook data for ${item.title}:`, dbError);
+        return { ...item, downloadUrl: null }; // Handle case where ebook is not found
+      }
+
+      const { data, error } = await supabase.storage
+        .from('ebook-files')
+        .createSignedUrl(ebookData.file_name, 60 * 60 * 24); // Link expires in 24 hours
+
+      if (error) {
+        console.error(`Error creating signed URL for ${item.title}:`, error);
+        return { ...item, downloadUrl: null }; // Handle error gracefully
+      }
+      
+      return { ...item, downloadUrl: data.signedUrl };
+    })
+  );
+
+  return productsWithDownloads;
 }
