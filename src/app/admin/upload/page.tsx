@@ -4,7 +4,7 @@
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -129,13 +129,13 @@ export default function UploadProductPage() {
             <div className="space-y-2">
               <Label htmlFor="image">Ebook Cover Image</Label>
               <Input id="image" type="file" {...register('image')} accept="image/jpeg,image/png,image/webp" />
-              {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
+              {errors.image && <p className="text-sm text-destructive">{errors.image.message as string}</p>}
               {serverErrors?.image && <p className="text-sm text-destructive">{serverErrors.image[0]}</p>}
             </div>
              <div className="space-y-2">
               <Label htmlFor="file">Ebook File (PDF, EPUB)</Label>
               <Input id="file" type="file" {...register('file')} accept=".pdf,.epub" />
-              {errors.file && <p className="text-sm text-destructive">{errors.file.message}</p>}
+              {errors.file && <p className="text-sm text-destructive">{errors.file.message as string}</p>}
                {serverErrors?.file && <p className="text-sm text-destructive">{serverErrors.file[0]}</p>}
             </div>
             <Button type="submit" disabled={isSubmitting}>
