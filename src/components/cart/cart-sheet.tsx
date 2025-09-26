@@ -21,16 +21,7 @@ function PaystackButton() {
     const { toast } = useToast();
     const { totalPrice, clearCart } = useCart();
 
-    const config = {
-        reference: (new Date()).getTime().toString(),
-        email: "user@example.com", // You should get this from your user data
-        amount: totalPrice * 100, // Amount in kobo
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-        currency: 'GHS',
-    };
-
-    const initializePayment = usePaystackPayment(config);
-
+    // Define onSuccess and onClose callbacks
     const onSuccess = (reference: any) => {
         console.log(reference);
         toast({
@@ -47,27 +38,30 @@ function PaystackButton() {
             title: 'Payment Canceled',
             description: 'Your payment was canceled.',
         });
-    }
+    };
+
+    // Configure the payment hook
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: "user@example.com", // You should get this from your user data
+        amount: totalPrice * 100, // Amount in kobo
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+        currency: 'GHS',
+    };
+    
+    const initializePayment = usePaystackPayment(config);
 
     const handleCheckout = () => {
-        const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
-        if (!publicKey) {
+        if (!config.publicKey) {
              toast({
                 variant: 'destructive',
-                title: 'Paystack not configured',
-                description: 'Please set your Paystack public key in the environment variables.',
+                title: 'Paystack key not found',
+                description: 'The Paystack public key is missing. Please check your configuration.',
             });
             return;
         }
-
-        const paymentConfig = {
-            ...config,
-            publicKey,
-            onSuccess,
-            onClose
-        };
-
-        initializePayment(paymentConfig);
+        
+        initializePayment({onSuccess, onClose});
     }
 
     return (
