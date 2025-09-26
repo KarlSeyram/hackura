@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -15,6 +16,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const formattedPrice = new Intl.NumberFormat('en-GH', {
+    style: 'currency',
+    currency: 'GHS',
+  }).format(product.price);
   
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
@@ -45,7 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <span className="sr-only">Add to cart</span>
             </Button>
         </div>
-        <p className="font-semibold text-lg">${product.price.toFixed(2)}</p>
+        <p className="font-semibold text-lg">{formattedPrice}</p>
       </CardFooter>
     </Card>
   );

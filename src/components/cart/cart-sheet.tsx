@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -16,6 +17,18 @@ import { Trash2, X } from 'lucide-react';
 
 export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } = useCart();
+  
+  const formattedTotalPrice = new Intl.NumberFormat('en-GH', {
+    style: 'currency',
+    currency: 'GHS',
+  }).format(totalPrice);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-GH', {
+        style: 'currency',
+        currency: 'GHS',
+    }).format(price);
+  }
 
   return (
     <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
@@ -40,7 +53,7 @@ export function CartSheetContent() {
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {item.quantity} x ${item.price.toFixed(2)}
+                      {item.quantity} x {formatPrice(item.price)}
                     </p>
                   </div>
                   <Button
@@ -58,7 +71,7 @@ export function CartSheetContent() {
           <SheetFooter className="p-6 sm:flex-col sm:items-stretch sm:space-x-0">
             <div className="flex justify-between font-semibold">
               <span>Total</span>
-              <span>${totalPrice.toFixed(2)}</span>
+              <span>{formattedTotalPrice}</span>
             </div>
             <Button className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white">
               Checkout with Paystack

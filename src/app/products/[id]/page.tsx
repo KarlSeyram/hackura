@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound } from 'next/navigation';
@@ -14,6 +15,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   if (!product) {
     notFound();
   }
+
+  const formattedPrice = new Intl.NumberFormat('en-GH', {
+    style: 'currency',
+    currency: 'GHS',
+  }).format(product.price);
 
   return (
     <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -32,7 +38,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <h1 className="font-headline text-3xl font-bold tracking-tight sm:text-4xl">
             {product.title}
           </h1>
-          <p className="mt-4 text-3xl font-bold">${product.price.toFixed(2)}</p>
+          <p className="mt-4 text-3xl font-bold">{formattedPrice}</p>
           <p className="mt-6 text-base text-muted-foreground">
             {product.description}
           </p>
