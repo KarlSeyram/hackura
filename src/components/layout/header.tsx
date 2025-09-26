@@ -7,9 +7,9 @@ import { Logo } from '@/components/logo';
 
 const navLinks = [
   { href: '/', label: 'Home' },
+  { href: '/store', label: 'Store' },
   { href: '/services', label: 'Services' },
   { href: '/contact', label: 'Contact' },
-  { href: '/admin/dashboard', label: 'Admin' },
 ];
 
 export default function Header() {
