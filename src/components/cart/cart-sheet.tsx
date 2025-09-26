@@ -14,52 +14,32 @@ import {
 import { Trash2, X, Download } from 'lucide-react';
 import { usePaystackPayment } from 'react-paystack';
 import { useToast } from '@/hooks/use-toast';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import ShareButton from '../products/share-button';
 import { createSignedDownloads } from '@/app/actions';
 import { useEffect, useState } from 'react';
 
-const CheckoutFormSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  email: z.string().email('Invalid email address'),
-});
-
-type CheckoutFormValues = z.infer<typeof CheckoutFormSchema>;
-
-
 export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } =
     useCart();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    getValues,
-    formState: { errors, isValid },
-  } = useForm<CheckoutFormValues>({
-    resolver: zodResolver(CheckoutFormSchema),
-    mode: 'onChange',
-  });
-
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
-
+  
   const config = {
-      reference: new Date().getTime().toString(),
-      email: getValues('email'),
-      amount: Math.round(totalPrice * 100),
-      publicKey: paystackPublicKey,
-      currency: 'GHS',
+    reference: new Date().getTime().toString(),
+    email: email,
+    amount: Math.round(totalPrice * 100),
+    publicKey: paystackPublicKey,
+    currency: 'GHS',
   };
 
   const initializePayment = usePaystackPayment(config);
@@ -126,13 +106,17 @@ export function CartSheetContent() {
       console.error('Paystack public key is missing or invalid.');
       return;
     }
-    const currentConfig = {
+    
+    const paymentConfig = {
       ...config,
-      email: getValues('email'),
+      email,
       amount: Math.round(totalPrice * 100),
-      reference: new Date().getTime().toString()
+      reference: new Date().getTime().toString(),
+      onSuccess: handlePaymentSuccess,
+      onClose: onClose,
     };
-    initializePayment({onSuccess: handlePaymentSuccess, onClose});
+    
+    initializePayment(paymentConfig);
   };
 
   const formattedTotalPrice = new Intl.NumberFormat('en-GH', {
@@ -146,6 +130,8 @@ export function CartSheetContent() {
       currency: 'GHS',
     }).format(price);
   };
+  
+  const isFormValid = name.length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   return (
     <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
@@ -194,28 +180,25 @@ export function CartSheetContent() {
           </div>
 
           <SheetFooter className="p-6 sm:flex-col sm:items-stretch sm:space-x-0">
-            <form onSubmit={handleSubmit(handleCheckout)} className="space-y-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" {...register('name')} placeholder="John Doe" />
-                {errors.name && (
-                  <p className="text-sm text-destructive">
-                    {errors.name.message}
-                  </p>
-                )}
+                <Input 
+                  id="name" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="John Doe" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
-                  {...register('email')}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                 />
-                {errors.email && (
-                  <p className="text-sm text-destructive">
-                    {errors.email.message}
-                  </p>
-                )}
               </div>
 
               <div className="flex justify-between font-semibold mt-4">
@@ -225,14 +208,14 @@ export function CartSheetContent() {
 
               {isClient && (
                  <Button
-                    type="submit"
+                    onClick={handleCheckout}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    disabled={!isValid || totalPrice === 0}
+                    disabled={!isFormValid || totalPrice === 0}
                 >
                     Checkout with Paystack
                 </Button>
               )}
-            </form>
+            </div>
             <Button
               variant="outline"
               className="mt-2 w-full"
