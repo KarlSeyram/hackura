@@ -30,59 +30,6 @@ const CheckoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof CheckoutFormSchema>;
 
-// Dedicated component to handle the Paystack payment hook
-function PaystackPaymentButton({
-  email,
-  amount,
-  disabled,
-  onSuccess,
-}: {
-  email: string;
-  amount: number;
-  disabled: boolean;
-  onSuccess: (reference: any) => void;
-}) {
-  const { toast } = useToast();
-  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
-
-  const config = {
-    reference: new Date().getTime().toString(),
-    email,
-    amount: Math.round(amount * 100), // Amount in kobo, rounded to nearest integer
-    publicKey: paystackPublicKey,
-    currency: 'GHS',
-  };
-
-  const initializePayment = usePaystackPayment(config);
-
-  const onClose = () => {
-    // Optional: handle payment closure
-  };
-
-  const handleCheckout = () => {
-    if (!paystackPublicKey || !(paystackPublicKey.startsWith('pk_test_') || paystackPublicKey.startsWith('pk_live_'))) {
-      toast({
-        variant: 'destructive',
-        title: 'Paystack Key Not Configured',
-        description:
-          'The Paystack public key is missing or invalid. Please check your .env file and restart the server.',
-      });
-      console.error('Paystack public key is missing or invalid.');
-      return;
-    }
-    initializePayment({ onSuccess, onClose });
-  };
-
-  return (
-    <Button
-      onClick={handleCheckout}
-      className="w-full bg-green-600 hover:bg-green-700 text-white"
-      disabled={disabled}
-    >
-      Checkout with Paystack
-    </Button>
-  );
-}
 
 export function CartSheetContent() {
   const { cartItems, removeFromCart, totalPrice, cartCount, clearCart } =
@@ -98,13 +45,24 @@ export function CartSheetContent() {
     register,
     handleSubmit,
     watch,
+    getValues,
     formState: { errors, isValid },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(CheckoutFormSchema),
     mode: 'onChange',
   });
 
-  const email = watch('email');
+  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
+
+  const config = {
+      reference: new Date().getTime().toString(),
+      email: getValues('email'),
+      amount: Math.round(totalPrice * 100),
+      publicKey: paystackPublicKey,
+      currency: 'GHS',
+  };
+
+  const initializePayment = usePaystackPayment(config);
 
   const handlePaymentSuccess = async (reference: any) => {
     console.log('Payment successful:', reference);
@@ -153,6 +111,29 @@ export function CartSheetContent() {
     }
   };
 
+  const onClose = () => {
+    // Optional: handle payment closure
+  };
+
+  const handleCheckout = () => {
+    if (!paystackPublicKey || !(paystackPublicKey.startsWith('pk_test_') || paystackPublicKey.startsWith('pk_live_'))) {
+      toast({
+        variant: 'destructive',
+        title: 'Paystack Key Not Configured',
+        description:
+          'The Paystack public key is missing or invalid. Please check your .env file and restart the server.',
+      });
+      console.error('Paystack public key is missing or invalid.');
+      return;
+    }
+    const currentConfig = {
+      ...config,
+      email: getValues('email'),
+      amount: Math.round(totalPrice * 100),
+      reference: new Date().getTime().toString()
+    };
+    initializePayment({onSuccess: handlePaymentSuccess, onClose});
+  };
 
   const formattedTotalPrice = new Intl.NumberFormat('en-GH', {
     style: 'currency',
@@ -213,7 +194,7 @@ export function CartSheetContent() {
           </div>
 
           <SheetFooter className="p-6 sm:flex-col sm:items-stretch sm:space-x-0">
-            <form onSubmit={handleSubmit(() => {})} className="space-y-4">
+            <form onSubmit={handleSubmit(handleCheckout)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" {...register('name')} placeholder="John Doe" />
@@ -243,12 +224,13 @@ export function CartSheetContent() {
               </div>
 
               {isClient && (
-                <PaystackPaymentButton
-                  email={email}
-                  amount={totalPrice}
-                  disabled={!isValid || totalPrice === 0}
-                  onSuccess={handlePaymentSuccess}
-                />
+                 <Button
+                    type="submit"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    disabled={!isValid || totalPrice === 0}
+                >
+                    Checkout with Paystack
+                </Button>
               )}
             </form>
             <Button
