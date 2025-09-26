@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "ebook-1",
+      "description": "Abstract cover for a book about ethical hacking.",
+      "imageUrl": "https://images.unsplash.com/photo-1631624215749-b10b3dd7bca7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8aGFja2VyJTIwY29kZXxlbnwwfHx8fDE3NTg4ODg5MjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hacker code"
+    },
+    {
+      "id": "ebook-2",
+      "description": "Geometric design for a network security guide.",
+      "imageUrl": "https://images.unsplash.com/photo-1676568218736-6a6937b537ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxuZXR3b3JrJTIwY2lyY3VpdHxlbnwwfHx8fDE3NTg4NzMwNzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "network circuit"
+    },
+    {
+      "id": "ebook-3",
+      "description": "Minimalist cover for a Python automation book.",
+      "imageUrl": "https://images.unsplash.com/photo-1724925188785-6390864cdfb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxweXRob24lMjBzY3JpcHR8ZW58MHx8fHwxNzU4OTA4NTE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "python script"
+    },
+    {
+      "id": "ebook-4",
+      "description": "Dark themed cover for a cryptography book.",
+      "imageUrl": "https://images.unsplash.com/photo-1633265486064-086b219458ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxlbmNyeXB0aW9uJTIwbG9ja3xlbnwwfHx8fDE3NTg5MDg1MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "encryption lock"
+    },
+    {
+      "id": "ebook-5",
+      "description": "A book cover about cloud infrastructure security.",
+      "imageUrl": "https://images.unsplash.com/photo-1667984550707-bf0beecaa082?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjbG91ZCUyMHNlcnZlcnxlbnwwfHx8fDE3NTg5MDg1MTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cloud server"
+    },
+    {
+      "id": "ebook-6",
+      "description": "Cover for a book on machine learning in cybersecurity.",
+      "imageUrl": "https://images.unsplash.com/photo-1679639539537-0d2e452890f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhaSUyMGJyYWlufGVufDB8fHx8MTc1ODg4ODg1NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ai brain"
+    },
+    {
+      "id": "ebook-7",
+      "description": "Cover for a book on digital forensics.",
+      "imageUrl": "https://images.unsplash.com/photo-1626148749358-5b3b3f45b41a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYWduaWZ5aW5nJTIwZ2xhc3N8ZW58MHx8fHwxNzU4ODYyMTc3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "magnifying glass"
+    },
+    {
+      "id": "ebook-8",
+      "description": "Book cover for an introduction to blockchain.",
+      "imageUrl": "https://images.unsplash.com/photo-1705234384697-6fef8e534519?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxibG9ja2NoYWluJTIwYmxvY2tzfGVufDB8fHx8MTc1ODkwODUxNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "blockchain blocks"
+    }
+  ]
 }
