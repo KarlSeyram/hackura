@@ -27,3 +27,31 @@ export function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function FacebookIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 50 50"
+      width="50px"
+      height="50px"
+      {...props}
+    >
+      <path d="M25,3C12.85,3,3,12.85,3,25c0,11.03,8.125,20.137,18.712,21.728V30.831h-5.443v-5.783h5.443v-4.211 c0-5.388,3.208-8.368,8.163-8.368c2.336,0,4.69,0.418,4.69,0.418v4.949h-2.602c-2.611,0-3.447,1.646-3.447,3.296v3.919h5.654 l-0.912,5.783h-4.742V46.728C38.875,45.137,47,36.03,47,25C47,12.85,37.15,3,25,3z" />
+    </svg>
+  );
+}
+
+export function LinkedinIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 50 50"
+      width="50px"
+      height="50px"
+      {...props}
+    >
+      <path d="M41,4H9C6.24,4,4,6.24,4,9v32c0,2.76,2.24,5,5,5h32c2.76,0,5-2.24,5-5V9C46,6.24,43.76,4,41,4z M17,20v19h-6V20H17z M11,14.47c0-1.4,1.2-2.47,3-2.47s2.93,1.07,3,2.47c0,1.4-1.12,2.53-3,2.53C12.2,17,11,15.87,11,14.47z M39,39h-6V29 c0-2.21-0.02-5.04-3.04-5.04c-3.04,0-3.52,2.38-3.52,4.88V39h-6V20h6v2.56h0.08c0.76-1.44,2.62-2.96,5.43-2.96 c5.81,0,6.88,3.82,6.88,8.78V39z" />
+    </svg>
+  );
+}
