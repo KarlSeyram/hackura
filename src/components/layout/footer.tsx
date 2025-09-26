@@ -11,7 +11,7 @@ export default function Footer() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="#" aria-label="X page">
+          <Link href="https://x.com/dorpe_karl" target="_blank" aria-label="X page">
             <XIcon className="h-5 w-5 fill-foreground transition-colors hover:fill-primary" />
           </Link>
           <Link href="#" aria-label="WhatsApp">

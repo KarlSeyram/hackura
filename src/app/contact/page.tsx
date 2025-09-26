@@ -106,7 +106,7 @@ export default function ContactPage() {
               Follow Us
             </h3>
             <div className="flex items-center gap-4">
-              <Link href="#" aria-label="X page">
+              <Link href="https://x.com/dorpe_karl" target="_blank" aria-label="X page">
                 <XIcon className="h-6 w-6 fill-foreground transition-colors hover:fill-primary" />
               </Link>
               <Link href="#" aria-label="WhatsApp">
