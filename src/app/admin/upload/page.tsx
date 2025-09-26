@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -18,16 +19,16 @@ const fileSchema = z.custom<FileList>(val => val instanceof FileList, 'Please se
   .refine(files => files.length > 0, 'File is required.');
 
 const imageSchema = fileSchema
-  .refine(files => files[0].size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
+  .refine(files => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
   .refine(
-    files => ["image/jpeg", "image/png", "image/webp"].includes(files[0].type),
+    files => ["image/jpeg", "image/png", "image/webp"].includes(files?.[0]?.type),
     "Only .jpg, .png, and .webp formats are supported."
   );
   
 const ebookFileSchema = fileSchema
-  .refine(files => files[0].size <= 25 * 1024 * 1024, `Max file size is 25MB.`)
+  .refine(files => files?.[0]?.size <= 25 * 1024 * 1024, `Max file size is 25MB.`)
   .refine(
-    files => ["application/pdf", "application/epub+zip"].includes(files[0].type),
+    files => ["application/pdf", "application/epub+zip"].includes(files?.[0]?.type),
     "Only .pdf and .epub formats are supported."
   );
 
