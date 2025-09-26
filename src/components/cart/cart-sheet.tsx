@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import ShareButton from '../products/share-button';
 
 const CheckoutFormSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -34,6 +35,7 @@ type CheckoutFormValues = z.infer<typeof CheckoutFormSchema>;
 function PaystackButton({ email, amount, disabled }: { email: string; amount: number; disabled: boolean }) {
     const { toast } = useToast();
     const { clearCart } = useCart();
+    
     const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
     const config = {
@@ -73,7 +75,7 @@ function PaystackButton({ email, amount, disabled }: { email: string; amount: nu
     }
 
     return (
-        <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={disabled}>
+        <Button onClick={handleCheckout} className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={disabled}>
             Checkout with Paystack
         </Button>
     )
@@ -123,10 +125,10 @@ export function CartSheetContent() {
       {cartItems.length > 0 ? (
         <>
           <ScrollArea className="flex-1">
-            <div className="flex flex-col gap-4 p-6">
+            <div className="flex flex-col gap-8 p-6">
               {cartItems.map(item => (
-                <div key={item.id} className="flex items-center gap-4">
-                  <div className="relative h-20 w-16 flex-shrink-0 overflow-hidden rounded-md">
+                <div key={item.id} className="flex items-start gap-4">
+                  <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-md border">
                     <Image
                       src={item.imageUrl}
                       alt={item.title}
@@ -135,18 +137,26 @@ export function CartSheetContent() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold">{item.title}</h3>
+                    <h3 className="font-semibold line-clamp-2">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {item.quantity} x {formatPrice(item.price)}
+                      Quantity: {item.quantity}
                     </p>
+                     <p className="text-sm font-medium">
+                      {formatPrice(item.price)}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                        <ShareButton product={item} />
+                         <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => removeFromCart(item.id)}
+                        >
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Remove item</span>
+                        </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
               ))}
             </div>
