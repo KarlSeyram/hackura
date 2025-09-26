@@ -20,14 +20,12 @@ import { useToast } from '@/hooks/use-toast';
 function PaystackButton() {
     const { toast } = useToast();
     const { totalPrice, clearCart } = useCart();
-    
-    const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
     const config = {
         reference: (new Date()).getTime().toString(),
         email: "user@example.com", // You should get this from your user data
         amount: totalPrice * 100, // Amount in kobo
-        publicKey: publicKey,
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
         currency: 'GHS',
     };
 
@@ -52,6 +50,7 @@ function PaystackButton() {
     }
 
     const handleCheckout = () => {
+        const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
         if (!publicKey) {
              toast({
                 variant: 'destructive',
@@ -60,7 +59,15 @@ function PaystackButton() {
             });
             return;
         }
-        initializePayment({onSuccess, onClose});
+
+        const paymentConfig = {
+            ...config,
+            publicKey,
+            onSuccess,
+            onClose
+        };
+
+        initializePayment(paymentConfig);
     }
 
     return (
