@@ -3,9 +3,10 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { CartItem } from '@/lib/definitions';
+import { revalidatePath } from 'next/cache';
 
 // This function creates secure, time-limited download links for purchased ebooks.
-export async function createSignedDownloads(cartItems: CartItem[]) {
+export async function createSignedDownloads(cartItems: CartItem[], paymentReference: string) {
   const supabase = createClient();
 
   // Use Promise.all to generate all signed URLs in parallel.
@@ -20,7 +21,7 @@ export async function createSignedDownloads(cartItems: CartItem[]) {
       
       if (dbError || !ebookData || !ebookData.file_name) {
         console.error(`Error fetching ebook data for ${item.title}:`, dbError);
-        return { ...item, downloadUrl: null }; // Handle case where ebook is not found
+        return null;
       }
 
       const { data, error } = await supabase.storage
@@ -29,12 +30,55 @@ export async function createSignedDownloads(cartItems: CartItem[]) {
 
       if (error) {
         console.error(`Error creating signed URL for ${item.title}:`, error);
-        return { ...item, downloadUrl: null }; // Handle error gracefully
+        return null;
       }
       
-      return { ...item, downloadUrl: data.signedUrl };
+      return { ebook_id: item.id, download_url: data.signedUrl, payment_ref: paymentReference };
     })
   );
 
-  return productsWithDownloads;
+  const validLinks = productsWithDownloads.filter(item => item !== null);
+
+  if (validLinks.length > 0) {
+      const { error: insertError } = await supabase
+        .from('purchase_links')
+        .insert(validLinks as any);
+
+      if (insertError) {
+          console.error('Error inserting purchase links:', insertError);
+          return [];
+      }
+  }
+  
+  return validLinks;
+}
+
+
+export async function getDownloadLinks(paymentRef: string) {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('purchase_links')
+        .select('*')
+        .eq('payment_ref', paymentRef);
+    
+    if (error) {
+        console.error('Error fetching download links:', error);
+        return { success: false, links: null };
+    }
+
+    return { success: true, links: data };
+}
+
+export async function clearPurchaseData(paymentRef: string) {
+    const supabase = createClient();
+    
+    const { error } = await supabase
+        .from('purchase_links')
+        .delete()
+        .eq('payment_ref', paymentRef);
+
+    if (error) {
+        console.error('Error cleaning up purchase data:', error);
+    }
 }
