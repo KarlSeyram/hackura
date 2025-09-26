@@ -35,7 +35,7 @@ export default function StorePage() {
       </section>
 
       <section>
-        <div className="flex justify-center mb-8 space-x-2 overflow-x-auto pb-2">
+        <div className="flex justify-center mb-8 space-x-2 overflow-x-auto pb-2 no-scrollbar">
             {allCategories.map(category => (
                 <Button
                 key={category}
