@@ -34,7 +34,7 @@ export async function createSignedDownloads(cartItems: CartItem[]) {
         .eq('id', item.id)
         .single();
       
-      if (dbError || !ebookData) {
+      if (dbError || !ebookData || !ebookData.file_name) {
         console.error(`Error fetching ebook data for ${item.title}:`, dbError);
         return { ...item, downloadUrl: null }; // Handle case where ebook is not found
       }
