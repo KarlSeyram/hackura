@@ -12,7 +12,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { Trash2, X, Download } from 'lucide-react';
-import { usePaystackPayment } from 'react-paystack';
+import { PaystackButton } from 'react-paystack';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -34,16 +34,19 @@ export function CartSheetContent() {
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   
-  const config = {
-    reference: new Date().getTime().toString(),
+  const componentProps = {
     email: email,
     amount: Math.round(totalPrice * 100),
+    metadata: {
+      name,
+      cartItems: JSON.stringify(cartItems.map(item => ({id: item.id, title: item.title, quantity: item.quantity}))),
+    },
     publicKey: paystackPublicKey,
-    currency: 'GHS',
+    text: "Checkout with Paystack",
+    onSuccess: (reference: any) => handlePaymentSuccess(reference),
+    onClose: () => {},
   };
-
-  const initializePayment = usePaystackPayment(config);
-
+  
   const handlePaymentSuccess = async (reference: any) => {
     console.log('Payment successful:', reference);
     
@@ -80,6 +83,8 @@ export function CartSheetContent() {
       });
 
       clearCart();
+      setName('');
+      setEmail('');
 
     } catch (error) {
       console.error('Error creating download links:', error);
@@ -89,34 +94,6 @@ export function CartSheetContent() {
         description: 'We received your payment, but there was an issue creating your download links. Please contact support.',
       });
     }
-  };
-
-  const onClose = () => {
-    // Optional: handle payment closure
-  };
-
-  const handleCheckout = () => {
-    if (!paystackPublicKey || !(paystackPublicKey.startsWith('pk_test_') || paystackPublicKey.startsWith('pk_live_'))) {
-      toast({
-        variant: 'destructive',
-        title: 'Paystack Key Not Configured',
-        description:
-          'The Paystack public key is missing or invalid. Please check your .env file and restart the server.',
-      });
-      console.error('Paystack public key is missing or invalid.');
-      return;
-    }
-    
-    const paymentConfig = {
-      ...config,
-      email,
-      amount: Math.round(totalPrice * 100),
-      reference: new Date().getTime().toString(),
-      onSuccess: handlePaymentSuccess,
-      onClose: onClose,
-    };
-    
-    initializePayment(paymentConfig);
   };
 
   const formattedTotalPrice = new Intl.NumberFormat('en-GH', {
@@ -207,13 +184,11 @@ export function CartSheetContent() {
               </div>
 
               {isClient && (
-                 <Button
-                    onClick={handleCheckout}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    disabled={!isFormValid || totalPrice === 0}
-                >
-                    Checkout with Paystack
-                </Button>
+                 <PaystackButton
+                    {...componentProps}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-green-600 text-white hover:bg-green-700 h-10 px-4 py-2 w-full"
+                    disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
+                />
               )}
             </div>
             <Button
