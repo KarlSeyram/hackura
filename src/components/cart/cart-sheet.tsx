@@ -161,7 +161,7 @@ export function CartSheetContent() {
               ))}
             </div>
           </ScrollArea>
-           <Separator />
+          
           <SheetFooter className="p-6 sm:flex-col sm:items-stretch sm:space-x-0">
              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                <div className="space-y-2">
@@ -193,7 +193,7 @@ export function CartSheetContent() {
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-          <Separator className="mb-4"/>
+          
           <h3 className="font-semibold">Your cart is empty</h3>
           <p className="text-sm text-muted-foreground">
             Add some ebooks to get started.
