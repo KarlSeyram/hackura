@@ -1,5 +1,42 @@
 import type { Ebook, Service, ContactRequest } from './definitions';
-import { PlaceHolderImages } from './placeholder-images';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+export async function getEbooks() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  const { data, error } = await supabase.from('ebooks').select('*').order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching ebooks:', error);
+    return [];
+  }
+  
+  // The data from supabase has image_url, but our Ebook type expects imageUrl.
+  // We need to map the data to match the Ebook type.
+  const ebooks: Ebook[] = data.map(ebook => ({
+    id: ebook.id,
+    title: ebook.title,
+    description: ebook.description,
+    price: ebook.price,
+    imageUrl: ebook.image_url,
+    imageHint: '', // imageHint is not in the DB, default to empty string
+  }));
+
+  return ebooks;
+}
+
 
 export const ebooks: Ebook[] = [];
 

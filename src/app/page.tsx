@@ -1,10 +1,11 @@
 import ProductCard from '@/components/products/product-card';
-import { ebooks } from '@/lib/data';
+import { getEbooks } from '@/lib/data';
 import type { Ebook } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export default function Home() {
+export default async function Home() {
+  const ebooks = await getEbooks();
   const featuredEbooks = ebooks.slice(0, 3);
 
   return (

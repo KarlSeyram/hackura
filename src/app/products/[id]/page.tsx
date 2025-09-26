@@ -1,16 +1,17 @@
-
-'use client';
-
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { ebooks } from '@/lib/data';
-import { Button } from '@/components/ui/button';
-import ShareButton from '@/components/products/share-button';
-import { useCart } from '@/hooks/use-cart';
+import { getEbooks } from '@/lib/data';
+import { ProductClient } from './product-client';
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  const { addToCart } = useCart();
-  const product = ebooks.find(p => p.id === params.id);
+async function getProduct(id: string) {
+    const ebooks = await getEbooks();
+    const product = ebooks.find(p => p.id === id);
+    return product;
+}
+
+
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const product = await getProduct(params.id);
 
   if (!product) {
     notFound();
@@ -42,11 +43,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <p className="mt-6 text-base text-muted-foreground">
             {product.description}
           </p>
+          
+          <ProductClient product={product} />
 
-          <div className="mt-8 flex items-center gap-4">
-            <Button size="lg" onClick={() => addToCart(product)}>Add to Cart</Button>
-            <ShareButton product={product} />
-          </div>
         </div>
       </div>
     </div>
