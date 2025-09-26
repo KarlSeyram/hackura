@@ -42,6 +42,8 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
+const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+
 export default function UploadProductPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -122,7 +124,7 @@ export default function UploadProductPage() {
               {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price (GHS)</Label>
+              <Label htmlFor="price">Price ({paystackCurrency})</Label>
               <Input id="price" type="number" {...register('price')} placeholder="e.g., 49.99" step="0.01" />
               {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
             </div>

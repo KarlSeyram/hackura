@@ -16,10 +16,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
   if (!product) {
     notFound();
   }
+  
+  const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 
-  const formattedPrice = new Intl.NumberFormat('en-GH', {
+  const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'GHS',
+    currency: paystackCurrency,
   }).format(product.price);
 
   return (

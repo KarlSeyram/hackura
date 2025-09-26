@@ -7,6 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableRowActions } from './data-table-row-actions';
 import Image from 'next/image';
 
+const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+
 export const columns: ColumnDef<Ebook>[] = [
   {
     id: 'select',
@@ -52,9 +54,9 @@ export const columns: ColumnDef<Ebook>[] = [
     header: () => <div className="text-right">Price</div>,
     cell: ({ row }) => {
       const price = parseFloat(row.getValue('price'));
-      const formatted = new Intl.NumberFormat('en-GH', {
+      const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'GHS',
+        currency: paystackCurrency,
       }).format(price);
 
       return <div className="text-right font-medium">{formatted}</div>;

@@ -33,10 +33,12 @@ export function CartSheetContent() {
   }, []);
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
+  const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
   
   const componentProps = {
     email: email,
     amount: Math.round(totalPrice * 100),
+    currency: paystackCurrency,
     metadata: {
       name,
       cartItems: JSON.stringify(cartItems.map(item => ({id: item.id, title: item.title, quantity: item.quantity}))),
@@ -96,15 +98,15 @@ export function CartSheetContent() {
     }
   };
 
-  const formattedTotalPrice = new Intl.NumberFormat('en-GH', {
+  const formattedTotalPrice = new Intl.NumberFormat(undefined, {
     style: 'currency',
-    currency: 'GHS',
+    currency: paystackCurrency,
   }).format(totalPrice);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-GH', {
+    return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency: 'GHS',
+      currency: paystackCurrency,
     }).format(price);
   };
   

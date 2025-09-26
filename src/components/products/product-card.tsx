@@ -16,9 +16,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const formattedPrice = new Intl.NumberFormat('en-GH', {
+  const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+  const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'GHS',
+    currency: paystackCurrency,
   }).format(product.price);
   
   return (
