@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getEbooks } from '@/lib/data';
+import { createClient } from '@/lib/supabase/client';
 import type { Ebook } from '@/lib/definitions';
 import ProductCard from '@/components/products/product-card';
 import { Button } from '@/components/ui/button';
@@ -13,30 +14,41 @@ export default function StorePage() {
   const [allCategories, setAllCategories] = useState<string[]>(['All']);
   const [activeCategory, setActiveCategory] = useState('All');
   const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
     async function fetchEbooks() {
       setLoading(true);
-      const fetchedEbooks = await getEbooks();
-      setEbooks(fetchedEbooks);
-      setFilteredEbooks(fetchedEbooks);
+      const { data, error } = await supabase.from('ebooks').select('*').order('created_at', { ascending: false });
       
-      // The imageHint is not available in the database, so we cannot create categories from it.
-      // We will leave the categories as just 'All' for now.
-      // const categories = ['All', ...new Set(fetchedEbooks.map(ebook => ebook.imageHint?.split(' ')[0] || '').filter(Boolean))];
-      // setAllCategories(categories);
-
+      if (error) {
+        console.error('Error fetching ebooks:', error);
+        setEbooks([]);
+        setFilteredEbooks([]);
+      } else {
+        const fetchedEbooks: Ebook[] = data.map(ebook => ({
+          id: ebook.id,
+          title: ebook.title,
+          description: ebook.description,
+          price: ebook.price,
+          imageUrl: ebook.image_url,
+          imageHint: '',
+        }));
+        setEbooks(fetchedEbooks);
+        setFilteredEbooks(fetchedEbooks);
+      }
+      
       setLoading(false);
     }
     fetchEbooks();
-  }, []);
+  }, [supabase]);
 
   const filterEbooks = (category: string) => {
     setActiveCategory(category);
     if (category === 'All') {
       setFilteredEbooks(ebooks);
     } else {
-      // Filtering logic will need to be adjusted if categories are re-introduced
+      // This part of the logic might need adjustment if real categories are added.
       setFilteredEbooks(
         ebooks.filter(ebook => ebook.imageHint?.toLowerCase().includes(category.toLowerCase()))
       );
