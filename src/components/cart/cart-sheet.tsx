@@ -21,7 +21,6 @@ function PaystackButton() {
     const { toast } = useToast();
     const { totalPrice, clearCart } = useCart();
     
-    // This should be stored in an environment variable
     const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
     const config = {
