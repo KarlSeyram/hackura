@@ -20,8 +20,18 @@ import { useToast } from '@/hooks/use-toast';
 function PaystackButton() {
     const { toast } = useToast();
     const { totalPrice, clearCart } = useCart();
+    const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
-    // Define onSuccess and onClose callbacks
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: "user@example.com", 
+        amount: totalPrice * 100, // Amount in kobo
+        publicKey: paystackPublicKey,
+        currency: 'GHS',
+    };
+    
+    const initializePayment = usePaystackPayment(config);
+
     const onSuccess = (reference: any) => {
         console.log(reference);
         toast({
@@ -32,7 +42,6 @@ function PaystackButton() {
     };
 
     const onClose = () => {
-        console.log('closed');
         toast({
             variant: 'destructive',
             title: 'Payment Canceled',
@@ -40,19 +49,8 @@ function PaystackButton() {
         });
     };
 
-    // Configure the payment hook
-    const config = {
-        reference: (new Date()).getTime().toString(),
-        email: "user@example.com", // You should get this from your user data
-        amount: totalPrice * 100, // Amount in kobo
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-        currency: 'GHS',
-    };
-    
-    const initializePayment = usePaystackPayment(config);
-
     const handleCheckout = () => {
-        if (!config.publicKey) {
+        if (!paystackPublicKey) {
              toast({
                 variant: 'destructive',
                 title: 'Paystack key not found',
@@ -65,7 +63,7 @@ function PaystackButton() {
     }
 
     return (
-        <Button onClick={handleCheckout} className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white">
+        <Button onClick={handleCheckout} className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white" disabled={totalPrice === 0}>
             Checkout with Paystack
         </Button>
     )
