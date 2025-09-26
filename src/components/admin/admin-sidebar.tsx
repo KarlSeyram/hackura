@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, UploadCloud, Inbox, Home, Book } from 'lucide-react';
+import { LayoutDashboard, UploadCloud, Inbox, Home } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,6 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 flex-col border-r bg-background p-4">
       <div className="flex items-center gap-2 pb-4 border-b mb-4">
-         <Book className="h-6 w-6 text-primary" />
         <h1 className="font-headline text-xl font-semibold">CyberShelf</h1>
       </div>
       <nav className="flex flex-col gap-2">
