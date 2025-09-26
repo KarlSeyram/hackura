@@ -65,10 +65,14 @@ export async function submitContactRequest(prevState: any, formData: FormData) {
 }
 
 export async function uploadProduct(prevState: any, formData: FormData) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return { message: 'Supabase environment variables are not configured.', errors: {} };
+    }
+
     const cookieStore = cookies();
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
         {
             cookies: {
                 get(name: string) {
@@ -87,7 +91,6 @@ export async function uploadProduct(prevState: any, formData: FormData) {
     });
 
     if (!validatedFields.success) {
-        console.log(validatedFields.error.flatten().fieldErrors);
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Please correct the form errors.',
@@ -102,8 +105,8 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         .from('ebook-covers')
         .upload(imageFileName, image);
 
-    if (imageError) {
-        return { message: `Failed to upload cover image: ${imageError.message}`, errors: {} };
+    if (imageError || !imageData) {
+        return { message: `Failed to upload cover image: ${imageError?.message}`, errors: {} };
     }
     const { data: { publicUrl: imageUrl } } = supabase.storage.from('ebook-covers').getPublicUrl(imageData.path);
 
