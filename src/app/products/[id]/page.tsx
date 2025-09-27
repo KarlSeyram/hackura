@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getEbooks } from '@/lib/data';
@@ -5,7 +6,7 @@ import { ProductClient } from './product-client';
 
 async function getProduct(id: string) {
     const ebooks = await getEbooks();
-    const product = ebooks.find(p => p.id === id);
+    const product = ebooks.find(p => p.id.toString() === id);
     return product;
 }
 

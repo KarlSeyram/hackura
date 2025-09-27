@@ -3,14 +3,16 @@ import type { Ebook, Service, ContactRequest } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks() {
-  const supabase = await createAdminClient();
-  const { data, error } = await supabase.from('ebooks').select('*').order('created_at', { ascending: false });
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("ebooks")
+    .select("id, title, description, price, image_url");
 
   if (error) {
-    console.error('Error fetching ebooks:', error);
-    return [];
+    console.error("Error fetching ebooks:", error);
+    throw new Error("Failed to fetch ebooks");
   }
-  
+
   // The data from supabase has image_url, but our Ebook type expects imageUrl.
   // We need to map the data to match the Ebook type.
   const ebooks: Ebook[] = data.map(ebook => ({

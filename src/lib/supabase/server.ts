@@ -2,17 +2,25 @@ import { createClient } from '@supabase/supabase-js';
 
 // For use in server-side logic (e.g., API routes, Server Actions)
 export function createAdminClient() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set.');
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseUrl.startsWith('http')) {
+    throw new Error(
+      'Supabase URL is not set or is invalid in environment variables. Please check your .env file.'
+    );
   }
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  
+  if (!serviceRoleKey) {
+    throw new Error(
+        'Supabase Service Role Key is not set in environment variables. Please check your .env file.'
+    );
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
