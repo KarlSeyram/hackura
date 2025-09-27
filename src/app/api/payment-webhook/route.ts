@@ -21,24 +21,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Invalid signature.' }, { status: 401 });
   }
 
-  const event = JSON.parse(body);
+  try {
+    const event = JSON.parse(body);
 
-  if (event.event === 'charge.success') {
-    const { reference, metadata } = event.data;
-    const cartItems = metadata?.cartItems ? JSON.parse(metadata.cartItems) : [];
+    if (event.event === 'charge.success') {
+      const { reference, metadata } = event.data;
+      const cartItems = metadata?.cartItems ? JSON.parse(metadata.cartItems) : [];
 
-    if (cartItems.length > 0 && reference) {
-      try {
-        // We have the cart items, now generate the signed URLs and store them
-        await createSignedDownloads(cartItems, reference);
-        console.log(`Successfully processed webhook for payment reference: ${reference}`);
-        
-      } catch (error) {
-        console.error(`Webhook processing failed for reference ${reference}:`, error);
-        return NextResponse.json({ message: 'Webhook processing error.' }, { status: 500 });
+      if (cartItems.length > 0 && reference) {
+        try {
+          await createSignedDownloads(cartItems, reference);
+          console.log(`Successfully processed webhook and created download links for payment reference: ${reference}`);
+        } catch (error) {
+          console.error(`Webhook processing failed for reference ${reference}:`, error);
+          // Still return 200 to Paystack to prevent retries
+        }
       }
     }
+  } catch (error) {
+    console.error('Error parsing Paystack webhook body:', error);
+    return NextResponse.json({ message: 'Invalid request body.' }, { status: 400 });
   }
+
 
   return NextResponse.json({ status: 'ok' });
 }

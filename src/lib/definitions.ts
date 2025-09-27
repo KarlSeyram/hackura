@@ -28,3 +28,8 @@ export type ContactRequest = {
   message: string;
   submittedAt: Date;
 };
+
+export type PurchaseLink = {
+    title: string;
+    download_url: string;
+}

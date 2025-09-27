@@ -1,32 +1,28 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/use-cart';
-import { useToast } from '@/hooks/use-toast';
-import { getDownloadLinks, clearPurchaseData } from '@/app/actions';
 import { PaystackButton } from 'react-paystack';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Download, ShoppingCart, Loader2 } from 'lucide-react';
+import { ShoppingCart, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
-  const { toast } = useToast();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [paymentState, setPaymentState] = useState<'idle' | 'processing' | 'success'>('idle');
-  const [paymentRef, setPaymentRef] = useState<string | null>(null);
+  const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');
 
   useEffect(() => {
     setIsClient(true);
-    if (cartCount === 0 && paymentState !== 'success') {
+    if (cartCount === 0 && paymentState !== 'processing') {
       router.push('/store');
     }
   }, [cartCount, router, paymentState]);
@@ -34,62 +30,12 @@ export default function CheckoutPage() {
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 
-  const showDownloadLinks = useCallback(async () => {
-    try {
-        const result = await getDownloadLinks();
-        if (result.success && result.links && result.links.length > 0) {
-            setPaymentState('success');
-            toast({
-              title: 'Payment Successful!',
-              description: (
-                <div className="flex flex-col gap-2 mt-2">
-                  <p>Your download links are ready:</p>
-                  <ul className="list-disc pl-5">
-                    {result.links.map((file: {title: string, file_url: string}, index: number) => (
-                      <li key={index}>
-                        <a
-                          href={file.file_url}
-                          download
-                          className="text-primary underline flex items-center gap-2"
-                        >
-                          {file.title} <Download className="h-4 w-4" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ),
-              duration: 60000, // 1 minute
-            });
-            clearCart();
-        } else {
-             throw new Error('No download links found.');
-        }
-    } catch(error) {
-        console.error(error);
-        setPaymentState('idle'); // Reset state
-        toast({
-            variant: 'destructive',
-            title: 'Error Preparing Downloads',
-            description: 'We received your payment, but there was an issue retrieving your download links. Please contact support.',
-            duration: 30000,
-        });
-    }
-  }, [toast, clearCart]);
-
-
   const handlePaymentSuccess = async (reference: any) => {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
-    setPaymentRef(reference.reference);
-    // Instead of polling, we will just fetch the public links after a short delay
-    // to give a sense of processing.
-    setTimeout(() => {
-        showDownloadLinks();
-        if(reference.reference) {
-            clearPurchaseData(reference.reference);
-        }
-    }, 2000);
+    clearCart();
+    // Redirect to a dedicated download page with the payment reference
+    router.push(`/download/${reference.reference}`);
   };
 
   const componentProps = {
@@ -114,7 +60,7 @@ export default function CheckoutPage() {
 
   const isFormValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  if (!isClient || (cartCount === 0 && paymentState !== 'success')) {
+  if (!isClient || cartCount === 0) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center">
         <p>Loading checkout...</p>
@@ -126,24 +72,10 @@ export default function CheckoutPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <h2 className="font-headline text-2xl font-bold">Processing Your Order...</h2>
-          <p className="text-muted-foreground mt-2">Please do not close this window. Your download links will appear shortly.</p>
-          <p className="text-sm text-muted-foreground mt-4">(Payment Reference: {paymentRef})</p>
+          <h2 className="font-headline text-2xl font-bold">Processing Your Payment...</h2>
+          <p className="text-muted-foreground mt-2">Please do not close this window. You will be redirected shortly.</p>
       </div>
     )
-  }
-  
-  if (paymentState === 'success') {
-      return (
-        <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
-            <h2 className="font-headline text-2xl font-bold">Thank you for your purchase!</h2>
-            <p className="text-muted-foreground mt-2">Your download links have been generated in the toast notification.</p>
-            <p className="text-muted-foreground mt-1">If you missed it, please check your email or contact support with your payment reference: <span className="font-mono">{paymentRef}</span></p>
-            <Button asChild className="mt-8">
-                <Link href="/store">Continue Shopping</Link>
-            </Button>
-        </div>
-      )
   }
 
   return (

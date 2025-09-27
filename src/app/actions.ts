@@ -1,4 +1,3 @@
-
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/server';
@@ -14,7 +13,7 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
       // We need to fetch the file_name from the database using the product id
       const { data: ebookData, error: dbError } = await supabase
         .from('ebooks')
-        .select('file_name')
+        .select('file_name, title')
         .eq('id', item.id)
         .single();
       
@@ -32,7 +31,7 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
         return null;
       }
       
-      return { ebook_id: item.id, download_url: data.signedUrl, payment_ref: paymentReference };
+      return { ebook_id: item.id, download_url: data.signedUrl, payment_ref: paymentReference, title: ebookData.title };
     })
   );
 
@@ -53,24 +52,20 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
 }
 
 
-export async function getDownloadLinks() {
+export async function getPurchaseDownloadLinks(purchaseId: string) {
     const supabase = createAdminClient();
 
-    const { data: downloads, error } = await supabase
-        .from('ebooks')
-        .select('title, file_name');
+    const { data, error } = await supabase
+        .from('purchase_links')
+        .select('title, download_url')
+        .eq('payment_ref', purchaseId);
     
     if (error) {
-        console.error('Error fetching download links:', error);
+        console.error('Error fetching download links for purchase:', error);
         throw new Error('Could not fetch download links.');
     }
     
-    const links = downloads.map(file => ({
-        title: file.title,
-        file_url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${file.file_name}`
-    }));
-
-    return { success: true, links };
+    return data;
 }
 
 export async function clearPurchaseData(paymentRef: string) {
