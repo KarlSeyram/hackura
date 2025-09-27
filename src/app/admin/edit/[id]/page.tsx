@@ -1,3 +1,5 @@
+'use client';
+
 import { notFound } from 'next/navigation';
 import { ebooks } from '@/lib/data';
 import { Input } from '@/components/ui/input';
@@ -5,9 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React from 'react';
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
-  const product = ebooks.find(p => p.id === params.id);
+  const { id } = React.use(params);
+  const product = ebooks.find(p => p.id === id);
 
   if (!product) {
     notFound();

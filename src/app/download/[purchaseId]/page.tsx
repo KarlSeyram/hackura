@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { getPurchaseDownloadLinks, clearPurchaseData } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
@@ -9,12 +8,12 @@ import Link from 'next/link';
 import type { PurchaseLink } from '@/lib/definitions';
 
 export default function DownloadPage({ params }: { params: { purchaseId: string } }) {
+    const { purchaseId } = params;
     const [links, setLinks] = useState<PurchaseLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchLinks = useCallback(async () => {
-        const { purchaseId } = params;
         if (!purchaseId) return;
 
         setLoading(true);
@@ -33,10 +32,9 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
         } finally {
             setLoading(false);
         }
-    }, [params]);
+    }, [purchaseId]);
 
     useEffect(() => {
-        const { purchaseId } = params;
         if (!purchaseId) return;
 
         let retries = 0;
@@ -67,7 +65,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
         };
 
         tryFetch();
-    }, [params]);
+    }, [purchaseId]);
 
 
     return (
@@ -89,7 +87,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                     </p>
                     <p className="text-xs text-destructive-foreground/60 mt-4">
                         Please contact our support team and provide your payment reference ID: <br />
-                        <span className="font-mono bg-destructive/20 px-1 py-0.5 rounded">{params.purchaseId}</span>
+                        <span className="font-mono bg-destructive/20 px-1 py-0.5 rounded">{purchaseId}</span>
                     </p>
                      <Button asChild className="mt-6">
                         <Link href="/contact">Contact Support</Link>
