@@ -34,67 +34,62 @@ export default function CheckoutPage() {
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 
-  const pollForDownloadLinks = useCallback(async (reference: string) => {
-    let attempts = 0;
-    const maxAttempts = 10; // Poll for 20 seconds
-    const interval = 2000; // 2 seconds
-
-    while (attempts < maxAttempts) {
-      const result = await getDownloadLinks(reference);
-      if (result.success && result.links && result.links.length > 0) {
-        setPaymentState('success');
-        toast({
-          title: 'Payment Successful!',
-          description: (
-            <div className="flex flex-col gap-2 mt-2">
-              <p>Your download links are ready:</p>
-              <ul className="list-disc pl-5">
-                {result.links.map(link => {
-                   const item = cartItems.find(item => item.id === link.ebook_id);
-                   return (
-                      <li key={link.id}>
+  const showDownloadLinks = useCallback(async () => {
+    try {
+        const result = await getDownloadLinks();
+        if (result.success && result.links && result.links.length > 0) {
+            setPaymentState('success');
+            toast({
+              title: 'Payment Successful!',
+              description: (
+                <div className="flex flex-col gap-2 mt-2">
+                  <p>Your download links are ready:</p>
+                  <ul className="list-disc pl-5">
+                    {result.links.map((file: {title: string, file_url: string}, index: number) => (
+                      <li key={index}>
                         <a
-                          href={link.download_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={file.file_url}
+                          download
                           className="text-primary underline flex items-center gap-2"
                         >
-                          {item?.title || 'Ebook'} <Download className="h-4 w-4" />
+                          {file.title} <Download className="h-4 w-4" />
                         </a>
                       </li>
-                   )
-                })}
-              </ul>
-              <p className="text-xs text-muted-foreground mt-2">Links expire in 24 hours.</p>
-            </div>
-          ),
-          duration: 60000, // 1 minute
+                    ))}
+                  </ul>
+                </div>
+              ),
+              duration: 60000, // 1 minute
+            });
+            clearCart();
+        } else {
+             throw new Error('No download links found.');
+        }
+    } catch(error) {
+        console.error(error);
+        setPaymentState('idle'); // Reset state
+        toast({
+            variant: 'destructive',
+            title: 'Error Preparing Downloads',
+            description: 'We received your payment, but there was an issue retrieving your download links. Please contact support.',
+            duration: 30000,
         });
-        
-        clearCart();
-        clearPurchaseData(reference); // Clean up the links from the DB after serving them
-        return;
-      }
-      attempts++;
-      await new Promise(resolve => setTimeout(resolve, interval));
     }
-    
-    setPaymentState('idle'); // Reset state
-    toast({
-      variant: 'destructive',
-      title: 'Error Preparing Downloads',
-      description: 'We received your payment, but there was an issue creating your download links. Please check your email or contact support.',
-      duration: 30000,
-    });
-
-  }, [toast, clearCart, cartItems]);
+  }, [toast, clearCart]);
 
 
   const handlePaymentSuccess = async (reference: any) => {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
     setPaymentRef(reference.reference);
-    pollForDownloadLinks(reference.reference);
+    // Instead of polling, we will just fetch the public links after a short delay
+    // to give a sense of processing.
+    setTimeout(() => {
+        showDownloadLinks();
+        if(reference.reference) {
+            clearPurchaseData(reference.reference);
+        }
+    }, 2000);
   };
 
   const componentProps = {
