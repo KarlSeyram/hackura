@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -25,7 +24,6 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
         setLoading(true);
         setError(null);
         try {
-            const supabase = createClient();
             // Fetch the purchase record and join it with the ebooks table
             const { data, error: dbError } = await supabase
                 .from("purchases")
