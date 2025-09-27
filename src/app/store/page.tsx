@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import type { Ebook } from '@/lib/definitions';
 import ProductCard from '@/components/products/product-card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ export default function StorePage() {
   const [allCategories, setAllCategories] = useState<string[]>(['All']);
   const [activeCategory, setActiveCategory] = useState('All');
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     async function fetchEbooks() {
@@ -41,7 +40,7 @@ export default function StorePage() {
       setLoading(false);
     }
     fetchEbooks();
-  }, [supabase]);
+  }, []);
 
   const filterEbooks = (category: string) => {
     setActiveCategory(category);

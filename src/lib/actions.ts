@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { createClient as createServerClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { CartItem } from '@/lib/definitions';
 
@@ -55,11 +55,11 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
 }
 
 
-export async function getDownloadLinks(paymentRef: string) {
+export async function getDownloadLinks() {
     const supabase = createAdminClient();
 
     const { data: downloads, error } = await supabase
-        .from('downloads')
+        .from('ebooks')
         .select('title, file_name');
     
     if (error) {
