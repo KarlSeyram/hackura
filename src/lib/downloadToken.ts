@@ -1,6 +1,4 @@
 
-'use server';
-
 import jwt from 'jsonwebtoken';
 
 interface DownloadTokenPayload {
