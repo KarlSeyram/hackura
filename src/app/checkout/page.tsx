@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
+import { generateDownloadToken } from '@/lib/downloadToken';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
@@ -40,18 +41,32 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = async (reference: any) => {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
+    toast({
+      title: 'Payment Successful!',
+      description: 'Preparing your download links...',
+    });
 
     try {
-      // Immediately record the purchase before redirecting
-      await recordPurchase(cartItems, reference.reference);
-      clearCart();
-      router.push(`/download/${reference.reference}`);
+      // In this stateless flow, we just generate the token and redirect.
+      // We could optionally still record the purchase for analytics.
+      // await recordPurchase(cartItems, reference.reference);
+
+      // For simplicity, we'll handle one ebook purchase at a time.
+      // In a real app, you might generate multiple tokens or a single token for the whole cart.
+      if (cartItems.length > 0) {
+        const item = cartItems[0];
+        const token = generateDownloadToken(item.id);
+        clearCart();
+        router.push(`/download?token=${token}`);
+      } else {
+        throw new Error("Cart is empty after payment, which shouldn't happen.");
+      }
     } catch (error) {
-      console.error('Failed to record purchase on client-side flow:', error);
+      console.error('Failed during post-payment processing:', error);
       toast({
         variant: 'destructive',
         title: 'Error Processing Purchase',
-        description: 'There was an issue finalizing your purchase. Please contact support.',
+        description: 'There was an issue preparing your download. Please contact support.',
       });
       setPaymentState('idle');
     }

@@ -4,6 +4,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem, PurchaseLink } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
+import { verifyDownloadToken } from '@/lib/downloadToken';
 
 
 export async function recordPurchase(cartItems: CartItem[], paymentReference: string) {
@@ -72,4 +73,41 @@ export async function getPurchaseDownloadLinks(purchaseId: string): Promise<Purc
     }
 
     return downloadLinks;
+}
+
+export async function getSecureDownloadUrl(token: string): Promise<{
+    url?: string;
+    error?: 'invalid' | 'expired' | 'not_found' | 'unknown';
+}> {
+    const payload = verifyDownloadToken(token);
+
+    if (!payload) {
+        // Here we can't distinguish between expired and invalid, but the UI can check expiry first.
+        return { error: 'invalid' };
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: ebook, error: dbError } = await supabase
+        .from('ebooks')
+        .select('file_name')
+        .eq('id', payload.ebookId)
+        .single();
+
+    if (dbError || !ebook) {
+        console.error('Ebook not found for ID:', payload.ebookId, dbError);
+        return { error: 'not_found' };
+    }
+    
+    // Create a signed URL that's valid for a short time (e.g., 5 minutes)
+    const { data, error: urlError } = await supabase.storage
+        .from('ebook-files')
+        .createSignedUrl(ebook.file_name, 300);
+
+    if (urlError) {
+        console.error('Error creating signed URL:', urlError);
+        return { error: 'unknown' };
+    }
+
+    return { url: data.signedUrl };
 }
