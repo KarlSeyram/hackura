@@ -12,8 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { recordPurchase } from '@/app/actions';
-import { generateDownloadToken } from '@/lib/downloadToken';
+import { createDownloadToken } from '@/app/actions';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
@@ -55,7 +54,7 @@ export default function CheckoutPage() {
       // In a real app, you might generate multiple tokens or a single token for the whole cart.
       if (cartItems.length > 0) {
         const item = cartItems[0];
-        const token = generateDownloadToken(item.id);
+        const token = await createDownloadToken(item.id);
         clearCart();
         router.push(`/download?token=${token}`);
       } else {

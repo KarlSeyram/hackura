@@ -4,7 +4,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem, PurchaseLink } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
-import { verifyDownloadToken } from '@/lib/downloadToken';
+import { generateDownloadToken, verifyDownloadToken } from '@/lib/downloadToken';
 
 
 export async function recordPurchase(cartItems: CartItem[], paymentReference: string) {
@@ -110,4 +110,8 @@ export async function getSecureDownloadUrl(token: string): Promise<{
     }
 
     return { url: data.signedUrl };
+}
+
+export async function createDownloadToken(ebookId: string): Promise<string> {
+    return generateDownloadToken(ebookId);
 }

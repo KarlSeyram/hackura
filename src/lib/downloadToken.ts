@@ -1,5 +1,8 @@
 
 import jwt from 'jsonwebtoken';
+import { config } from 'dotenv';
+
+config();
 
 interface DownloadTokenPayload {
   ebookId: string;
@@ -9,8 +12,11 @@ interface DownloadTokenPayload {
 const secret = process.env.DOWNLOAD_TOKEN_SECRET;
 const EXPIRATION_TIME_IN_SECONDS = 60 * 60 * 24; // 24 hours
 
-if (!secret) {
-  throw new Error('DOWNLOAD_TOKEN_SECRET is not set in the environment variables.');
+function getSecret(): string {
+    if (!secret) {
+      throw new Error('DOWNLOAD_TOKEN_SECRET is not set in the environment variables.');
+    }
+    return secret;
 }
 
 /**
@@ -23,7 +29,7 @@ export function generateDownloadToken(ebookId: string): string {
     ebookId,
     exp: Math.floor(Date.now() / 1000) + EXPIRATION_TIME_IN_SECONDS,
   };
-  return jwt.sign(payload, secret);
+  return jwt.sign(payload, getSecret());
 }
 
 /**
@@ -33,7 +39,7 @@ export function generateDownloadToken(ebookId: string): string {
  */
 export function verifyDownloadToken(token: string): DownloadTokenPayload | null {
   try {
-    const decoded = jwt.verify(token, secret) as DownloadTokenPayload;
+    const decoded = jwt.verify(token, getSecret()) as DownloadTokenPayload;
     return decoded;
   } catch (error) {
     // This will catch expired tokens, invalid signatures, etc.
