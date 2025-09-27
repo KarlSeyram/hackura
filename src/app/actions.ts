@@ -56,16 +56,21 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
 export async function getDownloadLinks() {
     const supabase = createClient();
 
-    const { data, error } = await supabase
+    const { data: downloads, error } = await supabase
         .from('downloads')
-        .select('title, file_url');
+        .select('title, file_name');
     
     if (error) {
         console.error('Error fetching download links:', error);
         throw new Error('Could not fetch download links.');
     }
+    
+    const links = downloads.map(file => ({
+        title: file.title,
+        file_url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${file.file_name}`
+    }));
 
-    return { success: true, links: data };
+    return { success: true, links };
 }
 
 export async function clearPurchaseData(paymentRef: string) {
