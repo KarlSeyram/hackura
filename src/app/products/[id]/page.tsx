@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getEbooks } from '@/lib/data';
 import { ProductClient } from './product-client';
-import React from 'react';
 
 async function getProduct(id: string) {
     const ebooks = await getEbooks();
@@ -12,7 +11,7 @@ async function getProduct(id: string) {
 
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params);
+  const { id } = params;
   const product = await getProduct(id);
 
   if (!product) {

@@ -1,5 +1,5 @@
 import {config} from 'dotenv';
-config({ path: '.env' });
+config();
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
