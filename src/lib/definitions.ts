@@ -37,14 +37,11 @@ export type PurchaseLink = {
   download_url: string;
 };
 
-// Represents a record from the 'purchases' table joined with 'ebooks'
-export type PurchaseWithEbook = {
-  id: string;
-  payment_ref: string;
+// Represents a record from the 'purchases' table
+export type Purchase = {
+  id: string; // This will be the payment_ref from Paystack
   created_at: string;
-  ebooks: {
-    id: string;
-    title: string;
-    file_name: string;
-  } | null; // ebooks can be null if the join fails or no ebook is associated
+  user_id?: string; // Optional user ID
+  ebook_id: string;
+  payment_ref: string;
 };

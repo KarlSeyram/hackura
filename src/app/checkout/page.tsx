@@ -12,6 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { recordPurchase } from '@/app/actions';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
@@ -25,9 +26,13 @@ export default function CheckoutPage() {
   useEffect(() => {
     setIsClient(true);
     if (cartCount === 0 && paymentState !== 'processing') {
+      toast({
+        title: 'Your Cart is Empty',
+        description: 'Redirecting you to the store to add some items.',
+      });
       router.push('/store');
     }
-  }, [cartCount, router, paymentState]);
+  }, [cartCount, router, paymentState, toast]);
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
@@ -36,10 +41,20 @@ export default function CheckoutPage() {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
 
-    // The purchase is recorded by the webhook. 
-    // We just need to clear the cart and redirect.
-    clearCart();
-    router.push(`/download/${reference.reference}`);
+    try {
+      // Immediately record the purchase before redirecting
+      await recordPurchase(cartItems, reference.reference);
+      clearCart();
+      router.push(`/download/${reference.reference}`);
+    } catch (error) {
+      console.error('Failed to record purchase on client-side flow:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error Processing Purchase',
+        description: 'There was an issue finalizing your purchase. Please contact support.',
+      });
+      setPaymentState('idle');
+    }
   };
 
   const handlePaymentClose = () => {
@@ -54,7 +69,7 @@ export default function CheckoutPage() {
     reference: `cybershelf_${new Date().getTime()}`,
     metadata: {
       name,
-      // Pass cart items to the webhook
+      // Pass cart items to the webhook as a JSON string
       cartItems: JSON.stringify(cartItems.map(item => ({id: item.id, title: item.title, quantity: item.quantity}))),
     },
     publicKey: paystackPublicKey,
@@ -70,7 +85,7 @@ export default function CheckoutPage() {
 
   const isFormValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  if (!isClient || cartCount === 0) {
+  if (!isClient || (cartCount === 0 && paymentState !== 'processing')) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center">
         <p>Loading checkout...</p>
