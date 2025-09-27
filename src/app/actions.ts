@@ -57,7 +57,7 @@ export async function getDownloadLinks() {
     const supabase = createClient();
 
     const { data: downloads, error } = await supabase
-        .from('downloads')
+        .from('ebooks')
         .select('title, file_name');
     
     if (error) {
