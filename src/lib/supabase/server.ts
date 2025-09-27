@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
+
+config();
 
 // For use in server-side logic (e.g., API routes, Server Actions)
 export function createAdminClient() {

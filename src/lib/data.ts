@@ -4,12 +4,6 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { PlaceHolderImages } from './placeholder-images';
 
 export async function getEbooks() {
-  // If Supabase credentials are not set, return mock data
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn("Supabase credentials not found. Falling back to mock data. Please update your .env file.");
-    return ebooks;
-  }
-  
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
