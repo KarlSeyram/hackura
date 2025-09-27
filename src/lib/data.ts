@@ -1,4 +1,3 @@
-
 import type { Ebook, Service, ContactRequest } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 import { PlaceHolderImages } from './placeholder-images';
