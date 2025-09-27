@@ -1,13 +1,12 @@
 
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem } from '@/lib/definitions';
-import { revalidatePath } from 'next/cache';
 
 // This function creates secure, time-limited download links for purchased ebooks.
 export async function createSignedDownloads(cartItems: CartItem[], paymentReference: string) {
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Use Promise.all to generate all signed URLs in parallel.
   const productsWithDownloads = await Promise.all(
@@ -55,7 +54,7 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
 
 
 export async function getDownloadLinks(paymentRef: string) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
         .from('purchase_links')
@@ -71,7 +70,7 @@ export async function getDownloadLinks(paymentRef: string) {
 }
 
 export async function clearPurchaseData(paymentRef: string) {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     
     const { error } = await supabase
         .from('purchase_links')
