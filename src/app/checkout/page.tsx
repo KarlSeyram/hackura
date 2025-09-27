@@ -11,10 +11,13 @@ import { ShoppingCart, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { recordPurchase } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
   const router = useRouter();
+  const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,17 +37,24 @@ export default function CheckoutPage() {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
 
-    // For simplicity in this public download model, we'll just redirect to the first item's page.
-    // A real multi-item cart would need a dedicated page listing all purchased downloads.
-    const firstItemId = cartItems[0]?.id;
-    
-    clearCart();
+    try {
+        const result = await recordPurchase(cartItems, reference.reference);
+        if (!result.success) {
+            throw new Error(result.error?.message || 'Failed to record purchase.');
+        }
 
-    if (firstItemId) {
-      router.push(`/download/${firstItemId}`);
-    } else {
-      // If cart is empty for some reason, redirect to store.
-      router.push('/store');
+        clearCart();
+        router.push(`/download/${reference.reference}`);
+
+    } catch (error) {
+        console.error('Error recording purchase:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Error Processing Purchase',
+            description: 'We received your payment, but there was an issue finalizing your order. Please contact support.',
+        });
+        // Keep the user on the checkout page to allow them to retry or contact support.
+        setPaymentState('idle');
     }
   };
 

@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 
 export type Ebook = {
@@ -7,6 +8,7 @@ export type Ebook = {
   price: number;
   imageUrl: string;
   imageHint: string;
+  file_name?: string; // file_name can be optional on the base type
 };
 
 export type CartItem = Ebook & {
@@ -29,7 +31,14 @@ export type ContactRequest = {
   submittedAt: Date;
 };
 
-export type PurchaseLink = {
+// Represents a record from the 'purchases' table joined with 'ebooks'
+export type PurchaseWithEbook = {
+  id: string;
+  payment_ref: string;
+  created_at: string;
+  ebooks: {
+    id: string;
     title: string;
-    download_url: string;
-}
+    file_name: string;
+  } | null; // ebooks can be null if the join fails or no ebook is associated
+};
