@@ -2,9 +2,8 @@
 'use server';
 
 import { z } from 'zod';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient as createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem } from '@/lib/definitions';
 
 // This function creates secure, time-limited download links for purchased ebooks.
@@ -152,7 +151,7 @@ export async function submitContactRequest(prevState: any, formData: FormData) {
 }
 
 export async function uploadProduct(prevState: any, formData: FormData) {
-    const supabase = createServerClient();
+    const supabase = createAdminClient();
 
     const validatedFields = productSchema.safeParse({
         title: formData.get('title'),
