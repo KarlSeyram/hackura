@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import type { CartItem } from '@/lib/definitions';
 

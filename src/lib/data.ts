@@ -1,9 +1,8 @@
 
 import type { Ebook, Service, ContactRequest } from './definitions';
-import { createClient } from '@/lib/supabase/server';
+import { supabase } from '@/lib/supabase/client';
 
 export async function getEbooks() {
-  const supabase = createClient();
   const { data, error } = await supabase.from('ebooks').select('*').order('created_at', { ascending: false });
 
   if (error) {
