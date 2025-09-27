@@ -11,7 +11,6 @@ import { ShoppingCart, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { recordPurchase } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
@@ -37,26 +36,16 @@ export default function CheckoutPage() {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
 
-    try {
-        const result = await recordPurchase(cartItems, reference.reference);
-        if (!result.success) {
-            throw new Error(result.error?.message || 'Failed to record purchase.');
-        }
-
-        clearCart();
-        router.push(`/download/${reference.reference}`);
-
-    } catch (error) {
-        console.error('Error recording purchase:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Error Processing Purchase',
-            description: 'We received your payment, but there was an issue finalizing your order. Please contact support.',
-        });
-        // Keep the user on the checkout page to allow them to retry or contact support.
-        setPaymentState('idle');
-    }
+    // The purchase is recorded by the webhook. 
+    // We just need to clear the cart and redirect.
+    clearCart();
+    router.push(`/download/${reference.reference}`);
   };
+
+  const handlePaymentClose = () => {
+    console.log('Payment dialog closed.');
+    setPaymentState('idle');
+  }
 
   const componentProps = {
     email,
@@ -65,12 +54,13 @@ export default function CheckoutPage() {
     reference: `cybershelf_${new Date().getTime()}`,
     metadata: {
       name,
+      // Pass cart items to the webhook
       cartItems: JSON.stringify(cartItems.map(item => ({id: item.id, title: item.title, quantity: item.quantity}))),
     },
     publicKey: paystackPublicKey,
     text: "Pay Now",
     onSuccess: (reference: any) => handlePaymentSuccess(reference),
-    onClose: () => {},
+    onClose: handlePaymentClose,
   };
 
   const formattedTotalPrice = new Intl.NumberFormat(undefined, {

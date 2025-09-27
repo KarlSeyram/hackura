@@ -31,6 +31,12 @@ export type ContactRequest = {
   submittedAt: Date;
 };
 
+// Represents a generated link for a purchased item
+export type PurchaseLink = {
+  title: string;
+  download_url: string;
+};
+
 // Represents a record from the 'purchases' table joined with 'ebooks'
 export type PurchaseWithEbook = {
   id: string;

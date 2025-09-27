@@ -1,20 +1,21 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import type { PurchaseWithEbook } from '@/lib/definitions';
+import type { PurchaseLink } from '@/lib/definitions';
+import { getPurchaseDownloadLinks } from '@/app/actions';
 import React from 'react';
 
 export default function DownloadPage({ params }: { params: { purchaseId: string } }) {
     const { purchaseId } = React.use(params);
-    const [purchase, setPurchase] = useState<PurchaseWithEbook | null>(null);
+    const [links, setLinks] = useState<PurchaseLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchPurchaseDetails = useCallback(async () => {
+    const fetchLinks = useCallback(async () => {
         if (!purchaseId) {
             setError("No purchase reference provided.");
             setLoading(false);
@@ -24,51 +25,45 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
         setLoading(true);
         setError(null);
         try {
-            // Fetch the purchase record and join it with the ebooks table
-            const { data, error: dbError } = await supabase
-                .from("purchases")
-                .select("id, payment_ref, created_at, ebooks(id, title, file_name)")
-                .eq("payment_ref", purchaseId)
-                .single();
+            // Poll for the download links
+            let attempts = 0;
+            const maxAttempts = 10;
+            const interval = 3000; // 3 seconds
 
-            if (dbError || !data) {
-                throw new Error("Could not find a matching purchase. Please contact support if you believe this is an error.");
-            }
-            
-            // The result from Supabase needs to be cast to the correct type
-            const typedData = data as unknown as PurchaseWithEbook;
+            const getLinks = async () => {
+                attempts++;
+                const fetchedLinks = await getPurchaseDownloadLinks(purchaseId);
+                
+                if (fetchedLinks.length > 0) {
+                    setLinks(fetchedLinks);
+                    setLoading(false);
+                } else if (attempts < maxAttempts) {
+                    setTimeout(getLinks, interval);
+                } else {
+                    throw new Error("Could not retrieve download links after several attempts. Please contact support.");
+                }
+            };
 
-            if (!typedData.ebooks?.file_name) {
-                 throw new Error("The ebook file for this purchase is missing. Please contact support.");
-            }
-            
-            setPurchase(typedData);
+            await getLinks();
 
         } catch (e: any) {
             console.error(e);
-            setError(e.message || "An error occurred while fetching your download.");
-        } finally {
+            setError(e.message || "An error occurred while fetching your downloads.");
             setLoading(false);
         }
     }, [purchaseId]);
 
     useEffect(() => {
-        fetchPurchaseDetails();
-    }, [fetchPurchaseDetails]);
-
-    // Construct the public URL for the file
-    const downloadUrl = purchase?.ebooks?.file_name
-        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${purchase.ebooks.file_name}`
-        : '';
-
+        fetchLinks();
+    }, [fetchLinks]);
 
     return (
         <div className="container mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[60vh]">
             {loading && (
                 <>
                     <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                    <h1 className="font-headline text-2xl font-bold">Verifying Your Purchase...</h1>
-                    <p className="text-muted-foreground mt-2">Please wait a moment while we retrieve your files.</p>
+                    <h1 className="font-headline text-2xl font-bold">Preparing Your Downloads...</h1>
+                    <p className="text-muted-foreground mt-2">Please wait a moment. This can take up to 30 seconds.</p>
                 </>
             )}
 
@@ -85,18 +80,20 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                 </div>
             )}
 
-            {!loading && !error && purchase && (
+            {!loading && !error && links.length > 0 && (
                 <>
                     <h1 className="font-headline text-3xl font-bold">Thank You for Your Purchase!</h1>
-                    <p className="text-muted-foreground mt-2 mb-8">Your download link is ready.</p>
+                    <p className="text-muted-foreground mt-2 mb-8">Your download links are ready and will expire in 24 hours.</p>
 
                     <div className="w-full max-w-md space-y-4">
-                        <Button asChild size="lg" className="w-full">
-                            <a href={downloadUrl} download>
-                                <Download className="mr-2 h-5 w-5" />
-                                Download {purchase.ebooks.title}
-                            </a>
-                        </Button>
+                        {links.map((link) => (
+                            <Button asChild size="lg" className="w-full" key={link.title}>
+                                <a href={link.download_url} download>
+                                    <Download className="mr-2 h-5 w-5" />
+                                    Download {link.title}
+                                </a>
+                            </Button>
+                        ))}
                     </div>
 
                      <Button asChild variant="outline" className="mt-8">
