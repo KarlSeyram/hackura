@@ -1,6 +1,7 @@
+
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/client';
 import type { CartItem } from '@/lib/definitions';
 
 // This function creates secure, time-limited download links for purchased ebooks.
