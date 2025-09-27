@@ -1,6 +1,7 @@
 
 'use server';
 
+import 'dotenv/config';
 import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem, PurchaseLink } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';

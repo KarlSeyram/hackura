@@ -1,4 +1,5 @@
 
+import 'dotenv/config';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { recordPurchase } from '@/app/actions';
