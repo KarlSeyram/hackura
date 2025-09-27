@@ -1,23 +1,9 @@
 
 import type { Ebook, Service, ContactRequest } from './definitions';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export async function getEbooks() {
-  const cookieStore = cookies();
-  // The anon key is public and can be used on the server.
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-
+  const supabase = createClient();
   const { data, error } = await supabase.from('ebooks').select('*').order('created_at', { ascending: false });
 
   if (error) {
