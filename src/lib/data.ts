@@ -3,7 +3,7 @@ import type { Ebook, Service, ContactRequest } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks() {
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
   const { data, error } = await supabase.from('ebooks').select('*').order('created_at', { ascending: false });
 
   if (error) {
