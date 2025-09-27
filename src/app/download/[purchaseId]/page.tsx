@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { PurchaseLink } from '@/lib/definitions';
+import React from 'react';
 
 export default function DownloadPage({ params }: { params: { purchaseId: string } }) {
-    const { purchaseId } = params;
+    const { purchaseId } = React.use(params);
     const [links, setLinks] = useState<PurchaseLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
