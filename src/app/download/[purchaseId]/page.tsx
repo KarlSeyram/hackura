@@ -32,15 +32,23 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
 
             const getLinks = async () => {
                 attempts++;
-                const fetchedLinks = await getPurchaseDownloadLinks(purchaseId);
-                
-                if (fetchedLinks.length > 0) {
-                    setLinks(fetchedLinks);
-                    setLoading(false);
-                } else if (attempts < maxAttempts) {
-                    setTimeout(getLinks, interval);
-                } else {
-                    throw new Error("Could not retrieve download links after several attempts. Please contact support.");
+                try {
+                    const fetchedLinks = await getPurchaseDownloadLinks(purchaseId);
+                    
+                    if (fetchedLinks && fetchedLinks.length > 0) {
+                        setLinks(fetchedLinks);
+                        setLoading(false);
+                    } else if (attempts < maxAttempts) {
+                        setTimeout(getLinks, interval);
+                    } else {
+                        throw new Error("Could not retrieve download links after several attempts. The purchase might still be processing. Please contact support.");
+                    }
+                } catch(e: any) {
+                     if (attempts < maxAttempts) {
+                        setTimeout(getLinks, interval);
+                    } else {
+                        throw e;
+                    }
                 }
             };
 
@@ -63,7 +71,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                 <>
                     <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
                     <h1 className="font-headline text-2xl font-bold">Preparing Your Downloads...</h1>
-                    <p className="text-muted-foreground mt-2">Please wait a moment. This can take up to 30 seconds.</p>
+                    <p className="text-muted-foreground mt-2">Please wait a moment. This can take up to 30 seconds as we verify your payment.</p>
                 </>
             )}
 
@@ -83,7 +91,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
             {!loading && !error && links.length > 0 && (
                 <>
                     <h1 className="font-headline text-3xl font-bold">Thank You for Your Purchase!</h1>
-                    <p className="text-muted-foreground mt-2 mb-8">Your download links are ready and will expire in 24 hours.</p>
+                    <p className="text-muted-foreground mt-2 mb-8">Your download links are ready. These links are secure and will expire in 24 hours.</p>
 
                     <div className="w-full max-w-md space-y-4">
                         {links.map((link) => (

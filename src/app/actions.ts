@@ -90,17 +90,31 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
 
 export async function getPurchaseDownloadLinks(purchaseId: string) {
     const supabase = createAdminClient();
-    const { data, error } = await supabase
-        .from('purchase_links')
-        .select('title, download_url')
-        .eq('payment_ref', purchaseId);
+    const { data: purchase, error: purchaseError } = await supabase
+        .from('purchases')
+        .select('id, ebook_id')
+        .eq('payment_ref', purchaseId)
+        .single();
 
-    if (error || !data) {
-        console.error('Error fetching download links for purchase:', purchaseId, error);
-        throw new Error('Could not retrieve download links for this purchase.');
+    if (purchaseError || !purchase) {
+        console.error('Error fetching purchase:', purchaseId, purchaseError);
+        throw new Error('Could not find a matching purchase. Please contact support if you believe this is an error.');
     }
 
-    return data;
+    const { data: ebook, error: ebookError } = await supabase
+        .from('ebooks')
+        .select('title, file_name')
+        .eq('id', purchase.ebook_id)
+        .single();
+
+    if (ebookError || !ebook) {
+        console.error('Error fetching ebook for purchase:', purchase.id, ebookError);
+        throw new Error('Could not find the requested ebook. Please contact support.');
+    }
+
+    const downloadUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${ebook.file_name}`;
+
+    return [{ title: ebook.title, download_url: downloadUrl }];
 }
 
 export async function clearPurchaseData(paymentRef: string) {
