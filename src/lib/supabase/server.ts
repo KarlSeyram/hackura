@@ -1,8 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClient() {
-  const cookieStore = await cookies();
+export function createClient() {
+  const cookieStore = cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +18,9 @@ export async function createClient() {
               cookieStore.set({ name, value, ...options });
             });
           } catch (error) {
-            // Safe to ignore when called from a Server Component
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
       },
@@ -40,7 +42,7 @@ export function createAdminClient() {
           return [];
         },
         setAll() {
-          // no-op
+          // No-op
         },
       },
     }
