@@ -9,24 +9,22 @@ import Link from 'next/link';
 import type { PurchaseLink } from '@/lib/definitions';
 
 export default function DownloadPage({ params }: { params: { purchaseId: string } }) {
-    const { purchaseId } = params;
     const [links, setLinks] = useState<PurchaseLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchLinks = useCallback(async () => {
+        const { purchaseId } = params;
+        if (!purchaseId) return;
+
         setLoading(true);
         setError(null);
         try {
             const fetchedLinks = await getPurchaseDownloadLinks(purchaseId);
             if (fetchedLinks && fetchedLinks.length > 0) {
                 setLinks(fetchedLinks);
-                // Once links are successfully retrieved, we can clean up the data.
-                // We'll wait a bit to ensure the user has time to see and use the links.
                 setTimeout(() => clearPurchaseData(purchaseId), 1000 * 60 * 60 * 24); // 24 hours
             } else {
-                // If no links are found, it might be a race condition.
-                // We'll retry a few times.
                 throw new Error("No links found yet.");
             }
         } catch (e: any) {
@@ -35,9 +33,10 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
         } finally {
             setLoading(false);
         }
-    }, [purchaseId]);
+    }, [params]);
 
     useEffect(() => {
+        const { purchaseId } = params;
         if (!purchaseId) return;
 
         let retries = 0;
@@ -51,6 +50,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                     setLinks(fetchedLinks);
                     setLoading(false);
                     setError(null);
+                     setTimeout(() => clearPurchaseData(purchaseId), 1000 * 60 * 60 * 24); // 24 hours
                 } else {
                     throw new Error("No links found yet.");
                 }
@@ -67,7 +67,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
         };
 
         tryFetch();
-    }, [purchaseId]);
+    }, [params]);
 
 
     return (
@@ -89,7 +89,7 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                     </p>
                     <p className="text-xs text-destructive-foreground/60 mt-4">
                         Please contact our support team and provide your payment reference ID: <br />
-                        <span className="font-mono bg-destructive/20 px-1 py-0.5 rounded">{purchaseId}</span>
+                        <span className="font-mono bg-destructive/20 px-1 py-0.5 rounded">{params.purchaseId}</span>
                     </p>
                      <Button asChild className="mt-6">
                         <Link href="/contact">Contact Support</Link>
