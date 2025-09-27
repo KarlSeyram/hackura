@@ -33,9 +33,19 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = async (reference: any) => {
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
+
+    // For simplicity in this public download model, we'll just redirect to the first item's page.
+    // A real multi-item cart would need a dedicated page listing all purchased downloads.
+    const firstItemId = cartItems[0]?.id;
+    
     clearCart();
-    // Redirect to a dedicated download page with the payment reference
-    router.push(`/download/${reference.reference}`);
+
+    if (firstItemId) {
+      router.push(`/download/${firstItemId}`);
+    } else {
+      // If cart is empty for some reason, redirect to store.
+      router.push('/store');
+    }
   };
 
   const componentProps = {
@@ -72,7 +82,7 @@ export default function CheckoutPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <h2 className="font-headline text-2xl font-bold">Processing Your Payment...</h2>
+          <h2 className="font-headline text-2xl font-bold">Finalizing Your Purchase...</h2>
           <p className="text-muted-foreground mt-2">Please do not close this window. You will be redirected shortly.</p>
       </div>
     )

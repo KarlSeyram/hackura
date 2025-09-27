@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
-import { getPurchaseDownloadLinks, clearPurchaseData } from '@/app/actions';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -10,63 +10,48 @@ import React from 'react';
 
 export default function DownloadPage({ params }: { params: { purchaseId: string } }) {
     const { purchaseId } = React.use(params);
-    const [links, setLinks] = useState<PurchaseLink[]>([]);
+    const [link, setLink] = useState<PurchaseLink | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchLinks = useCallback(async () => {
-        if (!purchaseId) return;
+    const fetchLink = useCallback(async () => {
+        if (!purchaseId) {
+            setError("No product ID provided.");
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         setError(null);
         try {
-            const fetchedLinks = await getPurchaseDownloadLinks(purchaseId);
-            if (fetchedLinks && fetchedLinks.length > 0) {
-                setLinks(fetchedLinks);
-                setTimeout(() => clearPurchaseData(purchaseId), 1000 * 60 * 60 * 24); // 24 hours
-            } else {
-                throw new Error("No links found yet.");
+            const { data, error: dbError } = await supabase
+                .from("ebooks")
+                .select("title, file_name")
+                .eq("id", purchaseId)
+                .single();
+
+            if (dbError || !data || !data.file_name) {
+                throw new Error("Could not find the requested ebook.");
             }
+            
+            const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${data.file_name}`;
+            
+            setLink({
+                title: data.title,
+                download_url: publicUrl,
+            });
+
         } catch (e: any) {
             console.error(e);
-            setError(e.message || "An error occurred while fetching your downloads.");
+            setError(e.message || "An error occurred while fetching your download.");
         } finally {
             setLoading(false);
         }
     }, [purchaseId]);
 
     useEffect(() => {
-        if (!purchaseId) return;
-
-        let retries = 0;
-        const maxRetries = 5;
-        const retryDelay = 3000; // 3 seconds
-
-        const tryFetch = async () => {
-            try {
-                const fetchedLinks = await getPurchaseDownloadLinks(purchaseId);
-                 if (fetchedLinks && fetchedLinks.length > 0) {
-                    setLinks(fetchedLinks);
-                    setLoading(false);
-                    setError(null);
-                     setTimeout(() => clearPurchaseData(purchaseId), 1000 * 60 * 60 * 24); // 24 hours
-                } else {
-                    throw new Error("No links found yet.");
-                }
-            } catch (e) {
-                retries++;
-                if (retries >= maxRetries) {
-                    setError("Could not retrieve download links after several attempts. Please contact support.");
-                    setLoading(false);
-                } else {
-                    console.log(`Retrying... (${retries}/${maxRetries})`);
-                    setTimeout(tryFetch, retryDelay);
-                }
-            }
-        };
-
-        tryFetch();
-    }, [purchaseId]);
+        fetchLink();
+    }, [fetchLink]);
 
 
     return (
@@ -74,8 +59,8 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
             {loading && (
                 <>
                     <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                    <h1 className="font-headline text-2xl font-bold">Preparing Your Downloads...</h1>
-                    <p className="text-muted-foreground mt-2">Please wait a moment. Your files are being securely generated.</p>
+                    <h1 className="font-headline text-2xl font-bold">Preparing Your Download...</h1>
+                    <p className="text-muted-foreground mt-2">Please wait a moment while we retrieve your file.</p>
                 </>
             )}
 
@@ -84,11 +69,10 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                     <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
                     <h1 className="font-headline text-xl font-bold text-destructive-foreground">Failed to Get Downloads</h1>
                     <p className="text-destructive-foreground/80 mt-2">
-                        We're sorry, but there was a problem preparing your download links.
+                        We're sorry, but there was a problem retrieving your download link.
                     </p>
                     <p className="text-xs text-destructive-foreground/60 mt-4">
-                        Please contact our support team and provide your payment reference ID: <br />
-                        <span className="font-mono bg-destructive/20 px-1 py-0.5 rounded">{purchaseId}</span>
+                        Please contact our support team if the problem persists.
                     </p>
                      <Button asChild className="mt-6">
                         <Link href="/contact">Contact Support</Link>
@@ -96,25 +80,23 @@ export default function DownloadPage({ params }: { params: { purchaseId: string 
                 </div>
             )}
 
-            {!loading && !error && links.length > 0 && (
+            {!loading && !error && link && (
                 <>
                     <h1 className="font-headline text-3xl font-bold">Thank You for Your Purchase!</h1>
-                    <p className="text-muted-foreground mt-2 mb-8">Your download links are ready. These links will expire in 24 hours.</p>
+                    <p className="text-muted-foreground mt-2 mb-8">Your download link is ready.</p>
 
                     <div className="w-full max-w-md space-y-4">
-                        {links.map((link, index) => (
-                            <Button key={index} asChild size="lg" className="w-full">
-                                <a href={link.download_url} download>
-                                    <Download className="mr-2 h-5 w-5" />
-                                    Download {link.title}
-                                </a>
-                            </Button>
-                        ))}
+                        <Button asChild size="lg" className="w-full">
+                            <a href={link.download_url} download>
+                                <Download className="mr-2 h-5 w-5" />
+                                Download {link.title}
+                            </a>
+                        </Button>
                     </div>
 
-                    <p className="text-sm text-muted-foreground mt-12">
-                        Having trouble? <Link href="/contact" className="underline hover:text-primary">Contact us</Link>.
-                    </p>
+                     <Button asChild variant="outline" className="mt-8">
+                        <Link href="/store">Continue Shopping</Link>
+                    </Button>
                 </>
             )}
         </div>

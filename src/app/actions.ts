@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/client';
+import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem } from '@/lib/definitions';
 
 // This function creates secure, time-limited download links for purchased ebooks.
@@ -50,34 +50,4 @@ export async function createSignedDownloads(cartItems: CartItem[], paymentRefere
   }
   
   return validLinks;
-}
-
-
-export async function getPurchaseDownloadLinks(purchaseId: string) {
-    const supabase = createAdminClient();
-
-    const { data, error } = await supabase
-        .from('purchase_links')
-        .select('title, download_url')
-        .eq('payment_ref', purchaseId);
-    
-    if (error) {
-        console.error('Error fetching download links for purchase:', error);
-        throw new Error('Could not fetch download links.');
-    }
-    
-    return data;
-}
-
-export async function clearPurchaseData(paymentRef: string) {
-    const supabase = createAdminClient();
-    
-    const { error } = await supabase
-        .from('purchase_links')
-        .delete()
-        .eq('payment_ref', paymentRef);
-
-    if (error) {
-        console.error('Error cleaning up purchase data:', error);
-    }
 }
