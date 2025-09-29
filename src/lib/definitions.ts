@@ -9,6 +9,7 @@ export type Ebook = {
   imageUrl: string;
   imageHint: string;
   file_name?: string; // file_name can be optional on the base type
+  category: string;
 };
 
 export type CartItem = Ebook & {
@@ -45,4 +46,5 @@ export type Purchase = {
   ebook_id: string;
   payment_ref: string;
 };
+
 
