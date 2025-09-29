@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a shareable link, product description, and image preview for an ebook.
@@ -40,7 +41,7 @@ const generateShareableLinkWithPreviewPrompt = ai.definePrompt({
 
   Generate a shareable link, product description, and image preview for the following ebook product:
 
-  Product Name: {{{productName}}}
+  Product Title: {{{productName}}}
   Product Description: {{{productDescription}}}
   Product Image URL: {{{productImageUrl}}}
 

@@ -8,11 +8,14 @@ export async function getEbooks(): Promise<Ebook[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("ebooks")
-    .select("id, title, description, price, image_url");
+    .select("id, title, description, price, image_url, image_hint")
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching ebooks:", error);
-    throw new Error('Failed to fetch ebooks from the database. Please check the connection and credentials.');
+    console.error("Error fetching ebooks from Supabase:", error.message);
+    // In production, you might want to throw a more user-friendly error or handle it gracefully.
+    // For debugging, throwing the actual error is helpful.
+    throw new Error(`Failed to fetch ebooks from the database. Supabase error: ${error.message}`);
   }
 
   // The data from supabase has image_url, but our Ebook type expects imageUrl.
@@ -20,82 +23,15 @@ export async function getEbooks(): Promise<Ebook[]> {
   const fetchedEbooks: Ebook[] = data.map(ebook => ({
     id: ebook.id,
     title: ebook.title,
-    description: ebook.description,
+    description: ebook.description, 
     price: ebook.price,
     imageUrl: ebook.image_url,
-    imageHint: '', // imageHint is not in the DB, default to empty string
+    imageHint: ebook.image_hint || '', 
   }));
 
   return fetchedEbooks;
 }
 
-
-export const ebooks: Ebook[] = [
-    {
-      id: '1',
-      title: 'Advanced Penetration Testing',
-      description: 'A deep dive into advanced exploitation techniques, vulnerability analysis, and post-exploitation strategies used by ethical hackers.',
-      price: 59.99,
-      imageUrl: PlaceHolderImages[0].imageUrl,
-      imageHint: PlaceHolderImages[0].imageHint,
-    },
-    {
-      id: '2',
-      title: 'Mastering Network Security',
-      description: 'Learn to design, implement, and manage secure network architectures. Covers firewalls, IDS/IPS, VPNs, and secure network protocols.',
-      price: 49.99,
-      imageUrl: PlaceHolderImages[1].imageUrl,
-      imageHint: PlaceHolderImages[1].imageHint,
-    },
-    {
-      id: '3',
-      title: 'Automate with Python',
-      description: 'Unlock the power of Python for automating security tasks. From scripting network scans to building custom security tools.',
-      price: 39.99,
-      imageUrl: PlaceHolderImages[2].imageUrl,
-      imageHint: PlaceHolderImages[2].imageHint,
-    },
-    {
-      id: '4',
-      title: 'Cryptography & Data Protection',
-      description: 'An essential guide to modern cryptography, including symmetric/asymmetric encryption, hashing algorithms, and data-at-rest protection.',
-      price: 45.0,
-      imageUrl: PlaceHolderImages[3].imageUrl,
-      imageHint: PlaceHolderImages[3].imageHint,
-    },
-     {
-      id: '5',
-      title: 'Cloud Security Fundamentals',
-      description: 'Secure your cloud infrastructure. This book covers best practices for AWS, Azure, and GCP, focusing on identity management and secure configurations.',
-      price: 55.0,
-      imageUrl: PlaceHolderImages[4].imageUrl,
-      imageHint: PlaceHolderImages[4].imageHint,
-    },
-    {
-      id: '6',
-      title: 'AI in Cybersecurity',
-      description: 'Explore the revolutionary impact of artificial intelligence and machine learning on threat detection, malware analysis, and security operations.',
-      price: 65.0,
-      imageUrl: PlaceHolderImages[5].imageUrl,
-      imageHint: PlaceHolderImages[5].imageHint,
-    },
-    {
-      id: '7',
-      title: 'Digital Forensics & Incident Response',
-      description: 'Master the techniques for investigating security breaches. Learn about data acquisition, evidence preservation, and post-incident analysis.',
-      price: 52.99,
-      imageUrl: PlaceHolderImages[6].imageUrl,
-      imageHint: PlaceHolderImages[6].imageHint,
-    },
-    {
-      id: '8',
-      title: 'The Blockchain Security Guide',
-      description: 'A comprehensive overview of blockchain technology and the unique security challenges of decentralized applications and smart contracts.',
-      price: 48.50,
-      imageUrl: PlaceHolderImages[7].imageUrl,
-      imageHint: PlaceHolderImages[7].imageHint,
-    }
-];
 
 export const services: Service[] = [
   {
@@ -147,3 +83,4 @@ export const contactRequests: ContactRequest[] = [
         submittedAt: new Date('2023-10-24T09:15:00Z'),
     },
 ];
+
