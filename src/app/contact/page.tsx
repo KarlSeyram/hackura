@@ -21,7 +21,6 @@ import {
   XIcon,
   WhatsAppIcon,
   FacebookIcon,
-  LinkedinIcon,
 } from '@/components/icons';
 
 function SubmitButton() {
@@ -112,9 +111,6 @@ export default function ContactPage() {
               </Link>
               <Link href="#" aria-label="Facebook page">
                 <FacebookIcon className="h-6 w-6 fill-foreground transition-colors hover:fill-primary" />
-              </Link>
-              <Link href="#" aria-label="LinkedIn page">
-                <LinkedinIcon className="h-6 w-6 fill-foreground transition-colors hover:fill-primary" />
               </Link>
             </div>
           </div>
