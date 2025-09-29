@@ -1,37 +1,32 @@
+
 import 'dotenv/config';
 import type { Ebook, Service, ContactRequest } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 import { PlaceHolderImages } from './placeholder-images';
 
-export async function getEbooks() {
-  try {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from("ebooks")
-      .select("id, title, description, price, image_url");
+export async function getEbooks(): Promise<Ebook[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("ebooks")
+    .select("id, title, description, price, image_url");
 
-    if (error) {
-      console.error("Error fetching ebooks:", error);
-      // If there's an error (like invalid credentials), fall back to mock data
-      return ebooks;
-    }
-
-    // The data from supabase has image_url, but our Ebook type expects imageUrl.
-    // We need to map the data to match the Ebook type.
-    const fetchedEbooks: Ebook[] = data.map(ebook => ({
-      id: ebook.id,
-      title: ebook.title,
-      description: ebook.description,
-      price: ebook.price,
-      imageUrl: ebook.image_url,
-      imageHint: '', // imageHint is not in the DB, default to empty string
-    }));
-
-    return fetchedEbooks;
-  } catch (e) {
-    console.error("An unexpected error occurred while fetching ebooks:", e);
-    return ebooks; // Fallback in case of any other unexpected error
+  if (error) {
+    console.error("Error fetching ebooks:", error);
+    throw new Error('Failed to fetch ebooks from the database. Please check the connection and credentials.');
   }
+
+  // The data from supabase has image_url, but our Ebook type expects imageUrl.
+  // We need to map the data to match the Ebook type.
+  const fetchedEbooks: Ebook[] = data.map(ebook => ({
+    id: ebook.id,
+    title: ebook.title,
+    description: ebook.description,
+    price: ebook.price,
+    imageUrl: ebook.image_url,
+    imageHint: '', // imageHint is not in the DB, default to empty string
+  }));
+
+  return fetchedEbooks;
 }
 
 
