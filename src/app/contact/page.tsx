@@ -9,14 +9,6 @@ import { submitContactRequest } from '@/lib/actions';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Clock, Mail, Phone } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { services } from '@/lib/data';
 import Link from 'next/link';
 import {
   XIcon,
@@ -146,23 +138,6 @@ export default function ContactPage() {
                 </p>
               )}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="service">Service of Interest (Optional)</Label>
-            <Select name="service">
-              <SelectTrigger id="service">
-                <SelectValue placeholder="Select a service" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None / General Inquiry</SelectItem>
-                {services.map(service => (
-                  <SelectItem key={service.id} value={service.title}>
-                    {service.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
