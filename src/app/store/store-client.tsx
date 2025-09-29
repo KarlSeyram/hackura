@@ -83,7 +83,7 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
 
                 <Select onValueChange={(value) => setSortBy(value as SortOption)} defaultValue="default">
                     <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Sort by" />
+                        <SelectValue placeholder="Price" />
                     </SelectTrigger>
                     <SelectContent>
                     <SelectItem value="default">Default</SelectItem>
