@@ -11,6 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Clock, Mail, Phone } from 'lucide-react';
 import Link from 'next/link';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   XIcon,
   WhatsAppIcon,
   FacebookIcon,
@@ -139,7 +146,29 @@ export default function ContactPage() {
               )}
             </div>
           </div>
-
+           <div className="space-y-2">
+            <Label htmlFor="service">Service of Interest</Label>
+            <Select name="service">
+              <SelectTrigger>
+                <SelectValue placeholder="Select a service" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="penetration-testing">
+                  Penetration Testing
+                </SelectItem>
+                <SelectItem value="security-architecture">
+                  Security Architecture Review
+                </SelectItem>
+                <SelectItem value="incident-response">
+                  Incident Response Retainer
+                </SelectItem>
+                <SelectItem value="custom-solutions">
+                  Custom Tech Solutions
+                </SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="message">Message</Label>
             <Textarea
