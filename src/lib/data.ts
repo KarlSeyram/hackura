@@ -2,13 +2,12 @@
 import 'dotenv/config';
 import type { Ebook, Service, ContactRequest } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
-import { PlaceHolderImages } from './placeholder-images';
 
 export async function getEbooks(): Promise<Ebook[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("ebooks")
-    .select("id, title, description, price, image_url, image_hint")
+    .select("id, title, description, price, image_url")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -26,7 +25,7 @@ export async function getEbooks(): Promise<Ebook[]> {
     description: ebook.description, 
     price: ebook.price,
     imageUrl: ebook.image_url,
-    imageHint: ebook.image_hint || '', 
+    imageHint: '', // Return an empty string as a fallback
   }));
 
   return fetchedEbooks;
@@ -83,4 +82,5 @@ export const contactRequests: ContactRequest[] = [
         submittedAt: new Date('2023-10-24T09:15:00Z'),
     },
 ];
+
 
