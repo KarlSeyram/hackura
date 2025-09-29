@@ -109,7 +109,7 @@ export default function ContactPage() {
               <Link href="https://x.com/dorpe_karl" target="_blank" aria-label="X page">
                 <XIcon className="h-6 w-6 fill-foreground transition-colors hover:fill-primary" />
               </Link>
-              <Link href="#" aria-label="WhatsApp">
+              <Link href="https://wa.me/+233503274729" target="_blank" aria-label="WhatsApp">
                 <WhatsAppIcon className="h-7 w-7 fill-foreground transition-colors hover:fill-primary" />
               </Link>
               <Link href="#" aria-label="Facebook page">
