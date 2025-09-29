@@ -7,7 +7,7 @@ export async function getEbooks(): Promise<Ebook[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("ebooks")
-    .select("id, title, description, price, image_url")
+    .select("id, title, description, price, image_url, category")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -19,7 +19,6 @@ export async function getEbooks(): Promise<Ebook[]> {
 
   // The data from supabase has image_url, but our Ebook type expects imageUrl.
   // We need to map the data to match the Ebook type.
-  const categories = ['Cybersecurity', 'Programming', 'Cloud', 'AI/ML'];
   const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
     id: ebook.id,
     title: ebook.title,
@@ -27,7 +26,7 @@ export async function getEbooks(): Promise<Ebook[]> {
     price: ebook.price,
     imageUrl: ebook.image_url,
     imageHint: '', // Return an empty string as a fallback
-    category: categories[index % categories.length],
+    category: ebook.category || 'General',
   }));
 
   return fetchedEbooks;
@@ -84,6 +83,7 @@ export const contactRequests: ContactRequest[] = [
         submittedAt: new Date('2023-10-24T09:15:00Z'),
     },
 ];
+
 
 
 

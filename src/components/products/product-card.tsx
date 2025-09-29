@@ -38,6 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="flex-1 p-4">
+        <p className="text-sm text-muted-foreground mb-1">{product.category}</p>
         <CardTitle className="font-headline text-lg mb-1">
           <Link href={`/products/${product.id}`}>{product.title}</Link>
         </CardTitle>
