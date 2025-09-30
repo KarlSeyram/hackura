@@ -6,7 +6,6 @@ import { X, CornerDownLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useCompletion } from 'ai/react';
 import { getEbooks } from '@/lib/data';
 import type { Ebook } from '@/lib/definitions';
 import { askAssistant } from '@/ai/flows/ebook-chatbot';
@@ -75,6 +74,8 @@ export function Chatbot() {
           {isOpen ? <X className="h-6 w-6" /> : (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -83,7 +84,11 @@ export function Chatbot() {
                 strokeLinejoin="round"
                 className="h-6 w-6"
             >
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
+                <path d="M12 8V4H8" />
+                <path d="m9 13-1-1" />
+                <path d="m15 13-1-1" />
+                <path d="m12 16-0.5-0.5" />
             </svg>
           )}
         </Button>
