@@ -1,3 +1,4 @@
+
 import 'dotenv/config';
 import type { Ebook, Service, ContactRequest, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
@@ -58,29 +59,7 @@ export const services: Service[] = [
   },
 ];
 
-export const contactRequests: ContactRequest[] = [
-    {
-        id: '1',
-        name: 'Alice Johnson',
-        email: 'alice.j@example.com',
-        message: 'I am interested in a penetration test for my e-commerce website. Could you provide a quote?',
-        submittedAt: new Date('2023-10-26T10:00:00Z'),
-    },
-    {
-        id: '2',
-        name: 'Bob Williams',
-        email: 'bob.w@example.com',
-        message: 'We need help with a security architecture review for our new cloud platform. What is your availability?',
-        submittedAt: new Date('2023-10-25T14:30:00Z'),
-    },
-    {
-        id: '3',
-        name: 'Charlie Brown',
-        email: 'charlie.b@example.com',
-        message: 'I have a question about your custom tech solutions. Can we schedule a call to discuss our project?',
-        submittedAt: new Date('2023-10-24T09:15:00Z'),
-    },
-];
+export const contactRequests: ContactRequest[] = [];
 
 const allReviews: Review[] = [
     { id: '1', ebookId: '1', reviewer: 'Alice', rating: 5, comment: 'This book was a game-changer! Highly recommended for anyone serious about ethical hacking.' },
