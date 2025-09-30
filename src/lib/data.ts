@@ -120,12 +120,6 @@ export const services: Service[] = [
   },
 ];
 
-const allReviews: Review[] = [
-    { id: '1', ebookId: '1', reviewer: 'Alice', rating: 5, comment: 'This book was a game-changer! Highly recommended for anyone serious about ethical hacking.' },
-    { id: '2', ebookId: '1', reviewer: 'Bob', rating: 4, comment: 'Great content, but a bit dense in some chapters. Overall, a valuable resource.' },
-    { id: '3', ebookId: '2', reviewer: 'Charlie', rating: 5, comment: 'The best guide on network security I have ever read. Clear, concise, and practical.' },
-];
-
 export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -149,15 +143,18 @@ export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
 }
 
 export async function submitReview(ebookId: string, rating: number, comment: string, reviewer: string) {
-    // In a real app, you would save this to a database.
-    console.log('New review submitted:', { ebookId, rating, comment, reviewer });
-    const newReview: Review = {
-        id: String(allReviews.length + 1),
-        ebookId,
-        reviewer,
+    const supabase = createAdminClient();
+    const { error } = await supabase.from('reviews').insert({
+        ebook_id: ebookId,
         rating,
         comment,
-    };
-    allReviews.push(newReview); // For demonstration purposes
+        reviewer_name: reviewer,
+    });
+
+    if (error) {
+        console.error('Error inserting review:', error);
+        return { success: false, message: 'Sorry, there was an error submitting your review.' };
+    }
+
     return { success: true, message: 'Thank you for your review!' };
 }
