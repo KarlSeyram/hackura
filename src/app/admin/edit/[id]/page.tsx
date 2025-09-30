@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { createAdminClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import type { Ebook } from '@/lib/definitions';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -39,7 +39,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const supabase = createAdminClient();
       const { data, error } = await supabase
         .from('ebooks')
         .select('*')
@@ -83,7 +82,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
-    const supabase = createAdminClient();
     const { error } = await supabase
       .from('ebooks')
       .update({
