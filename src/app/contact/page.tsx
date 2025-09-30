@@ -158,8 +158,17 @@ export default function ContactPage() {
                 <SelectItem value="incident-response">
                   Incident Response Retainer
                 </SelectItem>
-                <SelectItem value="custom-solutions">
+                <SelectItem value="custom-tech-solutions">
                   Custom Tech Solutions
+                </SelectItem>
+                <SelectItem value="academic-research-assistance">
+                  Insightful Minds Research Hub
+                </SelectItem>
+                 <SelectItem value="basic-web-pentesting">
+                  Basic Web Pentesting
+                </SelectItem>
+                <SelectItem value="graphic-design">
+                  Graphic Designing
                 </SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
