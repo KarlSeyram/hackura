@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -17,9 +18,6 @@ export function AdminSidebar() {
 
   return (
     <aside className="w-64 flex-col border-r bg-background p-4">
-      <div className="flex items-center gap-2 pb-4 border-b mb-4">
-        <h1 className="font-headline text-xl font-semibold">CyberShelf</h1>
-      </div>
       <nav className="flex flex-col gap-2">
         {adminNavItems.map(item => {
           const isActive = pathname.startsWith(item.href);
