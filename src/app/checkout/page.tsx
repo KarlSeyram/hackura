@@ -12,7 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { createDownloadToken } from '@/app/actions';
+import { recordPurchase } from '@/app/actions';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
@@ -46,20 +46,12 @@ export default function CheckoutPage() {
     });
 
     try {
-      // In this stateless flow, we just generate the token and redirect.
-      // We could optionally still record the purchase for analytics.
-      // await recordPurchase(cartItems, reference.reference);
+      // Record the purchase for analytics and to generate download links.
+      await recordPurchase(cartItems, reference.reference);
+      
+      clearCart();
+      router.push(`/download/${reference.reference}`);
 
-      // For simplicity, we'll handle one ebook purchase at a time.
-      // In a real app, you might generate multiple tokens or a single token for the whole cart.
-      if (cartItems.length > 0) {
-        const item = cartItems[0];
-        const token = await createDownloadToken(item.id);
-        clearCart();
-        router.push(`/download?token=${token}`);
-      } else {
-        throw new Error("Cart is empty after payment, which shouldn't happen.");
-      }
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
       toast({
