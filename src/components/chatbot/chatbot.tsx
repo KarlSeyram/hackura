@@ -89,8 +89,6 @@ export function Chatbot() {
                 <path d="m15 13-1-1" />
                 <path d="m12 16-0.5-0.5" />
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                <path d="m15.5 5.5 3 3" />
-                <path d="m15.5 8.5 3-3" />
             </svg>
           )}
         </Button>
@@ -118,9 +116,9 @@ export function Chatbot() {
                         <div className="flex justify-start">
                              <div className="rounded-lg px-4 py-2 bg-muted flex items-center gap-2">
                                 <div className="flex items-center gap-1.5">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce [animation-delay:-0.3s]"></span>
-                                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce [animation-delay:-0.15s]"></span>
-                                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce"></span>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse [animation-delay:-0.3s]"></span>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse [animation-delay:-0.15s]"></span>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-pulse"></span>
                                 </div>
                             </div>
                         </div>
