@@ -43,7 +43,7 @@ export const services: Service[] = [
     icon: ShieldCheck,
     pricing: {
       type: 'Project-Based',
-      amount: 'Starting at GH₵75,000'
+      amount: 'Starting at GH₵20,000'
     }
   },
   {
