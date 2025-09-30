@@ -24,6 +24,10 @@ export type Service = {
   shortDescription: string;
   description: string;
   icon: FC<LucideProps>;
+  pricing: {
+    type: string;
+    amount: string;
+  };
 };
 
 export type ContactRequest = {

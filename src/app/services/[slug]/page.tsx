@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation';
 import { services } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, DollarSign } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ServiceDetailPage({ params }: { params: { slug: string } }) {
   const service = services.find(s => s.slug === params.slug);
@@ -35,18 +35,39 @@ export default function ServiceDetailPage({ params }: { params: { slug: string }
                 <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl">{service.title}</h1>
             </div>
         </div>
-
-        <Card>
-            <CardContent className="p-8 text-lg text-muted-foreground space-y-6">
-                <p>{service.description}</p>
-            </CardContent>
-        </Card>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Service Description</CardTitle>
+                </CardHeader>
+                <CardContent className="text-lg text-muted-foreground space-y-6">
+                    <p>{service.description}</p>
+                </CardContent>
+            </Card>
+          </div>
+          <div>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-6 w-6" />
+                        Pricing
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-3xl font-bold">{service.pricing.amount}</p>
+                    <p className="text-sm text-muted-foreground">{service.pricing.type}</p>
+                </CardContent>
+             </Card>
+          </div>
+        </div>
         
         <div className="text-center py-8">
-             <h2 className="text-2xl font-bold mb-4">Ready to get started?</h2>
-             <p className="text-muted-foreground mb-6">Let's discuss how we can help your business.</p>
+             <h2 className="text-2xl font-bold mb-4">Ready to secure your business?</h2>
+             <p className="text-muted-foreground mb-6">Let's discuss how we can tailor our services to your needs.</p>
              <Button asChild size="lg">
-                <Link href="/contact">Get in Touch</Link>
+                <Link href="/contact">Get a Custom Quote</Link>
             </Button>
         </div>
 
