@@ -2,28 +2,29 @@
 'use client';
 
 import { notFound, useRouter } from 'next/navigation';
-import { getEbooks } from '@/lib/data';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { supabase } from '@/lib/supabase/client';
 import type { Ebook } from '@/lib/definitions';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { updateProduct } from '@/lib/actions';
 
-const FormSchema = z.object({
-  title: z.string().min(1, 'Title is required.'),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
-  price: z.coerce.number().min(0, 'Price must be a positive number.'),
-});
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
-type FormValues = z.infer<typeof FormSchema>;
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      Save Changes
+    </Button>
+  );
+}
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -31,14 +32,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const { toast } = useToast();
   const [product, setProduct] = useState<Ebook | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
-    resolver: zodResolver(FormSchema),
-  });
+  const initialState = { message: null, errors: {} };
+  const [state, dispatch] = useFormState(updateProduct, initialState);
 
   useEffect(() => {
     const fetchProduct = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('ebooks')
         .select('*')
@@ -58,15 +59,31 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             imageHint: ''
         };
         setProduct(ebook);
-        setValue('title', ebook.title);
-        setValue('description', ebook.description);
-        setValue('price', ebook.price);
       }
       setIsLoading(false);
     };
 
     fetchProduct();
-  }, [id, setValue]);
+  }, [id]);
+
+   useEffect(() => {
+    if (state?.message) {
+      if (Object.keys(state.errors ?? {}).length > 0) {
+        toast({
+          variant: 'destructive',
+          title: 'Update Failed',
+          description: state.message,
+        });
+      } else {
+        toast({
+          title: 'Success!',
+          description: state.message,
+        });
+        router.push('/admin/dashboard');
+      }
+    }
+  }, [state, toast, router]);
+
 
   if (isLoading) {
     return (
@@ -80,34 +97,6 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     notFound();
   }
 
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-    const { error } = await supabase
-      .from('ebooks')
-      .update({
-        title: data.title,
-        description: data.description,
-        price: data.price,
-      })
-      .eq('id', id);
-
-    if (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Update Failed',
-            description: `Could not update product: ${error.message}`
-        })
-    } else {
-        toast({
-            title: 'Success!',
-            description: 'Product updated successfully.'
-        })
-        router.push('/admin/dashboard');
-        router.refresh();
-    }
-    setIsSubmitting(false);
-  }
-
   return (
     <div className="flex-1 space-y-4">
       <h2 className="font-headline text-3xl font-bold tracking-tight">Edit Product</h2>
@@ -119,27 +108,30 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form ref={formRef} action={dispatch} className="space-y-6">
+            <input type="hidden" name="id" value={product.id} />
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
-              <Input id="title" {...register('title')} />
-              {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+              <Input id="title" name="title" defaultValue={product.title} />
+              {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" {...register('description')} rows={5} />
-              {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+              <Textarea id="description" name="description" defaultValue={product.description} rows={5} />
+              {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price</Label>
-              <Input id="price" type="number" step="0.01" {...register('price')} />
-              {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
+              <Input id="price" name="price" type="number" step="0.01" defaultValue={product.price} />
+              {state?.errors?.price && <p className="text-sm text-destructive">{state.errors.price[0]}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input id="category" name="category" defaultValue={product.category} />
+              {state?.errors?.category && <p className="text-sm text-destructive">{state.errors.category[0]}</p>}
             </div>
             
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save Changes
-            </Button>
+            <SubmitButton />
           </form>
         </CardContent>
       </Card>

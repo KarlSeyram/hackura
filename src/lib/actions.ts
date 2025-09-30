@@ -41,6 +41,14 @@ const productSchema = z.object({
     ),
 });
 
+const updateProductSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1, 'Title is required.'),
+  description: z.string().min(10, 'Description must be at least 10 characters.'),
+  price: z.coerce.number().min(0, 'Price must be a positive number.'),
+  category: z.string().min(1, 'Category is required.'),
+});
+
 
 const reviewSchema = z.object({
   ebookId: z.string(),
@@ -162,6 +170,51 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         errors: {},
     };
 }
+
+export async function updateProduct(prevState: any, formData: FormData) {
+  const supabase = createAdminClient();
+  const validatedFields = updateProductSchema.safeParse({
+    id: formData.get('id'),
+    title: formData.get('title'),
+    description: formData.get('description'),
+    price: formData.get('price'),
+    category: formData.get('category'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please correct the form errors.',
+    };
+  }
+
+  const { id, title, description, price, category } = validatedFields.data;
+
+  const { error } = await supabase
+    .from('ebooks')
+    .update({
+      title,
+      description,
+      price,
+      category,
+    })
+    .eq('id', id);
+
+  if (error) {
+    return { message: `Failed to update product: ${error.message}`, errors: {} };
+  }
+
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/store');
+  revalidatePath(`/products/${id}`);
+  revalidatePath('/');
+
+  return {
+    message: 'Product updated successfully!',
+    errors: {},
+  };
+}
+
 
 export async function submitReviewAction(prevState: any, formData: FormData) {
   const validatedFields = reviewSchema.safeParse({
