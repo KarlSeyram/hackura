@@ -11,9 +11,8 @@ export async function getEbooks(): Promise<Ebook[]> {
 
   if (error) {
     console.error("Error fetching ebooks from Supabase:", error.message);
-    // In production, you might want to throw a more user-friendly error or handle it gracefully.
-    // For debugging, throwing the actual error is helpful.
-    throw new Error(`Failed to fetch ebooks from the database. Supabase error: ${error.message}`);
+    // Return empty array on error to prevent site crash
+    return [];
   }
 
   // The data from supabase has image_url, but our Ebook type expects imageUrl.

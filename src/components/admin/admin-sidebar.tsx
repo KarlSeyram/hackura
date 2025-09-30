@@ -3,9 +3,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, UploadCloud, Inbox, Home } from 'lucide-react';
-
+import {
+  LayoutDashboard,
+  UploadCloud,
+  Inbox,
+  Home,
+  BookOpenCheck,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
 
 const adminNavItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,35 +31,39 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 flex-col border-r bg-background p-4">
-      <nav className="flex flex-col gap-2">
-        {adminNavItems.map(item => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-                isActive && 'bg-muted text-primary'
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
+    <>
+      <SidebarHeader>
+        <div className="flex items-center gap-2">
+          <BookOpenCheck className="h-6 w-6 text-primary" />
+          <span className="font-headline text-lg font-bold">CyberShelf</span>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {adminNavItems.map(item => {
+            const isActive = pathname === item.href;
+            return (
+              <SidebarMenuItem key={item.href}>
+                <Link href={item.href} legacyBehavior passHref>
+                  <SidebarMenuButton isActive={isActive} icon={<item.icon />}>
+                    {item.label}
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarSeparator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Link href="/" legacyBehavior passHref>
+              <SidebarMenuButton icon={<Home />}>Back to Site</SidebarMenuButton>
             </Link>
-          );
-        })}
-      </nav>
-      <div className="mt-auto flex flex-col gap-2">
-         <div className="my-4 h-px w-full bg-border" />
-         <Link
-            href="/"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <Home className="h-4 w-4" />
-            Back to Site
-          </Link>
-      </div>
-    </aside>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </>
   );
 }
