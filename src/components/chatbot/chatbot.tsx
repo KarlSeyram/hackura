@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bot, X, CornerDownLeft, Loader2 } from 'lucide-react';
+import { X, CornerDownLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -72,7 +72,20 @@ export function Chatbot() {
     <>
       <div className="fixed bottom-4 right-4 z-50">
         <Button onClick={() => setIsOpen(!isOpen)} size="icon" className="rounded-full w-14 h-14 shadow-lg">
-          {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}
+          {isOpen ? <X className="h-6 w-6" /> : (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+            >
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            </svg>
+          )}
         </Button>
       </div>
 
