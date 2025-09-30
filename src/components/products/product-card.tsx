@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <CardTitle className="font-headline text-lg mb-1">
           <Link href={`/products/${product.id}`}>{product.title}</Link>
         </CardTitle>
-        <CardDescription className="line-clamp-2 text-sm">{product.description}</CardDescription>
+        <CardDescription className="line-clamp-1 text-sm">{product.description}</CardDescription>
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4 pt-0">
         <div className="flex items-center gap-2">
