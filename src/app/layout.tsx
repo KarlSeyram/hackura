@@ -34,6 +34,7 @@ export default function RootLayout({
           </div>
           <Toaster />
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
