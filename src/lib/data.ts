@@ -43,7 +43,7 @@ export const services: Service[] = [
     icon: ShieldCheck,
     pricing: {
       type: 'Project-Based',
-      amount: 'Starting at $5,000'
+      amount: 'Starting at GH₵75,000'
     }
   },
   {
@@ -55,7 +55,7 @@ export const services: Service[] = [
     icon: LayoutGrid,
     pricing: {
       type: 'Hourly',
-      amount: '$250/hour'
+      amount: 'GH₵3,750/hour'
     }
   },
   {

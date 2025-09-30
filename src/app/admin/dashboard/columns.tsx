@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableRowActions } from './data-table-row-actions';
 import Image from 'next/image';
 
-const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'USD';
 
 export const columns: ColumnDef<Ebook>[] = [
   {
