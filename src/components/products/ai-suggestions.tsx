@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Ebook } from '@/lib/definitions';
 import { suggestEbooks } from '@/ai/flows/suggest-ebooks';
 import ProductCard from './product-card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AiSuggestionsProps {
   allEbooks: Ebook[];
@@ -90,11 +91,13 @@ export function AiSuggestions({ allEbooks }: AiSuggestionsProps) {
           {suggestions.length > 0 && (
             <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-4">Here are your recommendations:</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {suggestions.map(ebook => (
-                        <ProductCard key={ebook.id} product={ebook} />
-                    ))}
-                </div>
+                <ScrollArea className="h-[400px] pr-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {suggestions.map(ebook => (
+                            <ProductCard key={ebook.id} product={ebook} />
+                        ))}
+                    </div>
+                </ScrollArea>
             </div>
           )}
         </DialogContent>
