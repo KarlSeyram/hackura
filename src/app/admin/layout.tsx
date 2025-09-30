@@ -16,7 +16,7 @@ export default function AdminLayout({
         <AdminSidebar />
       </Sidebar>
       <SidebarInset>
-        <main className="flex-1 bg-muted/40 p-4 md:p-8">{children}</main>
+        <main className="flex-1 bg-muted/40 p-4 pt-16 md:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
