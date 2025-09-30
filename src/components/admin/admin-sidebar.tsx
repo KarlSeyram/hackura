@@ -45,7 +45,11 @@ export function AdminSidebar() {
             return (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} legacyBehavior passHref>
-                  <SidebarMenuButton isActive={isActive} icon={<item.icon />}>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    icon={<item.icon />}
+                    tooltip={item.label}
+                  >
                     {item.label}
                   </SidebarMenuButton>
                 </Link>
@@ -59,7 +63,9 @@ export function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/" legacyBehavior passHref>
-              <SidebarMenuButton icon={<Home />}>Back to Site</SidebarMenuButton>
+              <SidebarMenuButton icon={<Home />} tooltip="Back to Site">
+                Back to Site
+              </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
