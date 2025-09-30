@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import type { Ebook, Service, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
+import { Code, LayoutGrid, ShieldCheck, Siren } from 'lucide-react';
 
 export async function getEbooks(): Promise<Ebook[]> {
   const supabase = createAdminClient();
@@ -37,25 +38,25 @@ export const services: Service[] = [
     id: '1',
     title: 'Penetration Testing',
     description: 'We perform in-depth security assessments to identify and mitigate vulnerabilities in your web applications, mobile apps, and network infrastructure. Our certified experts simulate real-world attacks to provide actionable insights.',
-    icon: 'shield-check',
+    icon: ShieldCheck,
   },
   {
     id: '2',
     title: 'Security Architecture Review',
     description: 'Our team will review your system architecture, from cloud environments to on-premise solutions, ensuring that security is baked in from the ground up. We help you build resilient and secure systems.',
-    icon: 'layout-grid',
+    icon: LayoutGrid,
   },
   {
     id: '3',
     title: 'Incident Response Retainer',
     description: 'Be prepared for the worst. Our incident response team is on standby 24/7 to help you contain, eradicate, and recover from security breaches, minimizing damage and downtime.',
-    icon: 'siren',
+    icon: Siren,
   },
   {
     id: '4',
     title: 'Custom Tech Solutions',
     description: 'Beyond security, we build custom software and technology solutions to meet your business needs. From automation scripts to full-stack applications, our developers deliver high-quality code.',
-    icon: 'code',
+    icon: Code,
   },
 ];
 
@@ -66,8 +67,25 @@ const allReviews: Review[] = [
 ];
 
 export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
-    // In a real app, this would fetch from a database.
-    return allReviews.filter(review => review.ebookId === ebookId);
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+        .from('reviews')
+        .select('id, ebook_id, reviewer_name, rating, comment')
+        .eq('ebook_id', ebookId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching reviews:', error);
+        return [];
+    }
+
+    return data.map(r => ({
+        id: r.id,
+        ebookId: r.ebook_id,
+        reviewer: r.reviewer_name,
+        rating: r.rating,
+        comment: r.comment,
+    }));
 }
 
 export async function submitReview(ebookId: string, rating: number, comment: string, reviewer: string) {

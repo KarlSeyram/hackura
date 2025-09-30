@@ -1,4 +1,6 @@
-import type { LucideIcon } from 'lucide-react';
+
+import type { LucideProps } from 'lucide-react';
+import type { FC } from 'react';
 
 export type Ebook = {
   id: string;
@@ -19,7 +21,7 @@ export type Service = {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: FC<LucideProps>;
 };
 
 export type ContactRequest = {
