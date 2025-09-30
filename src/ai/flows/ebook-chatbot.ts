@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A chatbot assistant for the CyberShelf ebook store.
+ * @fileOverview A chatbot assistant for the Hackura ebook store.
  *
  * - askAssistant - A function that provides answers and recommends ebooks.
  * - ChatbotInput - The input type for the chatbot function.
@@ -40,7 +40,7 @@ const ebookChatbotPrompt = ai.definePrompt({
   name: 'ebookChatbotPrompt',
   input: {schema: ChatbotInputSchema},
   output: {schema: ChatbotOutputSchema},
-  prompt: `You are a friendly and knowledgeable chatbot assistant for an online ebook store called "CyberShelf". Your purpose is to help users with their cybersecurity-related questions and recommend relevant ebooks from the store's catalog.
+  prompt: `You are a friendly and knowledgeable chatbot assistant for an online ebook store called "Hackura". Your purpose is to help users with their cybersecurity-related questions and recommend relevant ebooks from the store's catalog.
 
 You will be given the user's query and a list of available ebooks in JSON format.
 

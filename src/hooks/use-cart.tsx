@@ -23,7 +23,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setIsClient(true);
-    const storedCart = localStorage.getItem('cybershelf-cart');
+    const storedCart = localStorage.getItem('hackura-cart');
     if (storedCart) {
       setCartItems(JSON.parse(storedCart));
     }
@@ -31,7 +31,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if(isClient) {
-      localStorage.setItem('cybershelf-cart', JSON.stringify(cartItems));
+      localStorage.setItem('hackura-cart', JSON.stringify(cartItems));
     }
   }, [cartItems, isClient]);
 

@@ -97,7 +97,7 @@ export function Chatbot() {
       {isOpen && (
         <Card className="fixed bottom-20 right-4 z-50 w-full max-w-sm shadow-2xl flex flex-col h-[70vh]">
             <CardHeader className="flex flex-row items-center justify-between border-b">
-                <CardTitle className="text-lg">CyberShelf Assistant</CardTitle>
+                <CardTitle className="text-lg">Hackura Assistant</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-6 w-6">
                     <X className="h-4 w-4" />
                 </Button>

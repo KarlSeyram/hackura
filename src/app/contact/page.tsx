@@ -75,10 +75,10 @@ export default function ContactPage() {
               <p className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary" />
                 <a
-                  href="mailto:cybershelf@gmail.com"
+                  href="mailto:hackura@gmail.com"
                   className="hover:text-primary transition-colors"
                 >
-                  cybershelf@gmail.com
+                  hackura@gmail.com
                 </a>
               </p>
               <p className="flex items-center gap-3">

@@ -41,7 +41,7 @@ const suggestEbooksPrompt = ai.definePrompt({
   name: 'suggestEbooksPrompt',
   input: {schema: SuggestEbooksInputSchema},
   output: {schema: SuggestEbooksOutputSchema},
-  prompt: `You are an expert ebook recommender for an online store called CyberShelf. Your goal is to help users find the perfect ebook based on their interests.
+  prompt: `You are an expert ebook recommender for an online store called Hackura. Your goal is to help users find the perfect ebook based on their interests.
 
 You will be given the user's interest and a list of available ebooks in JSON format.
 

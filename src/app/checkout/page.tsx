@@ -72,7 +72,7 @@ export default function CheckoutPage() {
     email,
     amount: Math.round(totalPrice * 100),
     currency: paystackCurrency,
-    reference: `cybershelf_${new Date().getTime()}`,
+    reference: `hackura_${new Date().getTime()}`,
     metadata: {
       name,
       // Pass cart items to the webhook as a JSON string
