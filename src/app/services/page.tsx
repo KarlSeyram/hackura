@@ -22,24 +22,25 @@ export default function ServicesPage() {
           {services.map((service) => {
             const IconComponent = service.icon;
             return (
-              <Card 
-                key={service.id} 
-                className="group p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg"
-              >
-                <div className="flex items-start gap-6">
-                   <div className="rounded-lg bg-muted p-3 text-primary transition-colors duration-300 group-hover:bg-primary/10">
-                     <IconComponent className="h-8 w-8" />
-                   </div>
-                   <div className="flex-1">
-                      <CardHeader className="p-0">
-                        <CardTitle className="font-headline text-2xl">{service.title}</CardTitle>
-                      </CardHeader>
-                      <CardDescription className="mt-2 text-base">
-                        {service.description}
-                      </CardDescription>
-                   </div>
-                </div>
-              </Card>
+              <Link key={service.id} href={`/services/${service.slug}`} className="group block">
+                <Card 
+                  className="p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg"
+                >
+                  <div className="flex items-start gap-6">
+                    <div className="rounded-lg bg-muted p-3 text-primary transition-colors duration-300 group-hover:bg-primary/10">
+                      <IconComponent className="h-8 w-8" />
+                    </div>
+                    <div className="flex-1">
+                        <CardHeader className="p-0">
+                          <CardTitle className="font-headline text-2xl">{service.title}</CardTitle>
+                        </CardHeader>
+                        <CardDescription className="mt-2 text-base">
+                          {service.shortDescription}
+                        </CardDescription>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
             );
           })}
         </div>

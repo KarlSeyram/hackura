@@ -36,25 +36,33 @@ export async function getEbooks(): Promise<Ebook[]> {
 export const services: Service[] = [
   {
     id: '1',
+    slug: 'penetration-testing',
     title: 'Penetration Testing',
+    shortDescription: 'Simulating real-world attacks to identify and mitigate vulnerabilities in your applications and network.',
     description: 'We perform in-depth security assessments to identify and mitigate vulnerabilities in your web applications, mobile apps, and network infrastructure. Our certified experts simulate real-world attacks to provide actionable insights.',
     icon: ShieldCheck,
   },
   {
     id: '2',
+    slug: 'security-architecture',
     title: 'Security Architecture Review',
+    shortDescription: 'Ensuring security is baked into your systems from the ground up, from cloud to on-premise.',
     description: 'Our team will review your system architecture, from cloud environments to on-premise solutions, ensuring that security is baked in from the ground up. We help you build resilient and secure systems.',
     icon: LayoutGrid,
   },
   {
     id: '3',
+    slug: 'incident-response',
     title: 'Incident Response Retainer',
+    shortDescription: 'Our team is on standby 24/7 to help you contain, eradicate, and recover from security breaches.',
     description: 'Be prepared for the worst. Our incident response team is on standby 24/7 to help you contain, eradicate, and recover from security breaches, minimizing damage and downtime.',
     icon: Siren,
   },
   {
     id: '4',
+    slug: 'custom-tech-solutions',
     title: 'Custom Tech Solutions',
+    shortDescription: 'Building custom software and technology solutions to meet your specific business needs.',
     description: 'Beyond security, we build custom software and technology solutions to meet your business needs. From automation scripts to full-stack applications, our developers deliver high-quality code.',
     icon: Code,
   },

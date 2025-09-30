@@ -19,7 +19,9 @@ export type CartItem = Ebook & {
 
 export type Service = {
   id: string;
+  slug: string;
   title: string;
+  shortDescription: string;
   description: string;
   icon: FC<LucideProps>;
 };
