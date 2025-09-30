@@ -7,9 +7,8 @@ import { CartIcon } from '@/components/cart/cart-icon';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/store', label: 'Store' },
-  { href: '/ai-suggestions', label: 'AI Suggestions' },
   { href: '/services', label: 'Services' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/contact', 'label': 'Contact' },
 ];
 
 export default function Header() {
