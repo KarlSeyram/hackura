@@ -13,35 +13,34 @@ const contactSchema = z.object({
   message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
 });
 
-const fileSchema = z.custom<FileList>(val => val instanceof FileList, 'Please select a file.')
-  .refine(files => files.length > 0, 'File is required.');
-
-const imageSchema = fileSchema
-  .refine(files => files?.[0]?.size > 0, 'File is required.')
-  .refine(files => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
-  .refine(
-    files => ["image/jpeg", "image/png", "image/webp"].includes(files?.[0]?.type),
-    "Only .jpg, .png, and .webp formats are supported."
-  );
-  
-const ebookFileSchema = fileSchema
- .refine(files => files?.[0]?.size > 0, 'File is required.')
-  .refine(files => files?.[0]?.size <= 25 * 1024 * 1024, `Max file size is 25MB.`)
-  .refine(
-    files => ["application/pdf", "application/epub+zip"].includes(files?.[0]?.type),
-    "Only .pdf and .epub formats are supported."
-  );
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const ACCEPTED_FILE_TYPES = ["application/pdf", "application/epub+zip"];
 
 const productSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
-  description: z.string().min(1, 'Description is required.'),
-  price: z.preprocess(
-    val => (val === '' ? undefined : Number(val)),
-    z.number().min(0, 'Price must be a positive number.')
-  ),
-  image: imageSchema,
-  file: ebookFileSchema,
+  description: z.string().min(10, 'Description must be at least 10 characters.'),
+  price: z.coerce.number().min(0, 'Price must be a positive number.'),
+  category: z.string().min(1, 'Category is required.'),
+  image: z
+    .any()
+    .refine((file) => file?.size > 0, 'Cover image is required.')
+    .refine((file) => file?.size <= MAX_IMAGE_SIZE, `Max image size is 5MB.`)
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file?.type),
+      "Only .jpg, .png, and .webp formats are supported."
+    ),
+  file: z
+    .any()
+    .refine((file) => file?.size > 0, 'Ebook file is required.')
+    .refine((file) => file?.size <= MAX_FILE_SIZE, `Max file size is 25MB.`)
+    .refine(
+      (file) => ACCEPTED_FILE_TYPES.includes(file?.type),
+      "Only .pdf and .epub formats are supported."
+    ),
 });
+
 
 const reviewSchema = z.object({
   ebookId: z.string(),
@@ -99,6 +98,7 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         title: formData.get('title'),
         description: formData.get('description'),
         price: formData.get('price'),
+        category: formData.get('category'),
         image: formData.get('image'),
         file: formData.get('file'),
     });
@@ -110,17 +110,13 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         };
     }
 
-    const { title, description, price, image, file } = validatedFields.data;
+    const { title, description, price, category, image, file } = validatedFields.data;
     
-    // The image from the form is a FileList, get the first file
-    const imageFile = image[0];
-    const ebookFile = file[0];
-
     // 1. Upload cover image
-    const imageFileName = `${Date.now()}-${imageFile.name}`;
+    const imageFileName = `${Date.now()}-${image.name}`;
     const { error: imageError, data: imageData } = await supabase.storage
         .from('ebook-covers')
-        .upload(imageFileName, imageFile);
+        .upload(imageFileName, image);
 
     if (imageError || !imageData) {
         return { message: `Failed to upload cover image: ${imageError?.message}`, errors: {} };
@@ -129,10 +125,10 @@ export async function uploadProduct(prevState: any, formData: FormData) {
 
 
     // 2. Upload ebook file
-    const ebookFileName = `${Date.now()}-${ebookFile.name}`;
+    const ebookFileName = `${Date.now()}-${file.name}`;
     const { error: fileError } = await supabase.storage
         .from('ebook-files')
-        .upload(ebookFileName, ebookFile);
+        .upload(ebookFileName, file);
     
     if (fileError) {
         // Clean up uploaded image if file upload fails
@@ -145,6 +141,7 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         title,
         description,
         price,
+        category,
         image_url: imageUrl,
         file_name: ebookFileName,
     });
@@ -158,6 +155,7 @@ export async function uploadProduct(prevState: any, formData: FormData) {
 
     revalidatePath('/admin/dashboard');
     revalidatePath('/store');
+    revalidatePath('/');
 
     return {
         message: 'Product uploaded successfully!',
