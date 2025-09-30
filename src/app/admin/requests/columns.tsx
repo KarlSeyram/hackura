@@ -34,19 +34,25 @@ export const columns: ColumnDef<ContactRequest>[] = [
     accessorKey: 'email',
     header: 'Email',
   },
+    {
+    accessorKey: 'service',
+    header: 'Service',
+  },
   {
     accessorKey: 'message',
     header: 'Message',
     cell: ({ row }) => {
         const message = row.original.message;
-        return <p className="truncate max-w-md">{message}</p>
+        return <p className="truncate max-w-sm">{message}</p>
     }
   },
   {
     accessorKey: 'submittedAt',
-    header: 'Submitted At',
+    header: () => <div className="text-right">Submitted At</div>,
     cell: ({ row }) => {
-        return <span>{format(new Date(row.original.submittedAt), 'PPp')}</span>
+        const date = new Date(row.getValue('submittedAt'));
+        const formatted = format(date, 'PPp');
+        return <div className="text-right font-medium">{formatted}</div>;
     }
   },
 ];

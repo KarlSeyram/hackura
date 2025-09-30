@@ -141,8 +141,25 @@ export async function submitContactRequest(prevState: any, formData: FormData) {
     };
   }
 
-  // In a real application, you would save this to a database.
-  console.log('New contact request:', validatedFields.data);
+  const supabase = createAdminClient();
+  const { name, email, service, message } = validatedFields.data;
+
+  const { error } = await supabase.from('contact_requests').insert({
+    name,
+    email,
+    service: service || null,
+    message,
+  });
+
+  if (error) {
+    console.error('Error inserting contact request:', error);
+    return {
+      errors: {},
+      message: 'There was an error submitting your request. Please try again.',
+    };
+  }
+
+  revalidatePath('/admin/requests');
 
   return {
     message: 'Thank you for your message! We will get back to you soon.',

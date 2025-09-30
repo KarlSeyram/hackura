@@ -1,6 +1,6 @@
 
 import 'dotenv/config';
-import type { Ebook, Service, ContactRequest, Review } from './definitions';
+import type { Ebook, Service, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks(): Promise<Ebook[]> {
@@ -58,8 +58,6 @@ export const services: Service[] = [
     icon: 'code',
   },
 ];
-
-export const contactRequests: ContactRequest[] = [];
 
 const allReviews: Review[] = [
     { id: '1', ebookId: '1', reviewer: 'Alice', rating: 5, comment: 'This book was a game-changer! Highly recommended for anyone serious about ethical hacking.' },
