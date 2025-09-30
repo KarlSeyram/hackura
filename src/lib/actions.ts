@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -221,4 +220,39 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         message: 'Product uploaded successfully!',
         errors: {},
     };
+}
+
+const reviewSchema = z.object({
+  ebookId: z.string(),
+  rating: z.coerce.number().min(1).max(5),
+  comment: z.string().min(10, 'Comment must be at least 10 characters.'),
+  reviewer: z.string().min(2, 'Name must be at least 2 characters.'),
+});
+
+export async function submitReviewAction(prevState: any, formData: FormData) {
+  const validatedFields = reviewSchema.safeParse({
+    ebookId: formData.get('ebookId'),
+    rating: formData.get('rating'),
+    comment: formData.get('comment'),
+    reviewer: formData.get('reviewer'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please correct the errors and try again.',
+    };
+  }
+  
+  const { ebookId, rating, comment, reviewer } = validatedFields.data;
+
+  // In a real app, you would save this to a database.
+  console.log('New review submitted:', { ebookId, rating, comment, reviewer });
+  
+  revalidatePath(`/products/${ebookId}`);
+
+  return {
+    message: 'Thank you for your review!',
+    errors: {},
+  };
 }

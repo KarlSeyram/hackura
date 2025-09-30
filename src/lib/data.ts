@@ -1,6 +1,5 @@
-
 import 'dotenv/config';
-import type { Ebook, Service, ContactRequest } from './definitions';
+import type { Ebook, Service, ContactRequest, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks(): Promise<Ebook[]> {
@@ -84,6 +83,27 @@ export const contactRequests: ContactRequest[] = [
     },
 ];
 
+const allReviews: Review[] = [
+    { id: '1', ebookId: '1', reviewer: 'Alice', rating: 5, comment: 'This book was a game-changer! Highly recommended for anyone serious about ethical hacking.' },
+    { id: '2', ebookId: '1', reviewer: 'Bob', rating: 4, comment: 'Great content, but a bit dense in some chapters. Overall, a valuable resource.' },
+    { id: '3', ebookId: '2', reviewer: 'Charlie', rating: 5, comment: 'The best guide on network security I have ever read. Clear, concise, and practical.' },
+];
 
+export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
+    // In a real app, this would fetch from a database.
+    return allReviews.filter(review => review.ebookId === ebookId);
+}
 
-
+export async function submitReview(ebookId: string, rating: number, comment: string, reviewer: string) {
+    // In a real app, you would save this to a database.
+    console.log('New review submitted:', { ebookId, rating, comment, reviewer });
+    const newReview: Review = {
+        id: String(allReviews.length + 1),
+        ebookId,
+        reviewer,
+        rating,
+        comment,
+    };
+    allReviews.push(newReview); // For demonstration purposes
+    return { success: true, message: 'Thank you for your review!' };
+}

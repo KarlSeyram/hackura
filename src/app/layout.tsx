@@ -5,6 +5,7 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { CartProvider } from '@/hooks/use-cart';
 import { Analytics } from "@vercel/analytics/next"
+import { Chatbot } from '@/components/chatbot/chatbot';
 
 export const metadata: Metadata = {
   title: 'CyberShelf',
@@ -33,6 +34,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <Toaster />
+          <Chatbot />
         </CartProvider>
         <Analytics />
       </body>

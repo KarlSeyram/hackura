@@ -3,6 +3,7 @@ import { getEbooks } from '@/lib/data';
 import type { Ebook } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { HomeClient } from './home-client';
 
 export default async function Home() {
   const ebooks = await getEbooks();
@@ -24,7 +25,9 @@ export default async function Home() {
         </div>
       </section>
 
-      <section>
+      <HomeClient allEbooks={ebooks} featuredEbooks={featuredEbooks} />
+
+      <section className="mt-16">
         <h2 className="font-headline text-3xl font-bold tracking-tight mb-8">
           Featured Ebooks
         </h2>

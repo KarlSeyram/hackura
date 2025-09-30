@@ -1,4 +1,3 @@
-
 import type { LucideIcon } from 'lucide-react';
 
 export type Ebook = {
@@ -24,7 +23,7 @@ export type Service = {
 };
 
 export type ContactRequest = {
-  id: string;
+  id:string;
   name: string;
   email: string;
   service?: string;
@@ -47,4 +46,16 @@ export type Purchase = {
   payment_ref: string;
 };
 
+export type Review = {
+    id: string;
+    ebookId: string;
+    reviewer: string;
+    rating: number;
+    comment: string;
+};
 
+export type QuizQuestion = {
+  id: string;
+  text: string;
+  options: { id: string; text: string }[];
+};

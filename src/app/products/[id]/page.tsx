@@ -1,15 +1,16 @@
-
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { getEbooks } from '@/lib/data';
+import { getEbooks, getReviewsForEbook, submitReview } from '@/lib/data';
 import { ProductClient } from './product-client';
+import { Star, MessageCircle } from 'lucide-react';
+import { ReviewForm } from './review-form';
+import { Separator } from '@/components/ui/separator';
 
 async function getProduct(id: string) {
     const ebooks = await getEbooks();
     const product = ebooks.find(p => p.id.toString() === id);
     return product;
 }
-
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -19,6 +20,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
     notFound();
   }
   
+  const reviews = await getReviewsForEbook(id);
+
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
@@ -29,7 +32,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   return (
     <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-        <div className="relative aspect-[3/4] w-full max-w-md mx-auto overflow-hidden rounded-lg shadow-lg">
+        <div className="relative aspect-square w-full max-w-md mx-auto overflow-hidden rounded-lg shadow-lg">
           <Image
             src={product.imageUrl}
             alt={product.title}
@@ -44,12 +47,61 @@ export default async function ProductPage({ params }: { params: { id: string } }
             {product.title}
           </h1>
           <p className="mt-4 text-3xl font-bold">{formattedPrice}</p>
+          <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`h-4 w-4 ${i < 4 ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground'}`} />
+                ))}
+              </div>
+              <span>({reviews.length} reviews)</span>
+          </div>
           <p className="mt-6 text-base text-muted-foreground">
             {product.description}
           </p>
           
           <ProductClient product={product} />
 
+        </div>
+      </div>
+       <Separator className="my-12" />
+
+      <div className="grid md:grid-cols-2 gap-12">
+        <div>
+          <h2 className="font-headline text-2xl font-bold mb-6">Customer Reviews</h2>
+          <div className="space-y-8">
+             {reviews.length > 0 ? (
+                reviews.map(review => (
+                  <div key={review.id} className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold">
+                        {review.reviewer.charAt(0)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{review.reviewer}</p>
+                        <div className="flex items-center">
+                           {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground'}`} />
+                           ))}
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground mt-2">{review.comment}</p>
+                    </div>
+                  </div>
+                ))
+            ) : (
+                <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/50 p-8 rounded-lg">
+                    <MessageCircle className="h-10 w-10 mb-4" />
+                    <p className="font-medium">No reviews yet.</p>
+                    <p className="text-sm">Be the first to share your thoughts!</p>
+                </div>
+            )}
+          </div>
+        </div>
+        <div>
+            <h2 className="font-headline text-2xl font-bold mb-6">Write a Review</h2>
+            <ReviewForm ebookId={product.id} />
         </div>
       </div>
     </div>
