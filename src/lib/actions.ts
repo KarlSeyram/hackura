@@ -6,88 +6,6 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { CartItem } from '@/lib/definitions';
 
-// This function creates secure, time-limited download links for purchased ebooks.
-export async function createSignedDownloads(cartItems: CartItem[], paymentReference: string) {
-  const supabase = createAdminClient();
-
-  // Use Promise.all to generate all signed URLs in parallel.
-  const productsWithDownloads = await Promise.all(
-    cartItems.map(async (item) => {
-      // We need to fetch the file_name from the database using the product id
-      const { data: ebookData, error: dbError } = await supabase
-        .from('ebooks')
-        .select('file_name')
-        .eq('id', item.id)
-        .single();
-      
-      if (dbError || !ebookData || !ebookData.file_name) {
-        console.error(`Error fetching ebook data for ${item.title} (ID: ${item.id}):`, dbError);
-        return null;
-      }
-
-      const { data, error } = await supabase.storage
-        .from('ebook-files')
-        .createSignedUrl(ebookData.file_name, 60 * 60 * 24); // Link expires in 24 hours
-
-      if (error) {
-        console.error(`Error creating signed URL for ${item.title} (File: ${ebookData.file_name}):`, error);
-        return null;
-      }
-      
-      return { ebook_id: item.id, download_url: data.signedUrl, payment_ref: paymentReference };
-    })
-  );
-
-  const validLinks = productsWithDownloads.filter(item => item !== null);
-
-  if (validLinks.length > 0) {
-      const { error: insertError } = await supabase
-        .from('purchase_links')
-        .insert(validLinks as any);
-
-      if (insertError) {
-          console.error('Error inserting purchase links:', insertError);
-          return [];
-      }
-  }
-  
-  return validLinks;
-}
-
-
-export async function getDownloadLinks() {
-    const supabase = createAdminClient();
-
-    const { data: downloads, error } = await supabase
-        .from('ebooks')
-        .select('title, file_name');
-    
-    if (error) {
-        console.error('Error fetching download links:', error);
-        throw new Error('Could not fetch download links.');
-    }
-    
-    const links = downloads.map(file => ({
-        title: file.title,
-        file_url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${file.file_name}`
-    }));
-
-    return { success: true, links };
-}
-
-export async function clearPurchaseData(paymentRef: string) {
-    const supabase = createAdminClient();
-    
-    const { error } = await supabase
-        .from('purchase_links')
-        .delete()
-        .eq('payment_ref', paymentRef);
-
-    if (error) {
-        console.error('Error cleaning up purchase data:', error);
-    }
-}
-
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -123,6 +41,13 @@ const productSchema = z.object({
   ),
   image: imageSchema,
   file: ebookFileSchema,
+});
+
+const reviewSchema = z.object({
+  ebookId: z.string(),
+  rating: z.coerce.number().min(1, 'A rating is required.').max(5),
+  comment: z.string().min(10, 'Comment must be at least 10 characters.'),
+  reviewer: z.string().min(2, 'Name must be at least 2 characters.'),
 });
 
 
@@ -240,13 +165,6 @@ export async function uploadProduct(prevState: any, formData: FormData) {
     };
 }
 
-const reviewSchema = z.object({
-  ebookId: z.string(),
-  rating: z.coerce.number().min(1).max(5),
-  comment: z.string().min(10, 'Comment must be at least 10 characters.'),
-  reviewer: z.string().min(2, 'Name must be at least 2 characters.'),
-});
-
 export async function submitReviewAction(prevState: any, formData: FormData) {
   const validatedFields = reviewSchema.safeParse({
     ebookId: formData.get('ebookId'),
@@ -263,9 +181,21 @@ export async function submitReviewAction(prevState: any, formData: FormData) {
   }
   
   const { ebookId, rating, comment, reviewer } = validatedFields.data;
+  const supabase = createAdminClient();
+  const { error } = await supabase.from('reviews').insert({
+    ebook_id: ebookId,
+    rating,
+    comment,
+    reviewer_name: reviewer,
+  });
 
-  // In a real app, you would save this to a database.
-  console.log('New review submitted:', { ebookId, rating, comment, reviewer });
+  if (error) {
+    console.error('Error inserting review:', error);
+    return {
+      message: 'Sorry, there was an error submitting your review.',
+      errors: {},
+    };
+  }
   
   revalidatePath(`/products/${ebookId}`);
 
