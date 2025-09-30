@@ -1,14 +1,15 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Ebook, QuizQuestion } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { gradeQuiz } from '@/ai/flows/quiz-grader';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import ProductCard from '@/components/products/product-card';
 
 interface QuizClientProps {
@@ -17,6 +18,8 @@ interface QuizClientProps {
 }
 
 export function QuizClient({ allEbooks, questions }: QuizClientProps) {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [result, setResult] = useState<{ specialty: string; reasoning: string; suggestedEbookIds: string[] } | null>(null);
@@ -65,11 +68,23 @@ export function QuizClient({ allEbooks, questions }: QuizClientProps) {
         setCurrentQuestionIndex(0);
         setResult(null);
         setError(null);
+        startTransition(() => {
+            router.refresh();
+        });
     }
 
     const currentQuestion = questions[currentQuestionIndex];
     const isLastQuestion = currentQuestionIndex === questions.length - 1;
     const allQuestionsAnswered = Object.keys(answers).length === questions.length;
+
+     if (isPending) {
+        return (
+            <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Generating a new quiz...</p>
+            </div>
+        )
+    }
 
     if (isLoading) {
         return (
@@ -108,7 +123,10 @@ export function QuizClient({ allEbooks, questions }: QuizClientProps) {
                             </div>
                         </div>
                     )}
-                    <Button onClick={handleRetake} variant="outline" className="mt-8">Retake Quiz</Button>
+                    <Button onClick={handleRetake} variant="outline" className="mt-8">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Take Another Quiz
+                    </Button>
                 </CardContent>
             </Card>
         )
