@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AiSuggestions } from '@/components/products/ai-suggestions';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -68,6 +69,7 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
                 />
             </div>
             <div className="flex gap-4">
+                <AiSuggestions allEbooks={initialEbooks} />
                 <Select onValueChange={setSelectedCategory} defaultValue="all">
                     <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Filter by category" />
