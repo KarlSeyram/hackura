@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import type { Ebook, Service, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
-import { Code, LayoutGrid, ShieldCheck, Siren } from 'lucide-react';
+import { Code, LayoutGrid, ShieldCheck, Siren, FileText, ShieldAlert, Palette } from 'lucide-react';
 
 export async function getEbooks(): Promise<Ebook[]> {
   const supabase = createAdminClient();
@@ -80,6 +80,42 @@ export const services: Service[] = [
     pricing: {
       type: 'Project-Based',
       amount: 'Varies based on scope'
+    }
+  },
+   {
+    id: '5',
+    slug: 'academic-research-assistance',
+    title: 'Insightful Minds Research Hub',
+    shortDescription: 'Expert research and assignment assistance to help you excel academically, from basic inquiries to advanced projects.',
+    description: 'Struggling with a tough assignment? Our research experts provide comprehensive support, from topic brainstorming and literature reviews to data analysis and final write-ups. We offer tailored assistance to ensure your work is well-researched and high-quality.',
+    icon: FileText,
+    pricing: {
+      type: 'Tiered Flat Rate',
+      amount: 'GH₵100 for Basic, Custom quotes for Advanced'
+    }
+  },
+  {
+    id: '6',
+    slug: 'basic-web-pentesting',
+    title: 'Basic Web Pentesting',
+    shortDescription: 'A focused security check-up for your website to find and fix common vulnerabilities quickly and affordably.',
+    description: 'Get a quick and affordable security health check for your website. Our basic web pentesting service focuses on identifying the most common and critical vulnerabilities, such as SQL injection and XSS, providing you with a clear report to secure your online presence.',
+    icon: ShieldAlert,
+    pricing: {
+      type: 'Flat Fee',
+      amount: 'GH₵500'
+    }
+  },
+  {
+    id: '7',
+    slug: 'graphic-design',
+    title: 'Graphic Designing',
+    shortDescription: 'Creative and professional graphic design services to bring your brand and ideas to life, from logos to marketing materials.',
+    description: 'Elevate your brand with stunning visuals. We offer a full range of graphic design services, including logo design, branding packages, marketing materials, social media graphics, and more. Our creative team works with you to bring your vision to life.',
+    icon: Palette,
+    pricing: {
+      type: 'Negotiable',
+      amount: 'Contact for a custom quote'
     }
   },
 ];
