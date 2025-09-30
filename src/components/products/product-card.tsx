@@ -26,7 +26,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
       <CardHeader className="p-0">
         <Link href={`/products/${product.id}`} className="block">
-          <div className="relative aspect-[3/4] w-full">
+          <div className="relative aspect-square w-full">
             <Image
               src={product.imageUrl}
               alt={product.title}
@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <CardTitle className="font-headline text-lg mb-1">
           <Link href={`/products/${product.id}`}>{product.title}</Link>
         </CardTitle>
-        <CardDescription className="line-clamp-3 text-sm">{product.description}</CardDescription>
+        <CardDescription className="line-clamp-2 text-sm">{product.description}</CardDescription>
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4 pt-0">
         <div className="flex items-center gap-2">
