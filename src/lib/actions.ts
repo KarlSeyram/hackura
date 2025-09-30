@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -255,4 +256,60 @@ export async function submitReviewAction(prevState: any, formData: FormData) {
     message: 'Thank you for your review!',
     errors: {},
   };
+}
+
+export async function deleteProduct(productId: string): Promise<{ success: boolean; message: string; }> {
+  const supabase = createAdminClient();
+
+  // 1. Get the product details to find file names
+  const { data: product, error: fetchError } = await supabase
+    .from('ebooks')
+    .select('image_url, file_name')
+    .eq('id', productId)
+    .single();
+
+  if (fetchError || !product) {
+    console.error('Error fetching product for deletion:', fetchError);
+    return { success: false, message: 'Product not found.' };
+  }
+  
+  const { image_url, file_name } = product;
+  const imageFileName = image_url?.split('/').pop();
+  
+  // 2. Delete from database
+  const { error: dbError } = await supabase
+    .from('ebooks')
+    .delete()
+    .eq('id', productId);
+  
+  if (dbError) {
+    console.error('Error deleting product from database:', dbError);
+    return { success: false, message: 'Failed to delete product from database.' };
+  }
+
+  // 3. Delete files from storage (continue even if one fails)
+  if (imageFileName) {
+      const { error: imageError } = await supabase.storage
+      .from('ebook-covers')
+      .remove([imageFileName]);
+      if (imageError) {
+          console.warn('Failed to delete cover image:', imageError.message);
+      }
+  }
+
+  if (file_name) {
+      const { error: fileError } = await supabase.storage
+      .from('ebook-files')
+      .remove([file_name]);
+      if (fileError) {
+          console.warn('Failed to delete ebook file:', fileError.message);
+      }
+  }
+
+  // 4. Revalidate paths to update the cache
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/store');
+  revalidatePath('/');
+
+  return { success: true, message: 'Product deleted successfully.' };
 }
