@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Settings, FileQuestion } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -71,12 +71,6 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
                 />
             </div>
             <div className="flex gap-4">
-                <Button variant="outline" asChild>
-                    <Link href="/quizzes">
-                        <FileQuestion className="mr-2 h-4 w-4" />
-                        Take a Quiz
-                    </Link>
-                </Button>
                 <Button variant="outline" asChild>
                     <Link href="/ai-suggestions">
                         <Settings className="mr-2 h-4 w-4" />
