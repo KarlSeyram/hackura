@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { getEbooks, getReviewsForEbook, submitReview } from '@/lib/data';
@@ -5,11 +6,53 @@ import { ProductClient } from './product-client';
 import { Star, MessageCircle } from 'lucide-react';
 import { ReviewForm } from './review-form';
 import { Separator } from '@/components/ui/separator';
+import type { Metadata } from 'next';
 
 async function getProduct(id: string) {
     const ebooks = await getEbooks();
     const product = ebooks.find(p => p.id.toString() === id);
     return product;
+}
+
+type Props = {
+  params: { id: string }
+}
+
+export async function generateMetadata(
+  { params }: Props
+): Promise<Metadata> {
+  const product = await getProduct(params.id);
+
+  if (!product) {
+    return {
+      title: 'Product Not Found',
+      description: 'The product you are looking for does not exist.',
+    }
+  }
+
+  return {
+    title: product.title,
+    description: product.description,
+    openGraph: {
+      title: product.title,
+      description: product.description,
+      images: [
+        {
+          url: product.imageUrl,
+          width: 800,
+          height: 800,
+          alt: product.title,
+        },
+      ],
+      type: 'website',
+    },
+     twitter: {
+      card: 'summary_large_image',
+      title: product.title,
+      description: product.description,
+      images: [product.imageUrl],
+    },
+  }
 }
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
