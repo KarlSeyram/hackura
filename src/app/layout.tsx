@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/hooks/use-cart';
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Chatbot } from '@/components/chatbot/chatbot';
 import { LayoutClient } from './layout-client';
 
@@ -35,6 +36,7 @@ export default function RootLayout({
           <Chatbot />
         </CartProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
