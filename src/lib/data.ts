@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import type { Ebook, Service, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
-import { Code, LayoutGrid, ShieldCheck, Siren, FileText, ShieldAlert, Palette } from 'lucide-react';
+import { Code, LayoutGrid, ShieldCheck, Siren, FileText, ShieldAlert, Palette, Globe } from 'lucide-react';
 
 export async function getEbooks(): Promise<Ebook[]> {
   const supabase = createAdminClient();
@@ -118,6 +118,18 @@ export const services: Service[] = [
       amount: 'Contact for a custom quote'
     }
   },
+  {
+    id: '8',
+    slug: 'website-development',
+    title: 'Website Development',
+    shortDescription: 'Professional website design and development to establish your online presence.',
+    description: 'From simple landing pages to complex e-commerce sites, we build beautiful, fast, and responsive websites that meet your business goals. Our development process is focused on quality, performance, and user experience.',
+    icon: Globe,
+    pricing: {
+        type: 'Project-Based',
+        amount: 'Starting at GH₵1,000'
+    }
+  }
 ];
 
 export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {

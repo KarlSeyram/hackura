@@ -1,5 +1,5 @@
 
-import type { LucideProps } from 'lucide-react';
+import type { LucideProps, LucideIcon } from 'lucide-react';
 import type { FC } from 'react';
 
 export type Ebook = {
@@ -23,7 +23,7 @@ export type Service = {
   title: string;
   shortDescription: string;
   description: string;
-  icon: FC<LucideProps>;
+  icon: LucideIcon;
   pricing: {
     type: string;
     amount: string;

@@ -170,6 +170,9 @@ export default function ContactPage() {
                 <SelectItem value="graphic-design">
                   Graphic Designing
                 </SelectItem>
+                <SelectItem value="website-development">
+                  Website Development
+                </SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
