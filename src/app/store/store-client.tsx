@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
-import AdBanner from '@/components/ads/ad-banner';
+import { EthicalAd } from '@/components/ads/ethical-ad';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -105,12 +105,7 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
         </div>
         
         <div className="my-8">
-            <AdBanner 
-                title="Deploy Globally, Instantly"
-                description="Vercel is the platform for frontend developers, providing the speed and reliability innovators need to create at the moment of inspiration."
-                ctaText="Deploy for Free"
-                ctaLink="https://vercel.com/import"
-            />
+            <EthicalAd />
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
