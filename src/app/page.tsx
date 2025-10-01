@@ -5,6 +5,8 @@ import type { Ebook } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { HomeClient } from './home-client';
+import AdBanner from '@/components/ads/ad-banner';
+import { Separator } from '@/components/ui/separator';
 
 export default async function Home() {
   const ebooks = await getEbooks();
@@ -27,6 +29,15 @@ export default async function Home() {
       </section>
 
       <HomeClient allEbooks={ebooks} featuredEbooks={featuredEbooks} />
+      
+      <Separator className="my-16" />
+
+      <AdBanner
+        title="Secure Your Code"
+        description="Automatically find and fix vulnerabilities in your code, open source dependencies, and containers."
+        ctaText="Try Snyk for Free"
+        ctaLink="https://snyk.io"
+      />
 
       <section className="mt-16">
         <h2 className="font-headline text-3xl font-bold tracking-tight mb-8">
