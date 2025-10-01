@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { XIcon, WhatsAppIcon, FacebookIcon } from '@/components/icons';
 
 const quickLinks = [
-    { href: '/', label: 'Home' },
     { href: '/store', label: 'Store' },
     { href: '/services', label: 'Services' },
     { href: '/contact', label: 'Contact' },
