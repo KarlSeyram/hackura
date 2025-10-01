@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { HomeClient } from './home-client';
 import { Separator } from '@/components/ui/separator';
-import { EthicalAd } from '@/components/ads/ethical-ad';
+import { PropellerAd } from '@/components/ads/propeller-ad';
 
 export default async function Home() {
   const ebooks = await getEbooks();
@@ -32,7 +32,7 @@ export default async function Home() {
       
       <Separator className="my-16" />
 
-      <EthicalAd />
+      <PropellerAd />
 
       <section className="mt-16">
         <h2 className="font-headline text-3xl font-bold tracking-tight mb-8">
