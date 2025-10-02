@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
-import { PropellerAd } from '@/components/ads/propeller-ad';
+import { NeworMediaAd } from '@/components/ads/newor-media-ad';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -105,7 +105,7 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
         </div>
         
         <div className="my-8">
-            <PropellerAd />
+            <NeworMediaAd />
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

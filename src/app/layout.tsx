@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Chatbot } from '@/components/chatbot/chatbot';
 import { LayoutClient } from './layout-client';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Hackura',
@@ -26,6 +27,14 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/*
+          1. Sign up at Newor Media and get your site approved.
+          2. They will provide a script to place in the <head> of your site.
+          3. Paste that script here, replacing this comment block.
+          
+          Example of what the script might look like:
+          <script async src="https://ad.newormedia.com/newor.min.js" data-site-id="YOUR_SITE_ID"></script>
+        */}
       </head>
       <body className="font-body antialiased">
         <CartProvider>
