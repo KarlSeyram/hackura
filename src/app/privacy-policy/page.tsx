@@ -1,21 +1,26 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
+
 export default function PrivacyPolicyPage() {
-    // A simple function to format the current date
-    const getCurrentDate = () => {
+    const [lastUpdated, setLastUpdated] = useState('');
+
+    useEffect(() => {
         const date = new Date();
-        return date.toLocaleDateString('en-US', {
+        setLastUpdated(date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
-        });
-    };
+        }));
+    }, []);
 
     return (
         <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
             <div className="space-y-8 text-foreground">
                 <div>
                     <h1 className="font-headline text-4xl font-bold tracking-tight">Privacy Policy</h1>
-                    <p className="mt-2 text-muted-foreground">Last updated: {getCurrentDate()}</p>
+                    <p className="mt-2 text-muted-foreground">Last updated: {lastUpdated || '...'}</p>
                 </div>
 
                 <div className="space-y-6">
