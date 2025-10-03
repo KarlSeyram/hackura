@@ -15,12 +15,18 @@ interface HomeClientProps {
 export function HomeClient({ allEbooks, featuredEbooks }: HomeClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [suggestions, setSuggestions] = useState<Ebook[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isClient) return;
+
     const getSuggestions = async () => {
       const viewedEbooks = JSON.parse(localStorage.getItem('viewedEbooks') || '[]');
       if (viewedEbooks.length > 1) {
-        // Create an interest string from the titles of viewed ebooks
         const viewedTitles = allEbooks
           .filter(ebook => viewedEbooks.includes(ebook.id))
           .map(ebook => ebook.title);
@@ -29,11 +35,10 @@ export function HomeClient({ allEbooks, featuredEbooks }: HomeClientProps) {
 
         try {
           const result = await suggestEbooks(interest, allEbooks);
-          // Filter out already viewed ebooks from suggestions
           const suggestedEbooks = allEbooks.filter(ebook => 
             result.suggestionIds.includes(ebook.id) && !viewedEbooks.includes(ebook.id)
           );
-          setSuggestions(suggestedEbooks.slice(0, 3)); // Show up to 3 suggestions
+          setSuggestions(suggestedEbooks.slice(0, 3));
         } catch (err) {
           console.error('Error getting AI suggestions:', err);
         }
@@ -42,10 +47,10 @@ export function HomeClient({ allEbooks, featuredEbooks }: HomeClientProps) {
     };
 
     getSuggestions();
-  }, [allEbooks]);
+  }, [allEbooks, isClient]);
 
-  if (isLoading || suggestions.length === 0) {
-    return null; // Don't show the section if loading or no suggestions
+  if (!isClient || isLoading || suggestions.length === 0) {
+    return null; // Don't show the section if not on client, loading, or no suggestions
   }
 
   return (
