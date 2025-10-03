@@ -15,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
-import { MonetagAd } from '@/components/ads/monetag-ad';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -104,10 +103,6 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
             </div>
         </div>
         
-        <div className="my-8">
-            <MonetagAd />
-        </div>
-
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredAndSortedEbooks.map((ebook: Ebook) => (
                 <ProductCard key={ebook.id} product={ebook} />
