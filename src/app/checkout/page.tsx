@@ -25,14 +25,17 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (cartCount === 0 && paymentState !== 'processing') {
+  }, []);
+
+  useEffect(() => {
+    if (isClient && cartCount === 0 && paymentState !== 'processing') {
       toast({
         title: 'Your Cart is Empty',
         description: 'Redirecting you to the store to add some items.',
       });
       router.push('/store');
     }
-  }, [cartCount, router, paymentState, toast]);
+  }, [isClient, cartCount, router, paymentState, toast]);
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
@@ -91,7 +94,7 @@ export default function CheckoutPage() {
 
   const isFormValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  if (!isClient || (cartCount === 0 && paymentState !== 'processing')) {
+  if (!isClient) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center">
         <p>Loading checkout...</p>
@@ -107,6 +110,14 @@ export default function CheckoutPage() {
           <p className="text-muted-foreground mt-2">Please do not close this window. You will be redirected shortly.</p>
       </div>
     )
+  }
+
+  if (cartCount === 0) {
+     return (
+      <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center">
+        <p>Redirecting to store...</p>
+      </div>
+    );
   }
 
   return (
