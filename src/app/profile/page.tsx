@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettings } from '@/components/profile/profile-settings';
 import { MyEbooksList } from '@/components/profile/my-ebooks-list';
+import { Button } from '@/components/ui/button';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -38,8 +39,8 @@ export default function ProfilePage() {
             <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="my-ebooks">My Ebooks</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="payment" disabled>Payment Methods</TabsTrigger>
-                <TabsTrigger value="settings" disabled>Settings</TabsTrigger>
+                <TabsTrigger value="payment">Payment Methods</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
             <TabsContent value="my-ebooks">
                 <Card>
@@ -60,6 +61,40 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <ProfileSettings />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+             <TabsContent value="payment">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Payment Methods</CardTitle>
+                        <CardDescription>Manage your saved payment methods for faster checkout.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+                            <p>You have no saved payment methods.</p>
+                        </div>
+                        <Button disabled>Add New Payment Method</Button>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="settings">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Account Settings</CardTitle>
+                        <CardDescription>Manage your account preferences and security.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <h3 className="font-medium">Change Password</h3>
+                            <p className="text-sm text-muted-foreground">It's a good idea to use a strong password that you're not using elsewhere.</p>
+                            <Button variant="outline" disabled>Change Password</Button>
+                        </div>
+                         <div className="space-y-2">
+                            <h3 className="font-medium">Danger Zone</h3>
+                            <p className="text-sm text-muted-foreground">Deleting your account is permanent and cannot be undone.</p>
+                            <Button variant="destructive" disabled>Delete My Account</Button>
+                        </div>
                     </CardContent>
                 </Card>
             </TabsContent>
