@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -35,6 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
       <CardContent className="flex-1 p-3">
+        <p className="text-xs text-muted-foreground truncate mb-1">{product.category}</p>
         <Link href={`/products/${product.id}`} className="block text-sm font-medium text-foreground hover:text-primary line-clamp-2 leading-tight">
             {product.title}
         </Link>
