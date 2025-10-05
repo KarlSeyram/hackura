@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser } from '@/firebase';
@@ -11,6 +10,7 @@ import { ProfileSettings } from '@/components/profile/profile-settings';
 import { MyEbooksList } from '@/components/profile/my-ebooks-list';
 import { Button } from '@/components/ui/button';
 import { PayPalIcon, SkrillIcon, MtnIcon } from '@/components/icons';
+import { ChangePasswordDialog } from '@/components/profile/change-password-dialog';
 
 
 export default function ProfilePage() {
@@ -107,7 +107,7 @@ export default function ProfilePage() {
                         <div className="space-y-2">
                             <h3 className="font-medium">Change Password</h3>
                             <p className="text-sm text-muted-foreground">It's a good idea to use a strong password that you're not using elsewhere.</p>
-                            <Button variant="outline" disabled>Change Password</Button>
+                            <ChangePasswordDialog />
                         </div>
                          <div className="space-y-2">
                             <h3 className="font-medium">Danger Zone</h3>
@@ -121,7 +121,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
-
-    
