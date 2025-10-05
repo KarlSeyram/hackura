@@ -26,11 +26,14 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
   const [sortOrder, setSortOrder] = useState('default');
 
   const categories = useMemo(() => {
-    const allCategories = initialEbooks.map(ebook => ebook.category);
+    if (!initialEbooks) return ['all'];
+    const allCategories = initialEbooks.map(ebook => ebook.category).filter(Boolean); // Filter out null/undefined categories
     return ['all', ...Array.from(new Set(allCategories))];
   }, [initialEbooks]);
 
   const filteredAndSortedEbooks = useMemo(() => {
+    if (!initialEbooks) return [];
+
     let filtered = initialEbooks.filter(ebook => !ebook.isDisabled);
 
     if (searchTerm) {
@@ -52,10 +55,10 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
     return filtered;
   }, [initialEbooks, searchTerm, category, sortOrder]);
   
-  if (!initialEbooks || initialEbooks.length === 0) {
+  if (!initialEbooks) {
     return (
       <div className="text-center col-span-full py-12">
-        <p className="text-muted-foreground">no products found</p>
+        <p className="text-muted-foreground">Loading products...</p>
       </div>
     );
   }
@@ -71,7 +74,7 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
                 <Button variant="outline" asChild>
                     <Link href="/ai-suggestions">
                         <Settings className="mr-2 h-4 w-4" />
@@ -104,15 +107,16 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
             </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {filteredAndSortedEbooks.map((ebook: Ebook) => (
-                <ProductCard key={ebook.id} product={ebook} />
-            ))}
-        </div>
-        {filteredAndSortedEbooks.length === 0 && (
-        <div className="text-center col-span-full py-12">
+        {filteredAndSortedEbooks.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {filteredAndSortedEbooks.map((ebook: Ebook) => (
+                  <ProductCard key={ebook.id} product={ebook} />
+              ))}
+          </div>
+        ) : (
+          <div className="text-center col-span-full py-12">
             <p className="text-muted-foreground">no products found</p>
-        </div>
+          </div>
         )}
   </section>
   );
