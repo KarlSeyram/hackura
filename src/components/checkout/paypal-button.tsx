@@ -73,12 +73,11 @@ export function PayPalCheckoutButton({
     
 
     const onError = (err: any) => {
-        console.error("PayPal Checkout Error:", err);
-        // Avoid showing an error toast if the user just closes the window
-        // This can be identified by checking for specific error messages or types if the library provides them.
-        if (err && (err.message?.includes('Window closed') || err.name === 'PAYPAL_POPUP_CLOSED')) {
-            onCancel();
-            return;
+        // This string is what the PayPal SDK throws when the user closes the popup.
+        const a = 'paypal-checkout-components';
+        if (err.message && err.message.includes(`${a}__braintree_popup_closed_by_user`)) {
+          onCancel();
+          return;
         }
         
         onPaymentError(err);
@@ -107,3 +106,5 @@ export function PayPalCheckoutButton({
         />
     );
 }
+
+    

@@ -24,9 +24,30 @@ function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChang
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
 
-  const validateAndNotify = () => {
-    const isValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    onFormChange(name, email, isValid);
+  useEffect(() => {
+    // When initial values change (e.g. user loads), update the form state
+    setName(initialName);
+    setEmail(initialEmail);
+    validateAndNotify(initialName, initialEmail);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialName, initialEmail]);
+
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  const handleBlur = () => {
+    validateAndNotify(name, email);
+  };
+
+  const validateAndNotify = (currentName: string, currentEmail: string) => {
+    const isValid = currentName.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentEmail);
+    onFormChange(currentName, currentEmail, isValid);
   };
   
   return (
@@ -36,8 +57,8 @@ function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChang
         <Input 
           id="name" 
           value={name} 
-          onChange={(e) => setName(e.target.value)} 
-          onBlur={validateAndNotify}
+          onChange={handleNameChange} 
+          onBlur={handleBlur}
           placeholder="John Doe" 
           required
         />
@@ -48,8 +69,8 @@ function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChang
           id="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onBlur={validateAndNotify}
+          onChange={handleEmailChange}
+          onBlur={handleBlur}
           placeholder="you@example.com"
           required
         />
@@ -101,7 +122,9 @@ export default function CheckoutPage() {
       const initialEmail = user.email || '';
       setName(initialName);
       setEmail(initialEmail);
-      setIsFormValid(initialName.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialEmail));
+      // Directly validate the initial user data
+      const isValid = initialName.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialEmail);
+      setIsFormValid(isValid);
     }
   }, [user]);
 
@@ -152,11 +175,6 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentError = (err: any) => {
-    // PayPal specific check for user closing window
-    if (err && (err.message?.includes('Window closed by buyer') || err.name === 'PAYPAL_CHECKOUT_WINDOW_CLOSED')) {
-       // This is a cancel event, not a true error. It is handled by onCancel in the button.
-       return;
-    }
     console.error("Payment Error:", err);
     toast({
         variant: "destructive",
@@ -327,4 +345,5 @@ export default function CheckoutPage() {
   );
 }
 
+    
     
