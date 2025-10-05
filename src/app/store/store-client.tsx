@@ -21,7 +21,37 @@ interface StoreClientProps {
 }
 
 export function StoreClient({ initialEbooks }: StoreClientProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [category, setCategory] = useState('all');
+  const [sortOrder, setSortOrder] = useState('default');
 
+  const categories = useMemo(() => {
+    const allCategories = initialEbooks.map(ebook => ebook.category);
+    return ['all', ...Array.from(new Set(allCategories))];
+  }, [initialEbooks]);
+
+  const filteredAndSortedEbooks = useMemo(() => {
+    let filtered = initialEbooks.filter(ebook => !ebook.isDisabled);
+
+    if (searchTerm) {
+      filtered = filtered.filter(ebook =>
+        ebook.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (category !== 'all') {
+      filtered = filtered.filter(ebook => ebook.category === category);
+    }
+
+    if (sortOrder === 'price-asc') {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortOrder === 'price-desc') {
+      filtered.sort((a, b) => b.price - a.price);
+    }
+
+    return filtered;
+  }, [initialEbooks, searchTerm, category, sortOrder]);
+  
   if (!initialEbooks || initialEbooks.length === 0) {
     return (
       <div className="text-center col-span-full py-12">
@@ -37,6 +67,8 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
                 <Input
                     placeholder="Search for books..."
                     className="w-full max-w-md"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
             <div className="flex gap-4">
@@ -46,34 +78,38 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
                         AI Suggestions
                     </Link>
                 </Button>
-                <Select defaultValue="all">
+                <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Filter by category" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map(cat => (
+                            <SelectItem key={cat} value={cat}>
+                                {cat === 'all' ? 'All Categories' : cat}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
 
-                <Select defaultValue="default">
+                <Select value={sortOrder} onValueChange={setSortOrder}>
                     <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Price" />
+                        <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                        <SelectItem value="price-desc">Price: High to Low</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
         </div>
         
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {initialEbooks.map((ebook: Ebook) => (
+            {filteredAndSortedEbooks.map((ebook: Ebook) => (
                 <ProductCard key={ebook.id} product={ebook} />
             ))}
         </div>
-        {initialEbooks.length === 0 && (
+        {filteredAndSortedEbooks.length === 0 && (
         <div className="text-center col-span-full py-12">
             <p className="text-muted-foreground">no products found</p>
         </div>
