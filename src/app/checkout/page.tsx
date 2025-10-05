@@ -7,13 +7,17 @@ import { PaystackButton } from 'react-paystack';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingCart, Loader2 } from 'lucide-react';
+import { ShoppingCart, Loader2, CreditCard } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import { useUser } from '@/firebase';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { PayPalIcon, SkrillIcon, MtnIcon } from '@/components/icons';
+
+type PaymentMethod = 'paystack' | 'paypal' | 'skrill';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
@@ -25,6 +29,7 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('paystack');
 
   useEffect(() => {
     setIsClient(true);
@@ -146,6 +151,25 @@ export default function CheckoutPage() {
     );
   }
 
+  const renderPaymentButton = () => {
+    switch (selectedPaymentMethod) {
+      case 'paystack':
+        return isClient && (
+          <PaystackButton
+            {...componentProps}
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+            disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
+          />
+        );
+      case 'paypal':
+        return <Button disabled className="w-full">PayPal Coming Soon</Button>;
+      case 'skrill':
+        return <Button disabled className="w-full">Skrill Coming Soon</Button>;
+      default:
+        return null;
+    }
+  }
+
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
@@ -179,34 +203,66 @@ export default function CheckoutPage() {
         <div>
           <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input 
-                id="name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                placeholder="John Doe" 
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input 
+                  id="name" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="John Doe" 
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            {isClient && (
-              <PaystackButton
-                {...componentProps}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
-                disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
-              />
-            )}
+
+            <Accordion type="single" collapsible defaultValue="paystack" onValueChange={(value) => setSelectedPaymentMethod(value as PaymentMethod)}>
+              <AccordionItem value="paystack">
+                <AccordionTrigger>
+                  <div className="flex items-center gap-2">
+                    <CreditCard />
+                    <span>Card & Mobile Money</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                  {renderPaymentButton()}
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="paypal">
+                <AccordionTrigger>
+                   <div className="flex items-center gap-2">
+                    <PayPalIcon className="h-6 w-6" />
+                    <span>PayPal</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                   {renderPaymentButton()}
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="skrill">
+                <AccordionTrigger>
+                   <div className="flex items-center gap-2">
+                    <SkrillIcon className="h-6 w-6" />
+                    <span>Skrill</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4">
+                   {renderPaymentButton()}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
              <Button variant="outline" asChild className="w-full">
                 <Link href="/store">
                     <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
@@ -218,3 +274,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    

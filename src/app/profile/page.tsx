@@ -38,7 +38,7 @@ export default function ProfilePage() {
             <p className="text-muted-foreground">Manage your account settings, orders, and profile information.</p>
         </div>
         <Tabs defaultValue="my-ebooks" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="my-ebooks">My Ebooks</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -89,3 +89,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
