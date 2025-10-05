@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser } from '@/firebase';
@@ -8,8 +9,8 @@ import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettings } from '@/components/profile/profile-settings';
 import { MyEbooksList } from '@/components/profile/my-ebooks-list';
-import { Button } from '@/components/ui/button';
 import { ChangePasswordDialog } from '@/components/profile/change-password-dialog';
+import { DeleteAccountDialog } from '@/components/profile/delete-account-dialog';
 
 
 export default function ProfilePage() {
@@ -38,7 +39,7 @@ export default function ProfilePage() {
             <p className="text-muted-foreground">Manage your account settings, orders, and profile information.</p>
         </div>
         <Tabs defaultValue="my-ebooks" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="my-ebooks">My Ebooks</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -77,10 +78,10 @@ export default function ProfilePage() {
                             <p className="text-sm text-muted-foreground">It's a good idea to use a strong password that you're not using elsewhere.</p>
                             <ChangePasswordDialog />
                         </div>
-                         <div className="space-y-2">
-                            <h3 className="font-medium">Danger Zone</h3>
-                            <p className="text-sm text-muted-foreground">Deleting your account is permanent and cannot be undone.</p>
-                            <Button variant="destructive" disabled>Delete My Account</Button>
+                         <div className="space-y-2 rounded-lg border border-destructive p-4">
+                            <h3 className="font-medium text-destructive">Danger Zone</h3>
+                            <p className="text-sm text-muted-foreground">Deleting your account is permanent and cannot be undone. All your purchased ebooks and data will be lost.</p>
+                            <DeleteAccountDialog />
                         </div>
                     </CardContent>
                 </Card>
