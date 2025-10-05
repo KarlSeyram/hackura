@@ -9,6 +9,7 @@ import { Chatbot } from '@/components/chatbot/chatbot';
 import { LayoutClient } from './layout-client';
 import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase';
+import { PayPalProvider } from '@/components/checkout/paypal-provider';
 
 export const metadata: Metadata = {
   title: 'Hackura',
@@ -30,15 +31,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          <CartProvider>
-            <LayoutClient>
-              {children}
-            </LayoutClient>
-            <Toaster />
-            <Chatbot />
-          </CartProvider>
-        </FirebaseClientProvider>
+        <PayPalProvider>
+          <FirebaseClientProvider>
+            <CartProvider>
+              <LayoutClient>
+                {children}
+              </LayoutClient>
+              <Toaster />
+              <Chatbot />
+            </CartProvider>
+          </FirebaseClientProvider>
+        </PayPalProvider>
         <Analytics />
         <SpeedInsights />
       </body>

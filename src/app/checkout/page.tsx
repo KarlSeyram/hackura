@@ -16,6 +16,7 @@ import { recordPurchase } from '@/app/actions';
 import { useUser } from '@/firebase';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { PayPalIcon, SkrillIcon, MtnIcon } from '@/components/icons';
+import { PayPalCheckoutButton } from '@/components/checkout/paypal-button';
 
 type PaymentMethod = 'paystack' | 'paypal' | 'skrill';
 
@@ -64,8 +65,8 @@ export default function CheckoutPage() {
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 
-  const handlePaymentSuccess = async (reference: any) => {
-    if (!user) {
+  const handleGenericPaymentSuccess = (reference: string) => {
+     if (!user) {
       toast({
         variant: 'destructive',
         title: 'Authentication Error',
@@ -73,17 +74,23 @@ export default function CheckoutPage() {
       });
       return;
     }
-    console.log('Payment successful. Ref:', reference.reference);
+    console.log('Payment successful. Ref:', reference);
     setPaymentState('processing');
     toast({
       title: 'Payment Successful!',
       description: 'Adding ebooks to your library...',
     });
 
+    // The purchase record is already created by Paystack/PayPal handlers
+    clearCart();
+    router.push(`/my-ebooks`);
+  };
+
+  const handlePaymentSuccess = async (reference: any) => {
     try {
+      if (!user) throw new Error('User not authenticated.');
       await recordPurchase(user.uid, cartItems, reference.reference);
-      clearCart();
-      router.push(`/my-ebooks`);
+      handleGenericPaymentSuccess(reference.reference);
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
       toast({
@@ -95,16 +102,20 @@ export default function CheckoutPage() {
     }
   };
 
+  const handlePaymentError = () => {
+    setPaymentState('idle');
+  };
+
   const handlePaymentClose = () => {
     console.log('Payment dialog closed.');
     setPaymentState('idle');
   }
 
-  const componentProps = {
+  const paystackComponentProps = {
     email,
     amount: Math.round(totalPrice * 100),
     currency: paystackCurrency,
-    reference: `hackura_${new Date().getTime()}`,
+    reference: `hackura_paystack_${new Date().getTime()}`,
     metadata: {
       name,
       userId: user?.uid,
@@ -156,13 +167,20 @@ export default function CheckoutPage() {
       case 'paystack':
         return isClient && (
           <PaystackButton
-            {...componentProps}
+            {...paystackComponentProps}
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
             disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
           />
         );
       case 'paypal':
-        return <Button disabled className="w-full">PayPal Coming Soon</Button>;
+        return isClient && isFormValid ? (
+          <PayPalCheckoutButton
+            cartItems={cartItems}
+            totalPrice={totalPrice}
+            onPaymentSuccess={(orderId) => handleGenericPaymentSuccess(orderId)}
+            onPaymentError={handlePaymentError}
+          />
+        ) : <Button disabled className="w-full">Fill Form to Enable PayPal</Button>;
       case 'skrill':
         return <Button disabled className="w-full">Skrill Coming Soon</Button>;
       default:
