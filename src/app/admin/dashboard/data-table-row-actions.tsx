@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import type { Row } from '@tanstack/react-table';
-import { MoreHorizontal, Pen, Power, Trash, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Pen, Power, PowerOff, Trash, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { deleteProduct } from '@/lib/actions';
+import { deleteProduct, toggleProductDisabledStatus } from '@/lib/actions';
 import type { Ebook } from '@/lib/definitions';
 
 
@@ -37,6 +37,7 @@ export function DataTableRowActions<TData extends Ebook>({ row }: DataTableRowAc
   const product = row.original;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -62,6 +63,29 @@ export function DataTableRowActions<TData extends Ebook>({ row }: DataTableRowAc
     }
   };
 
+  const handleToggleDisabled = async () => {
+    setIsToggling(true);
+    try {
+      const result = await toggleProductDisabledStatus(product.id, product.isDisabled);
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: `Product "${product.title}" has been ${product.isDisabled ? 'enabled' : 'disabled'}.`,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: error instanceof Error ? error.message : 'Could not update product status.',
+      });
+    } finally {
+      setIsToggling(false);
+    }
+  }
+
   return (
     <>
       <div className="flex justify-end">
@@ -69,7 +93,7 @@ export function DataTableRowActions<TData extends Ebook>({ row }: DataTableRowAc
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+              {isToggling ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -78,8 +102,12 @@ export function DataTableRowActions<TData extends Ebook>({ row }: DataTableRowAc
                 <Pen className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Power className="mr-2 h-4 w-4" /> Disable
+            <DropdownMenuItem onClick={handleToggleDisabled} disabled={isToggling}>
+              {product.isDisabled ? (
+                <><Power className="mr-2 h-4 w-4" /> Enable</>
+              ) : (
+                <><PowerOff className="mr-2 h-4 w-4" /> Disable</>
+              )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

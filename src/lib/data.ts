@@ -4,12 +4,20 @@ import type { Ebook, Service, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 import { Code, LayoutGrid, ShieldCheck, Siren, FileText, ShieldAlert, Palette, Globe } from 'lucide-react';
 
-export async function getEbooks(): Promise<Ebook[]> {
+export async function getEbooks(options: { includeDisabled?: boolean } = {}): Promise<Ebook[]> {
+  const { includeDisabled = false } = options;
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  
+  let query = supabase
     .from("ebooks")
-    .select("id, title, description, price, image_url, category")
+    .select("id, title, description, price, image_url, category, is_disabled")
     .order("created_at", { ascending: false });
+
+  if (!includeDisabled) {
+    query = query.eq('is_disabled', false);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching ebooks from Supabase:", error.message);
@@ -27,6 +35,7 @@ export async function getEbooks(): Promise<Ebook[]> {
     imageUrl: ebook.image_url,
     imageHint: '', // Return an empty string as a fallback
     category: ebook.category || 'General',
+    isDisabled: ebook.is_disabled,
   }));
 
   return fetchedEbooks;

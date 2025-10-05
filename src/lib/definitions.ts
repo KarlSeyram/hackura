@@ -11,6 +11,7 @@ export type Ebook = {
   imageHint: string;
   file_name?: string; // file_name can be optional on the base type
   category: string;
+  isDisabled: boolean;
 };
 
 export type CartItem = Ebook & {

@@ -6,6 +6,8 @@ import type { Ebook } from '@/lib/definitions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableRowActions } from './data-table-row-actions';
 import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'USD';
 
@@ -35,7 +37,7 @@ export const columns: ColumnDef<Ebook>[] = [
     cell: ({ row }) => {
         const product = row.original;
         return (
-            <div className="flex items-center gap-4">
+            <div className={cn("flex items-center gap-4", product.isDisabled && "opacity-50")}>
                 <div className="relative h-12 w-9 flex-shrink-0 overflow-hidden rounded-sm">
                     <Image
                         src={product.imageUrl}
@@ -44,7 +46,10 @@ export const columns: ColumnDef<Ebook>[] = [
                         className="object-cover"
                     />
                 </div>
-                <span className="font-medium truncate max-w-xs">{product.title}</span>
+                <div>
+                  <span className="font-medium truncate max-w-xs">{product.title}</span>
+                  {product.isDisabled && <Badge variant="outline" className="ml-2">Disabled</Badge>}
+                </div>
             </div>
         )
     }
@@ -54,12 +59,13 @@ export const columns: ColumnDef<Ebook>[] = [
     header: () => <div className="text-right">Price</div>,
     cell: ({ row }) => {
       const price = parseFloat(row.getValue('price'));
+      const product = row.original;
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: paystackCurrency,
       }).format(price);
 
-      return <div className="text-right font-medium">{formatted}</div>;
+      return <div className={cn("text-right font-medium", product.isDisabled && "opacity-50")}>{formatted}</div>;
     },
   },
   {

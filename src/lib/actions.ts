@@ -312,3 +312,25 @@ export async function deleteProduct(productId: string): Promise<{ success: boole
 
   return { success: true, message: 'Product deleted successfully.' };
 }
+
+
+export async function toggleProductDisabledStatus(productId: string, currentStatus: boolean): Promise<{ success: boolean; message: string; }> {
+    const supabase = createAdminClient();
+
+    const { error } = await supabase
+        .from('ebooks')
+        .update({ is_disabled: !currentStatus })
+        .eq('id', productId);
+
+    if (error) {
+        console.error('Error toggling product status:', error);
+        return { success: false, message: 'Failed to update product status.' };
+    }
+
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/store');
+    revalidatePath(`/products/${productId}`);
+    revalidatePath('/');
+
+    return { success: true, message: 'Product status updated.' };
+}

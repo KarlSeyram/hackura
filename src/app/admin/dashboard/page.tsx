@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 async function getStats() {
   const supabase = createAdminClient();
-  const { data: ebooks, error: ebooksError } = await supabase.from('ebooks').select('id, price');
+  const { data: ebooks, error: ebooksError } = await supabase.from('ebooks').select('id, price, is_disabled');
   if (ebooksError) {
     console.error('Error fetching ebooks for stats:', ebooksError);
     return { revenue: 0, sales: 0, productCount: 0 };
@@ -19,7 +19,7 @@ async function getStats() {
   const { data: purchases, error: purchasesError } = await supabase.from('purchases').select('ebook_id');
   if (purchasesError) {
     console.error('Error fetching purchases for stats:', purchasesError);
-    return { revenue: 0, sales: 0, productCount: ebooks.length };
+    return { revenue: 0, sales: 0, productCount: 0 };
   }
 
   const sales = purchases.length;
@@ -28,14 +28,14 @@ async function getStats() {
     return acc + (ebook?.price || 0);
   }, 0);
   
-  const productCount = ebooks.length;
+  const productCount = ebooks.filter(e => !e.is_disabled).length;
 
   return { revenue, sales, productCount };
 }
 
 
 export default async function AdminDashboard() {
-  const ebooks = await getEbooks();
+  const ebooks = await getEbooks({ includeDisabled: true });
   const stats = await getStats();
   
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
@@ -82,7 +82,7 @@ export default async function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Products</CardTitle>
             <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
