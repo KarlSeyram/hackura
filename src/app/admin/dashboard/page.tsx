@@ -7,30 +7,60 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { createAdminClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { subDays, format } from 'date-fns';
+import { SalesChart } from '@/components/admin/sales-chart';
 
 async function getStats() {
   const supabase = createAdminClient();
-  const { data: ebooks, error: ebooksError } = await supabase.from('ebooks').select('id, price, is_disabled');
-  if (ebooksError) {
-    console.error('Error fetching ebooks for stats:', ebooksError);
-    return { revenue: 0, sales: 0, productCount: 0 };
+  const sevenDaysAgo = subDays(new Date(), 7).toISOString();
+
+  // Fetch ebooks and purchases in parallel
+  const [ebooksRes, purchasesRes] = await Promise.all([
+    supabase.from('ebooks').select('id, price, is_disabled'),
+    supabase.from('purchases').select('ebook_id, created_at').gte('created_at', sevenDaysAgo)
+  ]);
+  
+  if (ebooksRes.error) {
+    console.error('Error fetching ebooks for stats:', ebooksRes.error);
+    return { revenue: 0, sales: 0, productCount: 0, salesData: [] };
+  }
+   if (purchasesRes.error) {
+    console.error('Error fetching purchases for stats:', purchasesRes.error);
+    return { revenue: 0, sales: 0, productCount: 0, salesData: [] };
   }
 
-  const { data: purchases, error: purchasesError } = await supabase.from('purchases').select('ebook_id');
-  if (purchasesError) {
-    console.error('Error fetching purchases for stats:', purchasesError);
-    return { revenue: 0, sales: 0, productCount: 0 };
-  }
+  const ebooks = ebooksRes.data;
+  const purchases = purchasesRes.data;
 
   const sales = purchases.length;
-  const revenue = purchases.reduce((acc, purchase) => {
-    const ebook = ebooks.find(p => p.id === purchase.ebook_id);
-    return acc + (ebook?.price || 0);
-  }, 0);
   
   const productCount = ebooks.filter(e => !e.is_disabled).length;
+  
+  // Initialize daily sales data for the last 7 days
+  const salesData: { date: string, revenue: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      salesData.push({
+          date: format(date, 'MMM d'),
+          revenue: 0,
+      });
+  }
 
-  return { revenue, sales, productCount };
+  // Calculate total revenue and populate daily sales
+  const totalRevenue = purchases.reduce((acc, purchase) => {
+    const ebook = ebooks.find(p => p.id === purchase.ebook_id);
+    const price = ebook?.price || 0;
+    
+    const purchaseDateStr = format(new Date(purchase.created_at), 'MMM d');
+    const dayData = salesData.find(d => d.date === purchaseDateStr);
+    if(dayData) {
+        dayData.revenue += price;
+    }
+
+    return acc + price;
+  }, 0);
+
+  return { revenue: totalRevenue, sales, productCount, salesData };
 }
 
 
@@ -64,7 +94,7 @@ export default async function AdminDashboard() {
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Revenue (7d)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -73,7 +103,7 @@ export default async function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Sales (7d)</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -90,6 +120,15 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+       <Card className="col-span-3">
+        <CardHeader>
+          <CardTitle>Sales Overview</CardTitle>
+          <CardContent className="pl-2 pt-6">
+            <SalesChart data={stats.salesData} />
+          </CardContent>
+        </CardHeader>
+      </Card>
 
       <div>
         <h3 className="text-2xl font-bold tracking-tight mt-8 mb-4">Manage Products</h3>
