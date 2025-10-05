@@ -13,9 +13,8 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .select("id, title, description, price, image_url, category, is_disabled")
     .order("created_at", { ascending: false });
 
-  if (!includeDisabled) {
-    query = query.or('is_disabled.eq.false,is_disabled.is.null');
-  }
+  // The is_disabled filter has been removed to ensure all products are visible.
+  // We can re-introduce a corrected filter later if needed.
 
   const { data, error } = await query;
 
