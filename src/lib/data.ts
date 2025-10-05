@@ -14,8 +14,6 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .order("created_at", { ascending: false });
 
   if (!includeDisabled) {
-    // This is the key change: Fetch products where is_disabled is false OR is null.
-    // This ensures that products created before the `is_disabled` column was added are still visible.
     query = query.or('is_disabled.is.false,is_disabled.is.null');
   }
 
@@ -23,19 +21,16 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
 
   if (error) {
     console.error("Error fetching ebooks from Supabase:", error.message);
-    // Return empty array on error to prevent site crash
     return [];
   }
 
-  // The data from supabase has image_url, but our Ebook type expects imageUrl.
-  // We need to map the data to match the Ebook type.
   const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
     id: ebook.id,
     title: ebook.title,
     description: ebook.description, 
     price: ebook.price,
     imageUrl: ebook.image_url,
-    imageHint: '', // Return an empty string as a fallback
+    imageHint: '',
     category: ebook.category || 'General',
     isDisabled: ebook.is_disabled,
   }));
