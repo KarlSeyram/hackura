@@ -71,13 +71,20 @@ export function PayPalCheckoutButton({
 
     const onError = (err: any) => {
         console.error("PayPal Checkout Error:", err);
-        toast({
-            variant: 'destructive',
-            title: 'PayPal Error',
-            description: 'An error occurred with the PayPal transaction. Please try again.',
-        });
+        // Avoid showing an error toast if the user just closes the window
+        // This can be identified by checking for specific error messages or types if the library provides them.
+        // For now, we'll just log it and call the onPaymentError prop without a toast.
         onPaymentError(err);
     };
+
+    const onCancel = () => {
+        console.log('PayPal payment cancelled by user.');
+        toast({
+            title: 'Payment Cancelled',
+            description: 'Your payment process was cancelled.',
+            variant: 'default'
+        });
+    }
 
     return (
        <PayPalButtons
@@ -85,7 +92,7 @@ export function PayPalCheckoutButton({
         createOrder={createOrder}
         onApprove={onApprove}
         onError={onError}
+        onCancel={onCancel}
         />
     );
 }
-
