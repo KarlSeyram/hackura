@@ -22,9 +22,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   }).format(product.price);
   
   return (
-    <Card className="group relative flex flex-col overflow-hidden rounded-lg border-transparent shadow-sm transition-all hover:shadow-lg bg-card">
+    <Card className="group relative flex flex-col overflow-hidden rounded-lg shadow-sm transition-all hover:shadow-md bg-card border">
       <Link href={`/products/${product.id}`} className="block">
-        <div className="relative aspect-square w-full">
+        <div className="relative aspect-[4/5] w-full">
           <Image
             src={product.imageUrl}
             alt={product.title}
@@ -35,12 +35,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
       <CardContent className="flex-1 p-3">
-        <Link href={`/products/${product.id}`} className="block text-sm font-medium text-foreground hover:text-primary truncate">
+        <Link href={`/products/${product.id}`} className="block text-sm font-medium text-foreground hover:text-primary line-clamp-2 leading-tight">
             {product.title}
         </Link>
       </CardContent>
       <CardFooter className="flex items-center justify-between p-3 pt-0">
-        <p className="font-bold text-lg">{formattedPrice}</p>
+        <p className="font-bold text-base">{formattedPrice}</p>
         <Button size="icon" variant="outline" onClick={() => addToCart(product)} className="h-8 w-8">
             <Plus className="h-4 w-4" />
             <span className="sr-only">Add to cart</span>
