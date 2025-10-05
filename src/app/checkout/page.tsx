@@ -13,11 +13,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
+import { useUser } from '@/firebase';
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+
   const [isClient, setIsClient] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,14 +31,30 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (isClient && cartCount === 0 && paymentState !== 'processing') {
-      toast({
-        title: 'Your Cart is Empty',
-        description: 'Redirecting you to the store to add some items.',
-      });
-      router.push('/store');
+    if (isClient && !isUserLoading) {
+      if (!user) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in to proceed with your purchase.',
+          variant: 'destructive',
+        });
+        router.push('/login');
+      } else if (cartCount === 0) {
+        toast({
+          title: 'Your Cart is Empty',
+          description: 'Redirecting you to the store to add some items.',
+        });
+        router.push('/store');
+      }
     }
-  }, [isClient, cartCount, router, paymentState, toast]);
+  }, [isClient, user, isUserLoading, cartCount, router, toast]);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.displayName || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
@@ -49,12 +68,9 @@ export default function CheckoutPage() {
     });
 
     try {
-      // Record the purchase for analytics and to generate download links.
       await recordPurchase(cartItems, reference.reference);
-      
       clearCart();
       router.push(`/download/${reference.reference}`);
-
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
       toast({
@@ -78,8 +94,7 @@ export default function CheckoutPage() {
     reference: `hackura_${new Date().getTime()}`,
     metadata: {
       name,
-      // Pass cart items to the webhook as a JSON string
-      cartItems: JSON.stringify(cartItems.map(item => ({id: item.id, title: item.title, quantity: item.quantity}))),
+      cartItems: JSON.stringify(cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))),
     },
     publicKey: paystackPublicKey,
     text: "Pay Now",
@@ -93,15 +108,17 @@ export default function CheckoutPage() {
   }).format(totalPrice);
 
   const isFormValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  if (!isClient) {
+  
+  if (!isClient || isUserLoading || !user) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center">
-        <p>Loading checkout...</p>
+      <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <h2 className="font-headline text-2xl font-bold">Loading Checkout...</h2>
+          <p className="text-muted-foreground mt-2">Checking your authentication status.</p>
       </div>
     );
   }
-  
+
   if (paymentState === 'processing') {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
