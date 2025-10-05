@@ -14,7 +14,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .order("created_at", { ascending: false });
 
   if (!includeDisabled) {
-    query = query.or('is_disabled.is.false,is_disabled.is.null');
+    query = query.eq('is_disabled', false);
   }
 
   const { data, error } = await query;

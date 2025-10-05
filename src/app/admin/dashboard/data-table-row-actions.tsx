@@ -28,8 +28,8 @@ import { deleteProduct, toggleProductDisabledStatus } from '@/lib/actions';
 import type { Ebook } from '@/lib/definitions';
 
 
-interface DataTableRowActionsProps {
-  row: Row<Ebook>;
+interface DataTableRowActionsProps<TData extends Ebook> {
+  row: Row<TData>;
 }
 
 export function DataTableRowActions<TData extends Ebook>({ row }: DataTableRowActionsProps<TData>) {

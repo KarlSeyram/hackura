@@ -56,7 +56,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             price: data.price,
             imageUrl: data.image_url,
             category: data.category || 'General',
-            imageHint: ''
+            imageHint: '',
+            isDisabled: data.is_disabled
         };
         setProduct(ebook);
       }

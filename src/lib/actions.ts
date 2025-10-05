@@ -153,6 +153,7 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         category,
         image_url: imageUrl,
         file_name: ebookFileName,
+        is_disabled: false,
     });
 
     if (dbError) {
