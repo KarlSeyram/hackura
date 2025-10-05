@@ -161,6 +161,13 @@ export default function CheckoutPage() {
       </div>
     );
   }
+  
+  const handleSkrillClick = () => {
+    toast({
+        title: "Coming Soon!",
+        description: "Skrill payments are not yet available. Please choose another method."
+    })
+  }
 
   const renderPaymentButton = () => {
     switch (selectedPaymentMethod) {
@@ -182,7 +189,7 @@ export default function CheckoutPage() {
           />
         ) : <Button disabled className="w-full">Fill Form to Enable PayPal</Button>;
       case 'skrill':
-        return <Button disabled className="w-full">Skrill Coming Soon</Button>;
+        return <Button className="w-full" onClick={handleSkrillClick} disabled={!isFormValid}>Pay with Skrill</Button>;
       default:
         return null;
     }
