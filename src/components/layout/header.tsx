@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getAuth, signOut } from 'firebase/auth';
+import { Separator } from '../ui/separator';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -121,7 +122,9 @@ export default function Header() {
 
         <div className="flex items-center gap-2">
           <CartIcon />
-          <UserNav />
+          <div className="hidden md:flex">
+            <UserNav />
+          </div>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
@@ -145,6 +148,12 @@ export default function Header() {
                   </Link>
                 ))}
               </nav>
+              <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-4">
+                <Separator />
+                <div className="flex justify-center">
+                    <UserNav />
+                </div>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
