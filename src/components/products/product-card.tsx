@@ -6,7 +6,7 @@ import Link from 'next/link';
 import type { Ebook } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 
 interface ProductCardProps {
@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <CardFooter className="flex items-center justify-between p-3 pt-0">
         <p className="font-bold text-base">{formattedPrice}</p>
         <Button size="icon" variant="outline" onClick={() => addToCart(product)} className="h-8 w-8">
-            <Plus className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4" />
             <span className="sr-only">Add to cart</span>
         </Button>
       </CardFooter>
