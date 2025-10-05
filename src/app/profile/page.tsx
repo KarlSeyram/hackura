@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser } from '@/firebase';
@@ -40,7 +39,7 @@ export default function ProfilePage() {
               <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-xl font-semibold">{user.displayName || 'No display name'}</p>
+              <p className="text-xl font-semibold">{user.displayName || 'We should have a display name as well'}</p>
               <p className="text-muted-foreground">{user.email}</p>
             </div>
           </div>
