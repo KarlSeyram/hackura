@@ -110,7 +110,7 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
         </div>
         {filteredAndSortedEbooks.length === 0 && (
         <div className="text-center col-span-full py-12">
-            <p className="text-muted-foreground">No products found that match your criteria.</p>
+            <p className="text-muted-foreground">no products found</p>
         </div>
         )}
   </section>
