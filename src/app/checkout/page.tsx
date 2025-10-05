@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,7 +29,6 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('paystack');
 
   useEffect(() => {
     setIsClient(true);
@@ -169,32 +167,6 @@ export default function CheckoutPage() {
     })
   }
 
-  const renderPaymentButton = () => {
-    switch (selectedPaymentMethod) {
-      case 'paystack':
-        return isClient && (
-          <PaystackButton
-            {...paystackComponentProps}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
-            disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
-          />
-        );
-      case 'paypal':
-        return isClient && isFormValid ? (
-          <PayPalCheckoutButton
-            cartItems={cartItems}
-            totalPrice={totalPrice}
-            onPaymentSuccess={(orderId) => handleGenericPaymentSuccess(orderId)}
-            onPaymentError={handlePaymentError}
-          />
-        ) : <Button disabled className="w-full">Fill Form to Enable PayPal</Button>;
-      case 'skrill':
-        return <Button className="w-full" onClick={handleSkrillClick} disabled={!isFormValid}>Pay with Skrill</Button>;
-      default:
-        return null;
-    }
-  }
-
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
@@ -252,40 +224,52 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <Accordion type="single" collapsible defaultValue="paystack" onValueChange={(value) => setSelectedPaymentMethod(value as PaymentMethod)}>
-              <AccordionItem value="paystack">
-                <AccordionTrigger>
-                  <div className="flex items-center gap-2">
-                    <CreditCard />
-                    <span>Card & Mobile Money</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4">
-                  {renderPaymentButton()}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="paypal">
-                <AccordionTrigger>
-                   <div className="flex items-center gap-2">
-                    <PayPalIcon className="h-6 w-6" />
-                    <span>PayPal</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4">
-                   {renderPaymentButton()}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="skrill">
-                <AccordionTrigger>
-                   <div className="flex items-center gap-2">
-                    <SkrillIcon className="h-6 w-6" />
-                    <span>Skrill</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4">
-                   {renderPaymentButton()}
-                </AccordionContent>
-              </AccordionItem>
+            <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
+                <AccordionItem value="paystack">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <CreditCard />
+                            <span>Card & Mobile Money</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                        {isClient && (
+                            <PaystackButton
+                                {...paystackComponentProps}
+                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+                                disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
+                            />
+                        )}
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="paypal">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <PayPalIcon className="h-6 w-6" />
+                            <span>PayPal</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                         <PayPalCheckoutButton
+                            cartItems={cartItems}
+                            totalPrice={totalPrice}
+                            onPaymentSuccess={(orderId) => handleGenericPaymentSuccess(orderId)}
+                            onPaymentError={handlePaymentError}
+                            disabled={!isFormValid}
+                          />
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="skrill">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <SkrillIcon className="h-6 w-6" />
+                            <span>Skrill</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                         <Button className="w-full" onClick={handleSkrillClick} disabled={!isFormValid}>Pay with Skrill</Button>
+                    </AccordionContent>
+                </AccordionItem>
             </Accordion>
 
              <Button variant="outline" asChild className="w-full">

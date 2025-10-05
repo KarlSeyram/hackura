@@ -6,12 +6,14 @@ import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import type { CartItem } from '@/lib/definitions';
 import { useUser } from '@/firebase';
+import { Button } from '../ui/button';
 
 interface PayPalCheckoutButtonProps {
     cartItems: CartItem[];
     totalPrice: number;
     onPaymentSuccess: (orderId: string) => void;
     onPaymentError: (err: any) => void;
+    disabled?: boolean;
 }
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'USD';
@@ -21,7 +23,8 @@ export function PayPalCheckoutButton({
     cartItems,
     totalPrice,
     onPaymentSuccess,
-    onPaymentError
+    onPaymentError,
+    disabled
 }: PayPalCheckoutButtonProps) {
     const { toast } = useToast();
     const { user } = useUser();
@@ -73,7 +76,11 @@ export function PayPalCheckoutButton({
         console.error("PayPal Checkout Error:", err);
         // Avoid showing an error toast if the user just closes the window
         // This can be identified by checking for specific error messages or types if the library provides them.
-        // For now, we'll just log it and call the onPaymentError prop without a toast.
+        if (err && (err.message?.includes('Window closed') || err.name === 'PAYPAL_POPUP_CLOSED')) {
+            onCancel();
+            return;
+        }
+        
         onPaymentError(err);
     };
 
@@ -84,6 +91,10 @@ export function PayPalCheckoutButton({
             description: 'Your payment process was cancelled.',
             variant: 'default'
         });
+    }
+
+    if (disabled) {
+        return <Button disabled className="w-full">Fill Form to Enable PayPal</Button>
     }
 
     return (
