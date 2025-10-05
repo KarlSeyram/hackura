@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
+import ShareButton from './share-button';
 
 interface ProductCardProps {
   product: Ebook;
@@ -41,10 +43,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       </CardContent>
       <CardFooter className="flex items-center justify-between p-3 pt-0">
         <p className="font-bold text-base">{formattedPrice}</p>
-        <Button size="icon" variant="outline" onClick={() => addToCart(product)} className="h-8 w-8">
-            <ShoppingCart className="h-4 w-4" />
-            <span className="sr-only">Add to cart</span>
-        </Button>
+        <div className="flex items-center gap-1">
+          <ShareButton product={product} />
+          <Button size="icon" variant="outline" onClick={() => addToCart(product)} className="h-8 w-8">
+              <ShoppingCart className="h-4 w-4" />
+              <span className="sr-only">Add to cart</span>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
