@@ -14,7 +14,9 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .order("created_at", { ascending: false });
 
   if (!includeDisabled) {
-    query = query.filter('is_disabled', 'is', false);
+    // This is the key change: Fetch products where is_disabled is false OR is null.
+    // This ensures that products created before the `is_disabled` column was added are still visible.
+    query = query.or('is_disabled.is.false,is_disabled.is.null');
   }
 
   const { data, error } = await query;
