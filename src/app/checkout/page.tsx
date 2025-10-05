@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,6 +20,45 @@ import { PayPalCheckoutButton } from '@/components/checkout/paypal-button';
 
 type PaymentMethod = 'paystack' | 'paypal' | 'skrill';
 
+function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+
+  const validateAndNotify = () => {
+    const isValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    onFormChange(name, email, isValid);
+  };
+  
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Full Name</Label>
+        <Input 
+          id="name" 
+          value={name} 
+          onChange={(e) => setName(e.target.value)} 
+          onBlur={validateAndNotify}
+          placeholder="John Doe" 
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email Address</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={validateAndNotify}
+          placeholder="you@example.com"
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
+
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
   const router = useRouter();
@@ -26,9 +66,11 @@ export default function CheckoutPage() {
   const { user, isUserLoading } = useUser();
 
   const [isClient, setIsClient] = useState(false);
+  const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');
+  
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -55,13 +97,23 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (user) {
-      setName(user.displayName || '');
-      setEmail(user.email || '');
+      const initialName = user.displayName || '';
+      const initialEmail = user.email || '';
+      setName(initialName);
+      setEmail(initialEmail);
+      setIsFormValid(initialName.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialEmail));
     }
   }, [user]);
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+  
+  const handleFormChange = (newName: string, newEmail: string, isValid: boolean) => {
+    setName(newName);
+    setEmail(newEmail);
+    setIsFormValid(isValid);
+  };
+
 
   const handleGenericPaymentSuccess = (reference: string) => {
      if (!user) {
@@ -79,7 +131,6 @@ export default function CheckoutPage() {
       description: 'Adding ebooks to your library...',
     });
 
-    // The purchase record is already created by Paystack/PayPal handlers
     clearCart();
     router.push(`/my-ebooks`);
   };
@@ -100,7 +151,18 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePaymentError = () => {
+  const handlePaymentError = (err: any) => {
+    // PayPal specific check for user closing window
+    if (err && (err.message?.includes('Window closed by buyer') || err.name === 'PAYPAL_CHECKOUT_WINDOW_CLOSED')) {
+       // This is a cancel event, not a true error. It is handled by onCancel in the button.
+       return;
+    }
+    console.error("Payment Error:", err);
+    toast({
+        variant: "destructive",
+        title: "Payment Failed",
+        description: "An error occurred with the transaction. Please try again.",
+    });
     setPaymentState('idle');
   };
 
@@ -130,7 +192,6 @@ export default function CheckoutPage() {
     currency: paystackCurrency,
   }).format(totalPrice);
 
-  const isFormValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   
   if (!isClient || isUserLoading || !user) {
     return (
@@ -200,29 +261,11 @@ export default function CheckoutPage() {
         <div>
           <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder="John Doe" 
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-            </div>
+            <UserInfoForm 
+              onFormChange={handleFormChange}
+              initialName={user.displayName || ''}
+              initialEmail={user.email || ''}
+            />
 
             <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
                 <AccordionItem value="paystack">
@@ -283,3 +326,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
