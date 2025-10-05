@@ -1,0 +1,222 @@
+{
+  "entities": {
+    "Ebook": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ebook",
+      "type": "object",
+      "description": "Represents an ebook available on the CyberShelf platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Ebook entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the ebook."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description or summary of the ebook."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL of the ebook file stored in Supabase storage.",
+          "format": "uri"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the ebook cover image stored in Supabase storage.",
+          "format": "uri"
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the ebook."
+        },
+        "isDisabled": {
+          "type": "boolean",
+          "description": "Indicates whether the ebook is disabled or not."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "fileUrl",
+        "imageUrl",
+        "price",
+        "isDisabled"
+      ]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "type": "object",
+      "description": "Represents a cybersecurity or tech service offered.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Service entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the service."
+        },
+        "contactInformation": {
+          "type": "string",
+          "description": "Contact details for inquiries about the service."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "contactInformation"
+      ]
+    },
+    "ContactRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContactRequest",
+      "type": "object",
+      "description": "Represents a contact request submitted through the contact form.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ContactRequest entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the person submitting the request."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the person submitting the request.",
+          "format": "email"
+        },
+        "message": {
+          "type": "string",
+          "description": "The message or request submitted."
+        },
+        "submissionDate": {
+          "type": "string",
+          "description": "The date and time when the request was submitted.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "message",
+        "submissionDate"
+      ]
+    },
+    "CartItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CartItem",
+      "type": "object",
+      "description": "Represents an item in the user's shopping cart.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CartItem entity."
+        },
+        "ebookId": {
+          "type": "string",
+          "description": "Reference to Ebook. (Relationship: Ebook 1:N CartItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the ebook in the cart."
+        }
+      },
+      "required": [
+        "id",
+        "ebookId",
+        "quantity"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/ebooks/{ebookId}",
+        "definition": {
+          "entityName": "Ebook",
+          "schema": {
+            "$ref": "#/backend/entities/Ebook"
+          },
+          "description": "Stores ebook data. Admin write access controlled via separate role collection.",
+          "params": [
+            {
+              "name": "ebookId",
+              "description": "The unique identifier for the ebook."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/services/{serviceId}",
+        "definition": {
+          "entityName": "Service",
+          "schema": {
+            "$ref": "#/backend/entities/Service"
+          },
+          "description": "Stores cybersecurity service data. Admin write access controlled via separate role collection.",
+          "params": [
+            {
+              "name": "serviceId",
+              "description": "The unique identifier for the service."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/contact_requests/{contactRequestId}",
+        "definition": {
+          "entityName": "ContactRequest",
+          "schema": {
+            "$ref": "#/backend/entities/ContactRequest"
+          },
+          "description": "Stores contact form submissions. Only accessible by admins.",
+          "params": [
+            {
+              "name": "contactRequestId",
+              "description": "The unique identifier for the contact request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/cart_items/{cartItemId}",
+        "definition": {
+          "entityName": "CartItem",
+          "schema": {
+            "$ref": "#/backend/entities/CartItem"
+          },
+          "description": "Stores cart items for a specific user. Path-based ownership ensures only the user can access their cart data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "cartItemId",
+              "description": "The unique identifier for the cart item."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support CyberShelf's core features, focusing on ebooks, services, contact requests, and shopping cart functionality. Authorization Independence is achieved by avoiding `get()` calls in security rules, primarily through path-based ownership and structural segregation. All data related to a specific user's cart is stored under their user ID, eliminating the need to fetch parent document data for authorization. Separate collections for ebooks, services, and contact requests ensure a homogeneous security posture. The structure prioritizes clarity and predictability with explicit state modeling where necessary and consistent naming conventions.\n\n*   `/ebooks`: Stores ebook data. This collection is globally readable but writeable only by admins (handled through separate admin role check).\n*   `/services`: Stores cybersecurity service data. Similar to ebooks, globally readable, admin-writeable.\n*   `/contact_requests`: Stores contact form submissions. Publicly createable, but only readable by admins.\n*   `/users/{userId}/cart_items`: Stores cart items related to a particular user. This is a path-based ownership model, ensuring only the user has access to their cart data.\n\nThis design ensures QAPs by:\n\n*   Segregating data with different access requirements into separate collections, enabling secure `list` operations without complex filtering in rules.\n*   Using path-based ownership for user-specific data (cart items), making list operations secure and efficient, as rules can easily verify ownership based on the path."
+  }
+}
