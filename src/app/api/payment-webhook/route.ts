@@ -1,7 +1,9 @@
+
 import 'dotenv/config';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { recordPurchase } from '@/app/actions';
+import type { CartItem } from '@/lib/definitions';
 
 const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
 
@@ -26,18 +28,21 @@ export async function POST(req: Request) {
 
     if (event.event === 'charge.success') {
       const { reference, metadata } = event.data;
-      // The metadata.cartItems should be a JSON string.
-      const cartItems = metadata?.cartItems ? JSON.parse(metadata.cartItems) : [];
       
-      if (cartItems.length > 0 && reference) {
+      const cartItems: CartItem[] = metadata?.cartItems ? JSON.parse(metadata.cartItems) : [];
+      const userId: string | undefined = metadata?.userId;
+
+      if (userId && cartItems.length > 0 && reference) {
         try {
           // This acts as a reliable fallback to ensure the purchase is recorded.
-          await recordPurchase(cartItems, reference);
+          await recordPurchase(userId, cartItems, reference);
           console.log(`Successfully processed webhook and recorded purchase for payment reference: ${reference}`);
         } catch (error) {
           console.error(`Webhook processing failed for reference ${reference}:`, error);
           // Still return 200 to Paystack to prevent retries for this specific error.
         }
+      } else {
+        console.warn(`Webhook for reference ${reference} received without sufficient metadata (userId or cartItems).`);
       }
     }
   } catch (error) {
