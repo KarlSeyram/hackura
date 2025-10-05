@@ -15,6 +15,10 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
 
   // The is_disabled filter has been removed to ensure all products are visible.
   // We can re-introduce a corrected filter later if needed.
+  if (!includeDisabled) {
+    // This logic is being removed to show all products.
+    // query = query.filter('is_disabled', 'is', false);
+  }
 
   const { data, error } = await query;
 
