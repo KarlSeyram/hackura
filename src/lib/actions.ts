@@ -4,7 +4,8 @@
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import type { CartItem } from '@/lib/definitions';
+import type { CartItem, Ebook } from '@/lib/definitions';
+import { generateDownloadToken } from './downloadToken';
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),

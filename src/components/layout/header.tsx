@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, User, LogOut } from 'lucide-react';
+import { Menu, User, LogOut, Library } from 'lucide-react';
 import { CartIcon } from '@/components/cart/cart-icon';
 import { useUser } from '@/firebase';
 import {
@@ -79,6 +79,12 @@ function UserNav() {
           <Link href="/profile">
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/my-ebooks">
+            <Library className="mr-2 h-4 w-4" />
+            <span>My Ebooks</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

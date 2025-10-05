@@ -39,7 +39,7 @@ export default function CheckoutPage() {
           variant: 'destructive',
         });
         router.push('/login');
-      } else if (cartCount === 0) {
+      } else if (cartCount === 0 && paymentState === 'idle') {
         toast({
           title: 'Your Cart is Empty',
           description: 'Redirecting you to the store to add some items.',
@@ -47,7 +47,7 @@ export default function CheckoutPage() {
         router.push('/store');
       }
     }
-  }, [isClient, user, isUserLoading, cartCount, router, toast]);
+  }, [isClient, user, isUserLoading, cartCount, router, toast, paymentState]);
 
   useEffect(() => {
     if (user) {
@@ -60,23 +60,31 @@ export default function CheckoutPage() {
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 
   const handlePaymentSuccess = async (reference: any) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Error',
+        description: 'You must be logged in to complete a purchase.',
+      });
+      return;
+    }
     console.log('Payment successful. Ref:', reference.reference);
     setPaymentState('processing');
     toast({
       title: 'Payment Successful!',
-      description: 'Preparing your download links...',
+      description: 'Adding ebooks to your library...',
     });
 
     try {
-      await recordPurchase(cartItems, reference.reference);
+      await recordPurchase(user.uid, cartItems, reference.reference);
       clearCart();
-      router.push(`/download/${reference.reference}`);
+      router.push(`/my-ebooks`);
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
       toast({
         variant: 'destructive',
         title: 'Error Processing Purchase',
-        description: 'There was an issue preparing your download. Please contact support.',
+        description: 'There was an issue saving your purchase. Please contact support.',
       });
       setPaymentState('idle');
     }
@@ -94,6 +102,7 @@ export default function CheckoutPage() {
     reference: `hackura_${new Date().getTime()}`,
     metadata: {
       name,
+      userId: user?.uid,
       cartItems: JSON.stringify(cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))),
     },
     publicKey: paystackPublicKey,

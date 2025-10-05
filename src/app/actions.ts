@@ -1,20 +1,20 @@
+
 'use server';
 
 import 'dotenv/config';
 import { createAdminClient } from '@/lib/supabase/server';
-import type { CartItem, PurchaseLink } from '@/lib/definitions';
+import type { CartItem, PurchaseLink, Ebook } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import { generateDownloadToken, verifyDownloadToken } from '@/lib/downloadToken';
 
 
-export async function recordPurchase(cartItems: CartItem[], paymentReference: string) {
+export async function recordPurchase(userId: string, cartItems: CartItem[], paymentReference: string) {
   const supabase = createAdminClient();
 
   const purchaseRecords = cartItems.map(item => ({
     ebook_id: item.id,
     payment_ref: paymentReference,
-    // In a real app with user accounts, you would get the user ID here.
-    // user_id: userId, 
+    user_id: userId, 
   }));
 
   if (purchaseRecords.length > 0) {
@@ -28,6 +28,7 @@ export async function recordPurchase(cartItems: CartItem[], paymentReference: st
     }
   }
 
+  revalidatePath('/my-ebooks');
   revalidatePath(`/download/${paymentReference}`);
   return { success: true };
 }
@@ -75,27 +76,20 @@ export async function getPurchaseDownloadLinks(purchaseId: string): Promise<Purc
     return downloadLinks;
 }
 
-export async function getSecureDownloadUrl(token: string): Promise<{
+export async function getSecureDownloadUrl(ebookId: string): Promise<{
     url?: string;
-    error?: 'invalid' | 'expired' | 'not_found' | 'unknown';
+    error?: 'not_found' | 'unknown';
 }> {
-    const payload = verifyDownloadToken(token);
-
-    if (!payload) {
-        // Here we can't distinguish between expired and invalid, but the UI can check expiry first.
-        return { error: 'invalid' };
-    }
-
     const supabase = createAdminClient();
 
     const { data: ebook, error: dbError } = await supabase
         .from('ebooks')
         .select('file_name')
-        .eq('id', payload.ebookId)
+        .eq('id', ebookId)
         .single();
 
     if (dbError || !ebook) {
-        console.error('Ebook not found for ID:', payload.ebookId, dbError);
+        console.error('Ebook not found for ID:', ebookId, dbError);
         return { error: 'not_found' };
     }
     
@@ -114,4 +108,48 @@ export async function getSecureDownloadUrl(token: string): Promise<{
 
 export async function createDownloadToken(ebookId: string): Promise<string> {
     return generateDownloadToken(ebookId);
+}
+
+
+export async function getMyEbooks(userId: string): Promise<Ebook[]> {
+    const supabase = createAdminClient();
+
+    // 1. Get all unique ebook_ids the user has purchased
+    const { data: purchases, error: purchasesError } = await supabase
+        .from('purchases')
+        .select('ebook_id')
+        .eq('user_id', userId);
+
+    if (purchasesError) {
+        console.error('Error fetching user purchases:', purchasesError);
+        return [];
+    }
+
+    if (!purchases || purchases.length === 0) {
+        return [];
+    }
+
+    const ebookIds = [...new Set(purchases.map(p => p.ebook_id))];
+
+    // 2. Fetch the details for those ebooks
+    const { data: ebooks, error: ebooksError } = await supabase
+        .from('ebooks')
+        .select('id, title, description, price, image_url, category, file_name')
+        .in('id', ebookIds);
+
+    if (ebooksError) {
+        console.error('Error fetching purchased ebooks:', ebooksError);
+        return [];
+    }
+
+    return ebooks.map(ebook => ({
+        id: ebook.id,
+        title: ebook.title,
+        description: ebook.description, 
+        price: ebook.price,
+        imageUrl: ebook.image_url,
+        imageHint: '',
+        category: ebook.category || 'General',
+        file_name: ebook.file_name
+    }));
 }
