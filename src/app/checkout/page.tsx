@@ -15,10 +15,10 @@ import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import { useUser } from '@/firebase';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { PayPalIcon, SkrillIcon, MtnIcon } from '@/components/icons';
+import { PayPalIcon, MtnIcon } from '@/components/icons';
 import { PayPalCheckoutButton } from '@/components/checkout/paypal-button';
 
-type PaymentMethod = 'paystack' | 'paypal' | 'skrill';
+type PaymentMethod = 'paystack' | 'paypal';
 
 function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
   const [name, setName] = useState(initialName);
@@ -175,6 +175,11 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentError = (err: any) => {
+    // The user closing the window is not a real error, so we don't show a toast.
+    if (err && err.message && err.message.includes('Window closed')) {
+        console.log("Payment window closed by user.");
+        return;
+    }
     console.error("Payment Error:", err);
     toast({
         variant: "destructive",
@@ -237,13 +242,6 @@ export default function CheckoutPage() {
         <p>Redirecting to store...</p>
       </div>
     );
-  }
-  
-  const handleSkrillClick = () => {
-    toast({
-        title: "Coming Soon!",
-        description: "Skrill payments are not yet available. Please choose another method."
-    })
   }
 
   return (
@@ -320,17 +318,6 @@ export default function CheckoutPage() {
                           />
                     </AccordionContent>
                 </AccordionItem>
-                <AccordionItem value="skrill">
-                    <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                            <SkrillIcon className="h-6 w-6" />
-                            <span>Skrill</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                         <Button className="w-full" onClick={handleSkrillClick} disabled={!isFormValid}>Pay with Skrill</Button>
-                    </AccordionContent>
-                </AccordionItem>
             </Accordion>
 
              <Button variant="outline" asChild className="w-full">
@@ -344,6 +331,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
-    
