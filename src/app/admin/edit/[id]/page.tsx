@@ -26,6 +26,19 @@ function SubmitButton() {
   );
 }
 
+// Define the state shape for the form
+type FormState = {
+  message: string;
+  errors: {
+    id?: string[];
+    title?: string[];
+    description?: string[];
+    price?: string[];
+    category?: string[];
+  }
+};
+
+
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const router = useRouter();
@@ -34,7 +47,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [isLoading, setIsLoading] = useState(true);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const initialState = { message: null, errors: {} };
+  const initialState: FormState = { message: '', errors: {} };
   const [state, dispatch] = useFormState(updateProduct, initialState);
 
   useEffect(() => {
