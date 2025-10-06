@@ -41,15 +41,16 @@ export function AdminSidebar() {
         <SidebarMenu>
           {adminNavItems.map(item => {
             const isActive = pathname === item.href;
+            const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} legacyBehavior passHref>
                   <SidebarMenuButton
                     isActive={isActive}
-                    icon={<item.icon />}
                     tooltip={item.label}
                   >
-                    {item.label}
+                    <Icon />
+                    <span>{item.label}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -62,8 +63,9 @@ export function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/" legacyBehavior passHref>
-              <SidebarMenuButton icon={<Home />} tooltip="Back to Site">
-                Back to Site
+              <SidebarMenuButton tooltip="Back to Site">
+                <Home />
+                <span>Back to Site</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
