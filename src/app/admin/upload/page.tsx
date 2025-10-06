@@ -26,17 +26,19 @@ function SubmitButton() {
   );
 }
 
-// Define the state shape for the form
+// Explicitly define the types for form errors and state
+type FormErrors = {
+  title?: string[];
+  description?: string[];
+  price?: string[];
+  category?: string[];
+  image?: string[];
+  file?: string[];
+};
+
 type FormState = {
   message: string;
-  errors: {
-    title?: string[];
-    description?: string[];
-    price?: string[];
-    category?: string[];
-    image?: string[];
-    file?: string[];
-  }
+  errors?: FormErrors;
 };
 
 
@@ -135,9 +137,10 @@ export default function UploadProductPage() {
     tokenClient.requestAccessToken({ prompt: 'consent' });
   }
 
-  const processFormState = (formState: FormState) => {
+  const processFormState = (formState: FormState | undefined) => {
+    if (!formState) return;
     if (formState.message) {
-      if (Object.keys(formState.errors ?? {}).length > 0) {
+      if (formState.errors && Object.keys(formState.errors).length > 0) {
         toast({
           variant: 'destructive',
           title: 'Upload Failed',
@@ -157,8 +160,8 @@ export default function UploadProductPage() {
     }
   };
 
-  useEffect(() => processFormState(state), [state, toast, router]);
-  useEffect(() => processFormState(driveState), [driveState, toast, router]);
+  useEffect(() => processFormState(state), [state]);
+  useEffect(() => processFormState(driveState), [driveState]);
 
   return (
     <>
