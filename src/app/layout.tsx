@@ -29,10 +29,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <Script src="https://apis.google.com/js/api.js" async />
-        <Script src="https://accounts.google.com/gsi/client" async />
       </head>
-      <body className="font-body antialiased">
+      <body>
         <PayPalProvider>
           <FirebaseClientProvider>
             <CartProvider>

@@ -28,8 +28,8 @@ function SubmitButton() {
 }
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
-const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || '';
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 
 export default function UploadProductPage() {
@@ -64,7 +64,7 @@ export default function UploadProductPage() {
   };
 
   useEffect(() => {
-    if (gapiLoaded && gisLoaded) {
+    if (gapiLoaded && gisLoaded && GOOGLE_CLIENT_ID) {
       const client = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: DRIVE_SCOPES,
@@ -75,7 +75,14 @@ export default function UploadProductPage() {
   }, [gapiLoaded, gisLoaded]);
 
   const handleOpenPicker = (fileType: 'image' | 'file') => {
-    if (!tokenClient) return;
+    if (!tokenClient || !GOOGLE_API_KEY) {
+        toast({
+            variant: 'destructive',
+            title: 'Configuration Error',
+            description: 'Google Drive integration is not configured. Please set API Key and Client ID.'
+        })
+        return;
+    };
     setIsDrivePickerLoading(true);
 
     tokenClient.callback = async (resp: any) => {
@@ -142,7 +149,9 @@ export default function UploadProductPage() {
 
   return (
     <>
-      <Script src="https://apis.google.com/js/api.js" async onLoad={() => setGapiLoaded(true)} />
+      <Script src="https://apis.google.com/js/api.js" async onLoad={() => {
+          window.gapi.load('picker', () => setGapiLoaded(true));
+      }} />
       <Script src="https://accounts.google.com/gsi/client" async onLoad={() => setGisLoaded(true)} />
 
       <div className="flex-1 space-y-4">
