@@ -1,7 +1,7 @@
 
 'use client';
 
-import { PayPalButtons, OnApproveData, CreateOrderData } from '@paypal/react-paypal-js';
+import { PayPalButtons, OnApproveActions } from '@paypal/react-paypal-js';
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import type { CartItem } from '@/lib/definitions';
@@ -30,7 +30,7 @@ export function PayPalCheckoutButton({
     // Faking user for now
     const [user, setUser] = useState({ uid: '123' });
 
-    const createOrder = (data: CreateOrderData, actions: any) => {
+    const createOrder = (data: any, actions: any) => {
         console.log("Creating PayPal order...");
         return actions.order.create({
             purchase_units: [
@@ -49,7 +49,7 @@ export function PayPalCheckoutButton({
         });
     };
 
-    const onApprove = async (data: OnApproveData, actions: any) => {
+    const onApprove = async (data: any, actions: OnApproveActions) => {
         console.log("PayPal order approved. Data:", data);
         if (!actions.order || !user) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not finalize purchase. User or order details missing.' });
