@@ -1,5 +1,5 @@
 
-import { services } from '@/lib/data';
+import { services } from '@/lib/services-data';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';

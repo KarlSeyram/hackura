@@ -1,6 +1,6 @@
 
 import { notFound } from 'next/navigation';
-import { services } from '@/lib/data';
+import { services } from '@/lib/services-data';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, DollarSign } from 'lucide-react';
