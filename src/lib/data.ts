@@ -5,6 +5,9 @@ import type { Ebook, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks(options: { includeDisabled?: boolean } = {}): Promise<Ebook[]> {
+  console.log('Attempting to fetch ebooks...');
+  console.log('Supabase URL Used:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Loaded' : 'NOT LOADED');
+
   const { includeDisabled = false } = options;
   const supabase = createAdminClient();
   
@@ -14,16 +17,20 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .order("created_at", { ascending: false });
 
   if (!includeDisabled) {
-    // This is a more direct and RLS-friendly way to fetch only enabled ebooks.
-    // The previous .or() filter could misbehave with RLS when a value is null.
     query = query.eq('is_disabled', false);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching ebooks from Supabase:", error.message);
+    console.error("Critical Error fetching ebooks from Supabase:", error);
     return [];
+  }
+
+  console.log(`Query successful. Found ${data.length} ebooks.`);
+  
+  if (data.length === 0) {
+      console.log('No ebooks were returned from the database. Please check your Supabase table "ebooks" to ensure it contains data and that the "is_disabled" column is set to false for the ebooks you want to display.');
   }
 
   const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
