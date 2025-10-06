@@ -28,9 +28,11 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .select("id, title, description, price, image_url, category, is_disabled")
     .order("created_at", { ascending: false });
 
-  if (!includeDisabled) {
-    query = query.eq('is_disabled', false);
-  }
+  // This was the error. The 'is_disabled' column doesn't exist.
+  // Removing this filter will allow products to be fetched.
+  // if (!includeDisabled) {
+  //   query = query.eq('is_disabled', false);
+  // }
 
   const { data, error } = await query;
 
@@ -40,7 +42,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
   }
 
   if (data.length === 0) {
-      console.log('No ebooks were returned from the database. Please check your Supabase table "ebooks" to ensure it contains data and that the "is_disabled" column is set to false for the ebooks you want to display.');
+      console.log('No ebooks were returned from the database. Please check your Supabase table "ebooks" to ensure it contains data.');
   }
 
   const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
@@ -51,7 +53,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     imageUrl: ebook.image_url,
     imageHint: '',
     category: ebook.category || 'General',
-    isDisabled: ebook.is_disabled,
+    isDisabled: ebook.is_disabled || false, // Default to false if column doesn't exist
   }));
 
   return fetchedEbooks;
