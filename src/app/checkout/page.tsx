@@ -151,11 +151,11 @@ export default function CheckoutPage() {
     setPaymentState('processing');
     toast({
       title: 'Payment Successful!',
-      description: 'Adding ebooks to your library...',
+      description: 'Redirecting to your downloads...',
     });
 
     clearCart();
-    router.push(`/my-ebooks`);
+    router.push(`/download/${reference}`);
   };
 
   const handlePaymentSuccess = async (reference: any) => {
@@ -331,3 +331,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    

@@ -64,9 +64,17 @@ export async function getPurchaseDownloadLinks(purchaseId: string): Promise<Purc
             continue; 
         }
 
-        const downloadUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ebook-files/${ebook.file_name}`;
+        // Generate a short-lived signed URL for the download
+        const { data, error: urlError } = await supabase.storage
+            .from('ebook-files')
+            .createSignedUrl(ebook.file_name, 3600); // URL is valid for 1 hour
 
-        downloadLinks.push({ title: ebook.title, download_url: downloadUrl });
+        if (urlError) {
+            console.error('Error creating signed URL for', ebook.file_name, urlError);
+            continue;
+        }
+
+        downloadLinks.push({ title: ebook.title, download_url: data.signedUrl });
     }
 
     if(downloadLinks.length === 0){
@@ -153,3 +161,5 @@ export async function getMyEbooks(userId: string): Promise<Ebook[]> {
         file_name: ebook.file_name
     }));
 }
+
+    

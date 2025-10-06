@@ -26,7 +26,7 @@ export default async function PurchaseConfirmationPage({ params }: { params: { p
                     <CardHeader className="items-center text-center">
                         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
                         <CardTitle className="font-headline text-3xl">Thank You for Your Purchase!</CardTitle>
-                        <CardDescription>Your download links are ready. You will also receive an email with these links shortly.</CardDescription>
+                        <CardDescription>Your download links are ready. You can also find your ebooks in your library.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -34,7 +34,7 @@ export default async function PurchaseConfirmationPage({ params }: { params: { p
                                 <div key={index} className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
                                     <p className="font-medium truncate pr-4">{link.title}</p>
                                     <Button asChild>
-                                        <a href={link.download_url}>
+                                        <a href={link.download_url} download>
                                             <Download className="mr-2 h-4 w-4" />
                                             Download
                                         </a>
@@ -45,11 +45,16 @@ export default async function PurchaseConfirmationPage({ params }: { params: { p
                     </CardContent>
                     <CardFooter className="flex-col gap-4">
                         <p className="text-xs text-muted-foreground text-center">
-                            These links are for your personal use and will expire in 24 hours.
+                            These secure links are for your personal use and will expire in 1 hour.
                         </p>
-                        <Button asChild variant="outline">
-                           <Link href="/store">Continue Shopping</Link>
-                        </Button>
+                        <div className="flex gap-4">
+                            <Button asChild variant="outline">
+                               <Link href="/my-ebooks">Go to My Library</Link>
+                            </Button>
+                            <Button asChild>
+                               <Link href="/store">Continue Shopping</Link>
+                            </Button>
+                        </div>
                     </CardFooter>
                  </Card>
             </div>
@@ -72,3 +77,5 @@ export default async function PurchaseConfirmationPage({ params }: { params: { p
         );
     }
 }
+
+    

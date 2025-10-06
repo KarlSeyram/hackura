@@ -39,6 +39,7 @@ export function PayPalCheckoutButton({
                         currency_code: paystackCurrency,
                     },
                     description: "Hackura Ebook Purchase",
+                    custom_id: user?.uid, // Pass user ID here
                 },
             ],
             application_context: {
@@ -58,7 +59,6 @@ export function PayPalCheckoutButton({
             const details = await actions.order.capture();
             const orderId = details.id;
             console.log('Payment successful. Order ID:', orderId);
-            toast({ title: 'Payment Successful!', description: 'Processing your order...' });
             
             // Record the purchase in the backend
             await recordPurchase(user.uid, cartItems, orderId);
@@ -106,5 +106,7 @@ export function PayPalCheckoutButton({
         />
     );
 }
+
+    
 
     
