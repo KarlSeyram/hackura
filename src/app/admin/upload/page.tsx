@@ -95,7 +95,7 @@ export default function UploadProductPage() {
         if(fileType === 'image'){
              view.setMimeTypes("image/png,image/jpeg,image/jpg,image/webp");
         } else {
-            view.setMimeTypes("application/pdf,application/epub+zip");
+            view.setMimeTypes("application/pdf,application/epub+zip,application/zip");
         }
 
         const picker = new google.picker.PickerBuilder()
@@ -207,7 +207,7 @@ export default function UploadProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="file">Ebook File (PDF, EPUB)</Label>
+                <Label htmlFor="file">Ebook File (PDF, EPUB, ZIP)</Label>
                 {ebookDriveFile ? (
                   <div className="flex items-center gap-2 text-sm p-2 border rounded-md bg-muted">
                     <CloudUpload className="h-4 w-4 text-green-500" />
@@ -216,7 +216,7 @@ export default function UploadProductPage() {
                   </div>
                 ) : (
                   <div className="flex gap-2">
-                    <Input id="file" name="file" type="file" accept=".pdf,.epub" />
+                    <Input id="file" name="file" type="file" accept=".pdf,.epub,.zip" />
                     <Button type="button" variant="outline" onClick={() => handleOpenPicker('file')} disabled={!gapiLoaded || !gisLoaded || isDrivePickerLoading}>
                        {isDrivePickerLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
                        <span className="ml-2 hidden sm:inline">Drive</span>

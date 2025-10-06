@@ -1,5 +1,4 @@
 
-import 'dotenv/config';
 import type { Ebook, Service, Review } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 import { Code, LayoutGrid, ShieldCheck, Siren, FileText, ShieldAlert, Palette, Globe } from 'lucide-react';

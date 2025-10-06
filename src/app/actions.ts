@@ -1,7 +1,6 @@
 
 'use server';
 
-import 'dotenv/config';
 import { createAdminClient } from '@/lib/supabase/server';
 import type { CartItem, PurchaseLink, Ebook } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
@@ -161,4 +160,5 @@ export async function getMyEbooks(userId: string): Promise<Ebook[]> {
         file_name: ebook.file_name
     }));
 }
+
 

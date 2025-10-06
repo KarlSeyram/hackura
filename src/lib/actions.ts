@@ -18,7 +18,7 @@ const contactSchema = z.object({
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
-const ACCEPTED_FILE_TYPES = ["application/pdf", "application/epub+zip"];
+const ACCEPTED_FILE_TYPES = ["application/pdf", "application/epub+zip", "application/zip"];
 
 const productSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
@@ -39,7 +39,7 @@ const productSchema = z.object({
     .refine((file) => file?.size <= MAX_FILE_SIZE, `Max file size is 25MB.`)
     .refine(
       (file) => ACCEPTED_FILE_TYPES.includes(file?.type),
-      "Only .pdf and .epub formats are supported."
+      "Only .pdf, .epub, and .zip formats are supported."
     ),
 });
 
