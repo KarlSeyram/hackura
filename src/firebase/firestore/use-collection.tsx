@@ -1,75 +1,94 @@
-{
-  "name": "nextn",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev -p 9002",
-    "genkit:dev": "genkit start src/ai/dev.ts",
-    "genkit:watch": "genkit start --watch src/ai/dev.ts",
-    "build": "NODE_ENV=production next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@genkit-ai/googleai": "1.13.0",
-    "@hookform/resolvers": "^4.1.3",
-    "@paypal/react-paypal-js": "^8.5.0",
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-alert-dialog": "^1.1.6",
-    "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-checkbox": "^1.1.4",
-    "@radix-ui/react-collapsible": "^1.1.11",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-menubar": "^1.1.6",
-    "@radix-ui/react-popover": "^1.1.6",
-    "@radix-ui/react-progress": "^1.1.2",
-    "@radix-ui/react-radio-group": "^1.2.3",
-    "@radix-ui/react-scroll-area": "^1.2.3",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-separator": "^1.1.2",
-    "@radix-ui/react-slider": "^1.2.3",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-switch": "^1.1.3",
-    "@radix-ui/react-tabs": "^1.1.3",
-    "@radix-ui/react-toast": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.1.8",
-    "@supabase/supabase-js": "^2.45.0",
-    "@tanstack/react-table": "^8.19.3",
-    "@vercel/analytics": "^1.5.0",
-    "@vercel/speed-insights": "^1.0.12",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
-    "embla-carousel-react": "^8.6.0",
-    "genkit": "1.13.0",
-    "googleapis": "^140.0.1",
-    "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.475.0",
-    "next": "14.2.4",
-    "patch-package": "^8.0.0",
-    "react": "^18.2.0",
-    "react-day-picker": "^8.10.1",
-    "react-dom": "^18.2.0",
-    "react-hook-form": "^7.54.2",
-    "react-paystack": "^5.0.0",
-    "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/gapi": "^0.0.47",
-    "@types/google.accounts": "^0.0.14",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "genkit-cli": "1.13.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
-  }
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  Query,
+  onSnapshot,
+  FirestoreError,
+  DocumentData,
+  QuerySnapshot,
+} from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
+
+/** Utility type to add an 'id' field to a given type T. */
+type WithId<T> = T & { id: string };
+
+/**
+ * Interface for the return value of the useCollection hook.
+ * @template T Type of the document data in the collection.
+ */
+export interface UseCollectionResult<T> {
+  data: WithId<T>[] | null; // Array of documents with IDs, or null.
+  isLoading: boolean;        // True if loading.
+  error: FirestoreError | Error | null; // Error object, or null.
+}
+
+/**
+ * React hook to subscribe to a Firestore collection or query in real-time.
+ * Handles nullable queries.
+ * 
+ * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
+ * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
+ * references
+ *
+ *
+ * @template T Optional type for document data. Defaults to any.
+ * @param {Query<DocumentData> | null | undefined} memoizedQuery -
+ * The Firestore Query. Waits if null/undefined.
+ * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
+ */
+export function useCollection<T = any>(
+  memoizedQuery: Query<DocumentData> | null | undefined,
+): UseCollectionResult<T> {
+  type StateDataType = WithId<T>[] | null;
+
+  const [data, setData] = useState<StateDataType>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<FirestoreError | Error | null>(null);
+
+  useEffect(() => {
+    if (!memoizedQuery) {
+      setData(null);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    // Optional: setData(null); // Clear previous data instantly
+
+    const unsubscribe = onSnapshot(
+      memoizedQuery,
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        const result: WithId<T>[] = [];
+        snapshot.forEach(doc => {
+          result.push({ ...(doc.data() as T), id: doc.id });
+        });
+        setData(result);
+        setError(null);
+        setIsLoading(false);
+      },
+      (error: FirestoreError) => {
+        // Here we can't be sure of the exact path from a query, so we use a placeholder.
+        const contextualError = new FirestorePermissionError({
+          operation: 'list',
+          path: '(collection query)',
+        });
+        
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
+
+        // trigger global error propagation
+        errorEmitter.emit('permission-error', contextualError);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [memoizedQuery]); // Re-run if the memoizedQuery changes.
+
+  return { data, isLoading, error };
 }

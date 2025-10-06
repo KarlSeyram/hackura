@@ -1,75 +1,86 @@
-{
-  "name": "nextn",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev -p 9002",
-    "genkit:dev": "genkit start src/ai/dev.ts",
-    "genkit:watch": "genkit start --watch src/ai/dev.ts",
-    "build": "NODE_ENV=production next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@genkit-ai/googleai": "1.13.0",
-    "@hookform/resolvers": "^4.1.3",
-    "@paypal/react-paypal-js": "^8.5.0",
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-alert-dialog": "^1.1.6",
-    "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-checkbox": "^1.1.4",
-    "@radix-ui/react-collapsible": "^1.1.11",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-menubar": "^1.1.6",
-    "@radix-ui/react-popover": "^1.1.6",
-    "@radix-ui/react-progress": "^1.1.2",
-    "@radix-ui/react-radio-group": "^1.2.3",
-    "@radix-ui/react-scroll-area": "^1.2.3",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-separator": "^1.1.2",
-    "@radix-ui/react-slider": "^1.2.3",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-switch": "^1.1.3",
-    "@radix-ui/react-tabs": "^1.1.3",
-    "@radix-ui/react-toast": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.1.8",
-    "@supabase/supabase-js": "^2.45.0",
-    "@tanstack/react-table": "^8.19.3",
-    "@vercel/analytics": "^1.5.0",
-    "@vercel/speed-insights": "^1.0.12",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
-    "embla-carousel-react": "^8.6.0",
-    "genkit": "1.13.0",
-    "googleapis": "^140.0.1",
-    "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.475.0",
-    "next": "14.2.4",
-    "patch-package": "^8.0.0",
-    "react": "^18.2.0",
-    "react-day-picker": "^8.10.1",
-    "react-dom": "^18.2.0",
-    "react-hook-form": "^7.54.2",
-    "react-paystack": "^5.0.0",
-    "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/gapi": "^0.0.47",
-    "@types/google.accounts": "^0.0.14",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "genkit-cli": "1.13.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+'use client';
+
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import type { FirebaseApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
+
+/**
+ * Defines the shape of the context that will be provided to the app.
+ * This includes the Firebase services and the current authenticated user state.
+ */
+interface FirebaseContextType {
+  firebaseApp: FirebaseApp | null;
+  auth: Auth | null;
+  firestore: Firestore | null;
+  user: User | null;
+  isLoading: boolean;
+}
+
+// Create the context with a default value of null.
+const FirebaseContext = createContext<FirebaseContextType | null>(null);
+
+/**
+* A React hook that provides easy access to the Firebase context.
+* It throws an error if used outside of a FirebaseProvider.
+*
+* @returns {FirebaseContextType} The Firebase context, including app, auth, firestore, user, and loading state.
+*/
+export function useFirebase() {
+  const context = useContext(FirebaseContext);
+  if (!context) {
+    throw new Error('useFirebase must be used within a FirebaseProvider');
   }
+  return context;
+}
+
+/**
+ * A React Provider component that initializes Firebase services and provides them
+ * to its children via context. It also listens for authentication state changes
+ * and makes the current user and loading state available throughout the app.
+ *
+ * @param {object} props - The component props.
+ * @param {ReactNode} props.children - The child components to render.
+ * @param {FirebaseApp} props.firebaseApp - The initialized Firebase App instance.
+ * @param {Auth} props.auth - The initialized Firebase Auth instance.
+ * @param {Firestore} props.firestore - The initialized Firebase Firestore instance.
+ * @returns {JSX.Element} The provider component.
+ */
+export function FirebaseProvider({
+  children,
+  firebaseApp,
+  auth,
+  firestore,
+}: {
+  children: ReactNode;
+  firebaseApp: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
+}) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Set up the authentication state listener.
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setIsLoading(false);
+    });
+
+    // Cleanup the listener when the component unmounts.
+    return () => unsubscribe();
+  }, [auth]);
+
+  // Memoize the context value to prevent unnecessary re-renders.
+  const contextValue = useMemo(
+    () => ({ firebaseApp, auth, firestore, user, isLoading }),
+    [firebaseApp, auth, firestore, user, isLoading]
+  );
+
+  return (
+    <FirebaseContext.Provider value={contextValue}>
+      {children}
+    </FirebaseContext.Provider>
+  );
 }
