@@ -75,10 +75,3 @@ export default function ServiceDetailPage({ params }: { params: { slug: string }
     </div>
   );
 }
-
-// Generate static paths for all services
-export async function generateStaticParams() {
-  return services.map((service) => ({
-    slug: service.slug,
-  }));
-}
