@@ -186,22 +186,22 @@ export default function UploadProductPage() {
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input id="title" name="title" placeholder="e.g., Advanced Network Security" />
-                {(state.errors?.title || driveState.errors?.title) && <p className="text-sm text-destructive">{(state.errors?.title || driveState.errors?.title)?.[0]}</p>}
+                {(state.errors?.title?.[0] || driveState.errors?.title?.[0]) && <p className="text-sm text-destructive">{(state.errors?.title?.[0] || driveState.errors?.title?.[0])}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" placeholder="A brief but engaging description of the ebook." rows={5} />
-                {(state.errors?.description || driveState.errors?.description) && <p className="text-sm text-destructive">{(state.errors?.description || driveState.errors?.description)?.[0]}</p>}
+                {(state.errors?.description?.[0] || driveState.errors?.description?.[0]) && <p className="text-sm text-destructive">{(state.errors?.description?.[0] || driveState.errors?.description?.[0])}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Price ({paystackCurrency})</Label>
                 <Input id="price" name="price" type="number" placeholder="e.g., 49.99" step="0.01" />
-                {(state.errors?.price || driveState.errors?.price) && <p className="text-sm text-destructive">{(state.errors?.price || driveState.errors?.price)?.[0]}</p>}
+                {(state.errors?.price?.[0] || driveState.errors?.price?.[0]) && <p className="text-sm text-destructive">{(state.errors?.price?.[0] || driveState.errors?.price?.[0])}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Input id="category" name="category" placeholder="e.g., Offensive Security" />
-                {(state.errors?.category || driveState.errors?.category) && <p className="text-sm text-destructive">{(state.errors?.category || driveState.errors?.category)?.[0]}</p>}
+                {(state.errors?.category?.[0] || driveState.errors?.category?.[0]) && <p className="text-sm text-destructive">{(state.errors?.category?.[0] || driveState.errors?.category?.[0])}</p>}
               </div>
 
               <div className="space-y-2">
@@ -221,7 +221,7 @@ export default function UploadProductPage() {
                     </Button>
                   </div>
                 )}
-                 {(state.errors?.image || driveState.errors?.image) && <p className="text-sm text-destructive">{(state.errors?.image || driveState.errors?.image)?.[0]}</p>}
+                 {(state.errors?.image?.[0] || driveState.errors?.image?.[0]) && <p className="text-sm text-destructive">{(state.errors?.image?.[0] || driveState.errors?.image?.[0])}</p>}
               </div>
 
               <div className="space-y-2">
@@ -241,7 +241,7 @@ export default function UploadProductPage() {
                     </Button>
                   </div>
                 )}
-                {(state.errors?.file || driveState.errors?.file) && <p className="text-sm text-destructive">{(state.errors?.file || driveState.errors?.file)?.[0]}</p>}
+                {(state.errors?.file?.[0] || driveState.errors?.file?.[0]) && <p className="text-sm text-destructive">{(state.errors?.file?.[0] || driveState.errors?.file?.[0])}</p>}
               </div>
               <SubmitButton />
             </form>
