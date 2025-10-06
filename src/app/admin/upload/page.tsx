@@ -38,7 +38,7 @@ type FormErrors = {
 
 type FormState = {
   message: string;
-  errors: FormErrors;
+  errors?: FormErrors;
 };
 
 
