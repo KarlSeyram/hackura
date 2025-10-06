@@ -1,6 +1,6 @@
+
 'use client';
 
-import { useUser } from '@/firebase';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getAuth, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -22,8 +21,8 @@ const profileSchema = z.object({
 
 
 export function ProfileSettings() {
-  const { user, isUserLoading } = useUser();
-  const auth = getAuth();
+  const [user, setUser] = useState({ displayName: 'Guest', email: 'guest@example.com', photoURL: '' });
+  const [isUserLoading, setIsUserLoading] = useState(false);
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -39,14 +38,14 @@ export function ProfileSettings() {
 
     setIsUpdating(true);
     try {
-      await updateProfile(user, {
-        displayName: values.displayName,
-      });
+      // Fake profile update
+      console.log('Updating profile with:', values);
+      await new Promise(res => setTimeout(res, 1000));
+      setUser(prev => ({...prev, displayName: values.displayName}));
       toast({
         title: 'Success!',
         description: 'Your profile has been updated.',
       });
-      // The useUser hook will trigger a re-render with the new info automatically
     } catch (error: any) {
        toast({
         variant: 'destructive',

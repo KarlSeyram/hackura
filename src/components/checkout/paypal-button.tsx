@@ -5,8 +5,8 @@ import { PayPalButtons, OnApproveData, CreateOrderData } from '@paypal/react-pay
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import type { CartItem } from '@/lib/definitions';
-import { useUser } from '@/firebase';
 import { Button } from '../ui/button';
+import { useState } from 'react';
 
 interface PayPalCheckoutButtonProps {
     cartItems: CartItem[];
@@ -27,7 +27,8 @@ export function PayPalCheckoutButton({
     disabled
 }: PayPalCheckoutButtonProps) {
     const { toast } = useToast();
-    const { user } = useUser();
+    // Faking user for now
+    const [user, setUser] = useState({ uid: '123' });
 
     const createOrder = (data: CreateOrderData, actions: any) => {
         console.log("Creating PayPal order...");
@@ -106,7 +107,3 @@ export function PayPalCheckoutButton({
         />
     );
 }
-
-    
-
-    

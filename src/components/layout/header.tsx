@@ -6,7 +6,6 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu, User, LogOut, Library } from 'lucide-react';
 import { CartIcon } from '@/components/cart/cart-icon';
-import { useUser } from '@/firebase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +15,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { getAuth, signOut } from 'firebase/auth';
 import { Separator } from '../ui/separator';
+import { useState } from 'react';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -27,15 +26,13 @@ const navLinks = [
 ];
 
 function UserNav() {
-  const { user, isUserLoading } = useUser();
-  const auth = getAuth();
+  // Faking user for now
+  const [user, setUser] = useState<{ displayName: string, email: string, photoURL: string } | null>({ displayName: 'Guest', email: 'guest@example.com', photoURL: '' });
+  const [isUserLoading, setIsUserLoading] = useState(false);
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    // Fake logout
+    setUser(null);
   };
 
 

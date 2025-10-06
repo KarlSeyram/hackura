@@ -1,9 +1,8 @@
 
 'use client';
 
-import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +13,9 @@ import { DeleteAccountDialog } from '@/components/profile/delete-account-dialog'
 
 
 export default function ProfilePage() {
-  const { user, isUserLoading } = useUser();
+  // Faking user for now
+  const [user, setUser] = useState({ uid: '123' });
+  const [isUserLoading, setIsUserLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -90,5 +91,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

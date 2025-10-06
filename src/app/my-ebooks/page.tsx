@@ -1,13 +1,15 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
 import { Loader2, Library } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MyEbooksList } from '@/components/profile/my-ebooks-list';
 
 export default function MyEbooksPage() {
-  const { user, isUserLoading } = useUser();
+  // Faking user for now
+  const [user, setUser] = useState({ uid: '123' });
+  const [isUserLoading, setIsUserLoading] = useState(false);
   const router = useRouter();
   
   useEffect(() => {

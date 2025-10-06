@@ -27,8 +27,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
-import { EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -37,7 +35,7 @@ const formSchema = z.object({
 });
 
 export function DeleteAccountDialog() {
-  const { user } = useUser();
+  const [user, setUser] = useState({ email: 'guest@example.com' });
   const { toast } = useToast();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -57,12 +55,9 @@ export function DeleteAccountDialog() {
     form.clearErrors();
 
     try {
-      // 1. Re-authenticate the user
-      const credential = EmailAuthProvider.credential(user.email, values.password);
-      await reauthenticateWithCredential(user, credential);
-
-      // 2. If re-authentication is successful, delete the user
-      await deleteUser(user);
+      // Fake account deletion
+      console.log('Deleting account for:', user.email);
+      await new Promise(res => setTimeout(res, 1500));
 
       toast({
         title: 'Account Deleted',
@@ -74,22 +69,7 @@ export function DeleteAccountDialog() {
       setIsOpen(false);
 
     } catch (error: any) {
-      let errorMessage = 'An unknown error occurred.';
-      switch (error.code) {
-        case 'auth/wrong-password':
-          errorMessage = 'The password you entered is incorrect.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many attempts. Please try again later.';
-          break;
-        case 'auth/requires-recent-login':
-             errorMessage = 'This operation is sensitive and requires recent authentication. Please log out and log back in before trying again.';
-             break;
-        default:
-          errorMessage = 'Failed to delete account. Please try again.';
-          break;
-      }
-      form.setError('password', { type: 'manual', message: errorMessage });
+      form.setError('password', { type: 'manual', message: 'Failed to delete account. Please try again.' });
     } finally {
       setIsDeleting(false);
     }

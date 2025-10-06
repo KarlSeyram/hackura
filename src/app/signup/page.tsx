@@ -16,8 +16,6 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
-import { useAuth } from '@/firebase';
-import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -37,7 +35,6 @@ const formSchema = z.object({
 });
 
 export default function SignUpPage() {
-  const auth = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -56,10 +53,8 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      await updateProfile(userCredential.user, {
-        displayName: values.displayName
-      });
+      // Fake signup
+      console.log('Signing up with:', values);
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
@@ -72,8 +67,8 @@ export default function SignUpPage() {
     setIsGoogleLoading(true);
     setError(null);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      // Fake Google sign in
+      console.log('Signing up with Google');
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);

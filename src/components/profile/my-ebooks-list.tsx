@@ -1,7 +1,7 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
 import { getMyEbooks, getSecureDownloadUrl } from '@/app/actions';
 import type { Ebook } from '@/lib/definitions';
 import { Loader2, Download, XCircle } from 'lucide-react';
@@ -59,7 +59,8 @@ function EbookRow({ ebook }: { ebook: Ebook }) {
 }
 
 export function MyEbooksList() {
-  const { user, isUserLoading } = useUser();
+  const [user, setUser] = useState({ uid: '123' });
+  const [isUserLoading, setIsUserLoading] = useState(false);
   const router = useRouter();
   const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [isLoading, setIsLoading] = useState(true);

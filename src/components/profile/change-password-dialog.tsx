@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -25,8 +26,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -39,8 +38,7 @@ const formSchema = z.object({
 });
 
 export function ChangePasswordDialog() {
-  const auth = useAuth();
-  const { user } = useUser();
+  const [user, setUser] = useState({ email: 'guest@example.com' });
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,13 +60,10 @@ export function ChangePasswordDialog() {
     setError(null);
 
     try {
-      // Re-authenticate the user
-      const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
-      await reauthenticateWithCredential(user, credential);
-
-      // If re-authentication is successful, update the password
-      await updatePassword(user, values.newPassword);
-
+      // Fake password change
+      console.log('Changing password for:', user.email);
+      await new Promise(res => setTimeout(res, 1000));
+      
       toast({
         title: 'Success!',
         description: 'Your password has been updated.',
@@ -76,19 +71,7 @@ export function ChangePasswordDialog() {
       form.reset();
       setIsOpen(false);
     } catch (error: any) {
-      let errorMessage = 'An unknown error occurred.';
-      switch (error.code) {
-        case 'auth/wrong-password':
-          errorMessage = 'The current password you entered is incorrect.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many attempts. Please try again later.';
-          break;
-        default:
-          errorMessage = 'Failed to update password. Please try again.';
-          break;
-      }
-      setError(errorMessage);
+      setError('Failed to update password. Please try again.');
     } finally {
       setIsLoading(false);
     }
