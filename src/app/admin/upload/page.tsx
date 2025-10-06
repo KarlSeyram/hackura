@@ -42,13 +42,14 @@ type FormState = {
 };
 
 // Custom hook to properly type useFormState
-function useActionState<State extends { message: string, errors: FormErrors }>(
+function useActionState<State extends FormState>(
   action: (state: State, payload: FormData) => Promise<State> | State,
   initialState: State
 ): [State, (payload: FormData) => void] {
   const [state, dispatch] = useFormState(action, initialState);
   return [state as State, dispatch];
 }
+
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
