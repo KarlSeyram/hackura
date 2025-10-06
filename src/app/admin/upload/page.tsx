@@ -27,6 +27,20 @@ function SubmitButton() {
   );
 }
 
+// Define the state shape for the form
+type FormState = {
+  message: string;
+  errors: {
+    title?: string[];
+    description?: string[];
+    price?: string[];
+    category?: string[];
+    image?: string[];
+    file?: string[];
+  }
+};
+
+
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -45,7 +59,7 @@ export default function UploadProductPage() {
   const [imageDriveFile, setImageDriveFile] = useState<{ id: string; name: string; accessToken: string; } | null>(null);
   const [ebookDriveFile, setEbookDriveFile] = useState<{ id: string; name: string; accessToken: string; } | null>(null);
 
-  const initialState = { message: null, errors: {} };
+  const initialState: FormState = { message: '', errors: {} };
   const [state, dispatch] = useFormState(uploadProduct, initialState);
   const [driveState, driveDispatch] = useFormState(uploadProductFromGoogleDrive, initialState);
 
@@ -122,7 +136,7 @@ export default function UploadProductPage() {
     tokenClient.requestAccessToken({ prompt: 'consent' });
   }
 
-  const processFormState = (formState: typeof state | typeof driveState) => {
+  const processFormState = (formState: FormState) => {
     if (formState.message) {
       if (Object.keys(formState.errors ?? {}).length > 0) {
         toast({
