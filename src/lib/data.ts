@@ -7,42 +7,34 @@ import { createClient } from '@supabase/supabase-js';
 export async function getEbooks(options: { includeDisabled?: boolean } = {}): Promise<Ebook[]> {
   const { includeDisabled = false } = options;
   
-  // Directly initialize the Supabase client here for server-side operations
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error("Supabase environment variables are not set. Make sure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are in your .env file.");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("Supabase server environment variables are not set.");
     return [];
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   let query = supabase
     .from("ebooks")
     .select("id, title, description, price, image_url, category, is_disabled")
     .order("created_at", { ascending: false });
 
-  // This was the error. The 'is_disabled' column doesn't exist.
-  // Removing this filter will allow products to be fetched.
-  // if (!includeDisabled) {
-  //   query = query.eq('is_disabled', false);
-  // }
+  if (!includeDisabled) {
+    query = query.eq('is_disabled', false);
+  }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Critical Error fetching ebooks from Supabase:", error);
+    console.error("Error fetching ebooks from Supabase:", error);
     return [];
   }
-
-  if (data.length === 0) {
-      console.log('No ebooks were returned from the database. Please check your Supabase table "ebooks" to ensure it contains data.');
+  
+  if (!data) {
+      return [];
   }
 
   const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
@@ -53,14 +45,21 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     imageUrl: ebook.image_url,
     imageHint: '',
     category: ebook.category || 'General',
-    isDisabled: ebook.is_disabled || false, // Default to false if column doesn't exist
+    isDisabled: ebook.is_disabled || false,
   }));
 
   return fetchedEbooks;
 }
 
 export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        console.error("Supabase server environment variables are not set for reviews.");
+        return [];
+    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { data, error } = await supabase
         .from('reviews')
         .select('id, ebook_id, reviewer_name, rating, comment')
@@ -82,7 +81,14 @@ export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
 }
 
 export async function submitReview(ebookId: string, rating: number, comment: string, reviewer: string) {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        console.error("Supabase server environment variables are not set for submitting reviews.");
+        return { success: false, message: 'Server configuration error.' };
+    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { error } = await supabase.from('reviews').insert({
         ebook_id: ebookId,
         rating,
