@@ -2,15 +2,27 @@
 'use server';
 
 import type { Ebook, Review } from './definitions';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function getEbooks(options: { includeDisabled?: boolean } = {}): Promise<Ebook[]> {
-  console.log('Attempting to fetch ebooks...');
-  console.log('Supabase URL Used:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Loaded' : 'NOT LOADED');
-
   const { includeDisabled = false } = options;
-  const supabase = createAdminClient();
   
+  // Directly initialize the Supabase client here for server-side operations
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Supabase environment variables are not set. Make sure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are in your .env file.");
+    return [];
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
   let query = supabase
     .from("ebooks")
     .select("id, title, description, price, image_url, category, is_disabled")
@@ -27,8 +39,6 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     return [];
   }
 
-  console.log(`Query successful. Found ${data.length} ebooks.`);
-  
   if (data.length === 0) {
       console.log('No ebooks were returned from the database. Please check your Supabase table "ebooks" to ensure it contains data and that the "is_disabled" column is set to false for the ebooks you want to display.');
   }
@@ -48,7 +58,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
 }
 
 export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
-    const supabase = createAdminClient();
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data, error } = await supabase
         .from('reviews')
         .select('id, ebook_id, reviewer_name, rating, comment')
@@ -70,7 +80,7 @@ export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
 }
 
 export async function submitReview(ebookId: string, rating: number, comment: string, reviewer: string) {
-    const supabase = createAdminClient();
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { error } = await supabase.from('reviews').insert({
         ebook_id: ebookId,
         rating,
