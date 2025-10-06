@@ -42,6 +42,13 @@ type FormState = {
   errors: FormErrors;
 };
 
+function useActionState<State>(
+  action: (state: State, payload: FormData) => Promise<State>,
+  initialState: State
+): [State, (payload: FormData) => void] {
+  const [state, dispatch] = useFormState(action, initialState);
+  return [state, dispatch];
+}
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
@@ -62,8 +69,8 @@ export default function UploadProductPage() {
   const [ebookDriveFile, setEbookDriveFile] = useState<{ id: string; name: string; accessToken: string; } | null>(null);
 
   const initialState: FormState = { message: '', errors: {} };
-  const [state, dispatch] = useFormState(uploadProduct, initialState);
-  const [driveState, driveDispatch] = useFormState(uploadProductFromGoogleDrive, initialState);
+  const [state, dispatch] = useActionState(uploadProduct, initialState);
+  const [driveState, driveDispatch] = useActionState(uploadProductFromGoogleDrive, initialState);
 
   const formAction = (formData: FormData) => {
     if (imageDriveFile || ebookDriveFile) {
@@ -187,22 +194,22 @@ export default function UploadProductPage() {
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input id="title" name="title" placeholder="e.g., Advanced Network Security" />
-                {(state.errors?.title?.[0] || driveState.errors?.title?.[0]) && <p className="text-sm text-destructive">{(state.errors?.title?.[0] || driveState.errors?.title?.[0])}</p>}
+                {(state.errors?.title?.[0] || driveState.errors?.title?.[0]) && <p className="text-sm text-destructive">{state.errors?.title?.[0] || driveState.errors?.title?.[0]}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" placeholder="A brief but engaging description of the ebook." rows={5} />
-                {(state.errors?.description?.[0] || driveState.errors?.description?.[0]) && <p className="text-sm text-destructive">{(state.errors?.description?.[0] || driveState.errors?.description?.[0])}</p>}
+                {(state.errors?.description?.[0] || driveState.errors?.description?.[0]) && <p className="text-sm text-destructive">{state.errors?.description?.[0] || driveState.errors?.description?.[0]}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Price ({paystackCurrency})</Label>
                 <Input id="price" name="price" type="number" placeholder="e.g., 49.99" step="0.01" />
-                {(state.errors?.price?.[0] || driveState.errors?.price?.[0]) && <p className="text-sm text-destructive">{(state.errors?.price?.[0] || driveState.errors?.price?.[0])}</p>}
+                {(state.errors?.price?.[0] || driveState.errors?.price?.[0]) && <p className="text-sm text-destructive">{state.errors?.price?.[0] || driveState.errors?.price?.[0]}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Input id="category" name="category" placeholder="e.g., Offensive Security" />
-                {(state.errors?.category?.[0] || driveState.errors?.category?.[0]) && <p className="text-sm text-destructive">{(state.errors?.category?.[0] || driveState.errors?.category?.[0])}</p>}
+                {(state.errors?.category?.[0] || driveState.errors?.category?.[0]) && <p className="text-sm text-destructive">{state.errors?.category?.[0] || driveState.errors?.category?.[0]}</p>}
               </div>
 
               <div className="space-y-2">
@@ -222,7 +229,7 @@ export default function UploadProductPage() {
                     </Button>
                   </div>
                 )}
-                 {(state.errors?.image?.[0] || driveState.errors?.image?.[0]) && <p className="text-sm text-destructive">{(state.errors?.image?.[0] || driveState.errors?.image?.[0])}</p>}
+                 {(state.errors?.image?.[0] || driveState.errors?.image?.[0]) && <p className="text-sm text-destructive">{state.errors?.image?.[0] || driveState.errors?.image?.[0]}</p>}
               </div>
 
               <div className="space-y-2">
@@ -242,7 +249,7 @@ export default function UploadProductPage() {
                     </Button>
                   </div>
                 )}
-                {(state.errors?.file?.[0] || driveState.errors?.file?.[0]) && <p className="text-sm text-destructive">{(state.errors?.file?.[0] || driveState.errors?.file?.[0])}</p>}
+                {(state.errors?.file?.[0] || driveState.errors?.file?.[0]) && <p className="text-sm text-destructive">{state.errors?.file?.[0] || driveState.errors?.file?.[0]}</p>}
               </div>
               <SubmitButton />
             </form>
