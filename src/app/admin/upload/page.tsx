@@ -38,7 +38,7 @@ type FormErrors = {
 
 type FormState = {
   message: string;
-  errors?: FormErrors;
+  errors: FormErrors;
 };
 
 
@@ -160,13 +160,13 @@ export default function UploadProductPage() {
     }
   };
 
-  useEffect(() => processFormState(state), [state]);
-  useEffect(() => processFormState(driveState), [driveState]);
+  useEffect(() => processFormState(state), [state, toast, router]);
+  useEffect(() => processFormState(driveState), [driveState, toast, router]);
 
   return (
     <>
       <Script src="https://apis.google.com/js/api.js" async onLoad={() => {
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && window.gapi) {
             window.gapi.load('picker', () => setGapiLoaded(true));
           }
       }} />
