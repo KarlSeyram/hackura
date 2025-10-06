@@ -64,11 +64,16 @@ async function handlePaystack(req: Request) {
 
     if (event.event === 'charge.success') {
         const { reference, metadata } = event.data;
-        const userId = metadata.userId;
-        const cartItems: CartItem[] = JSON.parse(metadata.cartItems);
+        
+        const customFields = metadata.custom_fields || [];
+        const userIdField = customFields.find((f: any) => f.variable_name === 'user_id');
+        const cartItemsField = customFields.find((f: any) => f.variable_name === 'cart_items');
+
+        const userId = userIdField?.value;
+        const cartItems: CartItem[] = cartItemsField ? JSON.parse(cartItemsField.value) : [];
 
         if (!userId || !cartItems || cartItems.length === 0) {
-            console.error('Missing userId or cartItems in Paystack metadata.');
+            console.error('Missing userId or cartItems in Paystack metadata custom fields.');
             return NextResponse.json({ message: 'Missing required metadata.' }, { status: 400 });
         }
 

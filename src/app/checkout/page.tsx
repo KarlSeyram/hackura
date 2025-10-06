@@ -196,9 +196,23 @@ export default function CheckoutPage() {
     currency: paystackCurrency,
     reference: `hackura_paystack_${new Date().getTime()}`,
     metadata: {
-      name,
-      userId: user?.uid,
-      cartItems: JSON.stringify(cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))),
+      custom_fields: [
+        {
+          display_name: "Customer Name",
+          variable_name: "customer_name",
+          value: name,
+        },
+        {
+          display_name: "User ID",
+          variable_name: "user_id",
+          value: user?.uid || "",
+        },
+        {
+          display_name: "Cart Items",
+          variable_name: "cart_items",
+          value: JSON.stringify(cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))),
+        }
+      ]
     },
     publicKey: paystackPublicKey,
     text: "Pay Now",
@@ -290,15 +304,16 @@ export default function CheckoutPage() {
                       </AccordionTrigger>
                       <AccordionContent className="pt-4">
                           {isClient && (
-                            <Button
-                              className="w-full"
-                              disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
-                            >
-                              <PaystackButton
+                             <Button
+                                asChild
+                                className="w-full"
+                                disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
+                              >
+                                <PaystackButton
                                   {...paystackComponentProps}
-                                  className="w-full h-full"
-                              />
-                            </Button>
+                                  className="w-full h-full disabled:cursor-not-allowed"
+                                />
+                              </Button>
                           )}
                       </AccordionContent>
                   </AccordionItem>
