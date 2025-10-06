@@ -4,15 +4,16 @@
 import { useFormState, useFormStatus } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Script from 'next/script';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { uploadProduct } from '@/lib/actions';
+import { uploadProduct, uploadProductFromGoogleDrive } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CloudUpload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 function SubmitButton() {
@@ -27,81 +28,199 @@ function SubmitButton() {
 }
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || '';
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 
 export default function UploadProductPage() {
   const router = useRouter();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  
+  const [gapiLoaded, setGapiLoaded] = useState(false);
+  const [gisLoaded, setGisLoaded] = useState(false);
+  const [tokenClient, setTokenClient] = useState<any>(null);
+  const [isDrivePickerLoading, setIsDrivePickerLoading] = useState(false);
+
+  const [imageDriveFile, setImageDriveFile] = useState<{ id: string; name: string; accessToken: string; } | null>(null);
+  const [ebookDriveFile, setEbookDriveFile] = useState<{ id: string; name: string; accessToken: string; } | null>(null);
 
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(uploadProduct, initialState);
+  const [driveState, driveDispatch] = useFormState(uploadProductFromGoogleDrive, initialState);
+
+  const formAction = (formData: FormData) => {
+    if (imageDriveFile || ebookDriveFile) {
+        if(imageDriveFile) formData.set('image-drive-id', imageDriveFile.id);
+        if(imageDriveFile) formData.set('image-drive-name', imageDriveFile.name);
+        if(imageDriveFile) formData.set('image-drive-token', imageDriveFile.accessToken);
+        if(ebookDriveFile) formData.set('file-drive-id', ebookDriveFile.id);
+        if(ebookDriveFile) formData.set('file-drive-name', ebookDriveFile.name);
+        if(ebookDriveFile) formData.set('file-drive-token', ebookDriveFile.accessToken);
+        driveDispatch(formData);
+    } else {
+        dispatch(formData);
+    }
+  };
 
   useEffect(() => {
-    if (state.message) {
-      if (Object.keys(state.errors ?? {}).length > 0) {
+    if (gapiLoaded && gisLoaded) {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: DRIVE_SCOPES,
+        callback: '', // defined later
+      });
+      setTokenClient(client);
+    }
+  }, [gapiLoaded, gisLoaded]);
+
+  const handleOpenPicker = (fileType: 'image' | 'file') => {
+    if (!tokenClient) return;
+    setIsDrivePickerLoading(true);
+
+    tokenClient.callback = async (resp: any) => {
+        if (resp.error !== undefined) {
+            setIsDrivePickerLoading(false);
+            throw resp;
+        }
+        
+        const view = new google.picker.View(google.picker.ViewId.DOCS);
+        if(fileType === 'image'){
+             view.setMimeTypes("image/png,image/jpeg,image/jpg,image/webp");
+        } else {
+            view.setMimeTypes("application/pdf,application/epub+zip");
+        }
+
+        const picker = new google.picker.PickerBuilder()
+            .setAppId(null) // Not needed for OAuth 2.0
+            .setOAuthToken(resp.access_token)
+            .addView(view)
+            .setDeveloperKey(GOOGLE_API_KEY)
+            .setCallback((data: any) => {
+                if (data.action === google.picker.Action.PICKED) {
+                    const doc = data.docs[0];
+                    const fileInfo = { id: doc.id, name: doc.name, accessToken: resp.access_token };
+                    if (fileType === 'image') {
+                        setImageDriveFile(fileInfo);
+                    } else {
+                        setEbookDriveFile(fileInfo);
+                    }
+                }
+                setIsDrivePickerLoading(false);
+            })
+            .build();
+        picker.setVisible(true);
+    };
+
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  const processFormState = (formState: typeof state | typeof driveState) => {
+    if (formState.message) {
+      if (Object.keys(formState.errors ?? {}).length > 0) {
         toast({
           variant: 'destructive',
           title: 'Upload Failed',
-          description: state.message,
+          description: formState.message,
         });
       } else {
         toast({
           title: 'Success!',
-          description: state.message,
+          description: formState.message,
         });
         formRef.current?.reset();
+        setImageDriveFile(null);
+        setEbookDriveFile(null);
         router.push('/admin/dashboard');
         router.refresh();
       }
     }
-  }, [state, toast, router]);
+  };
+
+  useEffect(() => processFormState(state), [state, toast, router]);
+  useEffect(() => processFormState(driveState), [driveState, toast, router]);
 
   return (
-    <div className="flex-1 space-y-4">
-      <h2 className="font-headline text-3xl font-bold tracking-tight">Upload New Product</h2>
-      <Card>
-        <CardHeader>
-          <CardTitle>New Ebook Details</CardTitle>
-          <CardDescription>
-            Fill out the form below to add a new ebook to the store.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form ref={formRef} action={dispatch} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" name="title" placeholder="e.g., Advanced Network Security" />
-              {state.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" placeholder="A brief but engaging description of the ebook." rows={5} />
-              {state.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ({paystackCurrency})</Label>
-              <Input id="price" name="price" type="number" placeholder="e.g., 49.99" step="0.01" />
-              {state.errors?.price && <p className="text-sm text-destructive">{state.errors.price[0]}</p>}
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input id="category" name="category" placeholder="e.g., Offensive Security" />
-              {state.errors?.category && <p className="text-sm text-destructive">{state.errors.category[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="image">Ebook Cover Image</Label>
-              <Input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" />
-              {state.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="file">Ebook File (PDF, EPUB)</Label>
-              <Input id="file" name="file" type="file" accept=".pdf,.epub" />
-              {state.errors?.file && <p className="text-sm text-destructive">{state.errors.file[0]}</p>}
-            </div>
-            <SubmitButton />
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <Script src="https://apis.google.com/js/api.js" async onLoad={() => setGapiLoaded(true)} />
+      <Script src="https://accounts.google.com/gsi/client" async onLoad={() => setGisLoaded(true)} />
+
+      <div className="flex-1 space-y-4">
+        <h2 className="font-headline text-3xl font-bold tracking-tight">Upload New Product</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>New Ebook Details</CardTitle>
+            <CardDescription>
+              Fill out the form below to add a new ebook to the store. You can upload from your device or Google Drive.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form ref={formRef} action={formAction} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" name="title" placeholder="e.g., Advanced Network Security" />
+                {(state.errors?.title || driveState.errors?.title) && <p className="text-sm text-destructive">{(state.errors?.title || driveState.errors?.title)?.[0]}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" placeholder="A brief but engaging description of the ebook." rows={5} />
+                {(state.errors?.description || driveState.errors?.description) && <p className="text-sm text-destructive">{(state.errors?.description || driveState.errors?.description)?.[0]}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Price ({paystackCurrency})</Label>
+                <Input id="price" name="price" type="number" placeholder="e.g., 49.99" step="0.01" />
+                {(state.errors?.price || driveState.errors?.price) && <p className="text-sm text-destructive">{(state.errors?.price || driveState.errors?.price)?.[0]}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Input id="category" name="category" placeholder="e.g., Offensive Security" />
+                {(state.errors?.category || driveState.errors?.category) && <p className="text-sm text-destructive">{(state.errors?.category || driveState.errors?.category)?.[0]}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="image">Ebook Cover Image</Label>
+                {imageDriveFile ? (
+                  <div className="flex items-center gap-2 text-sm p-2 border rounded-md bg-muted">
+                    <CloudUpload className="h-4 w-4 text-green-500" />
+                    <span className="flex-1 truncate">{imageDriveFile.name}</span>
+                    <Button variant="ghost" size="sm" onClick={() => setImageDriveFile(null)}>Change</Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" />
+                    <Button type="button" variant="outline" onClick={() => handleOpenPicker('image')} disabled={!gapiLoaded || !gisLoaded || isDrivePickerLoading}>
+                      {isDrivePickerLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+                      <span className="ml-2 hidden sm:inline">Drive</span>
+                    </Button>
+                  </div>
+                )}
+                 {(state.errors?.image || driveState.errors?.image) && <p className="text-sm text-destructive">{(state.errors?.image || driveState.errors?.image)?.[0]}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="file">Ebook File (PDF, EPUB)</Label>
+                {ebookDriveFile ? (
+                  <div className="flex items-center gap-2 text-sm p-2 border rounded-md bg-muted">
+                    <CloudUpload className="h-4 w-4 text-green-500" />
+                    <span className="flex-1 truncate">{ebookDriveFile.name}</span>
+                    <Button variant="ghost" size="sm" onClick={() => setEbookDriveFile(null)}>Change</Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input id="file" name="file" type="file" accept=".pdf,.epub" />
+                    <Button type="button" variant="outline" onClick={() => handleOpenPicker('file')} disabled={!gapiLoaded || !gisLoaded || isDrivePickerLoading}>
+                       {isDrivePickerLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+                       <span className="ml-2 hidden sm:inline">Drive</span>
+                    </Button>
+                  </div>
+                )}
+                {(state.errors?.file || driveState.errors?.file) && <p className="text-sm text-destructive">{(state.errors?.file || driveState.errors?.file)?.[0]}</p>}
+              </div>
+              <SubmitButton />
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

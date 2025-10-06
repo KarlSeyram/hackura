@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { CartItem, Ebook } from '@/lib/definitions';
 import { generateDownloadToken } from './downloadToken';
+import { uploadFromGoogleDrive } from '@/ai/flows/upload-from-google-drive';
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -41,6 +42,33 @@ const productSchema = z.object({
       "Only .pdf and .epub formats are supported."
     ),
 });
+
+const driveFileSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    token: z.string(),
+});
+
+const productFromDriveSchema = z.object({
+  title: z.string().min(1, 'Title is required.'),
+  description: z.string().min(10, 'Description must be at least 10 characters.'),
+  price: z.coerce.number().min(0, 'Price must be a positive number.'),
+  category: z.string().min(1, 'Category is required.'),
+  image: z.union([z.instanceof(File), driveFileSchema]),
+  file: z.union([z.instanceof(File), driveFileSchema]),
+}).refine(data => {
+    if (data.image instanceof File) {
+        return data.image.size > 0;
+    }
+    return true;
+}, { message: 'Cover image is required.', path: ['image'] })
+.refine(data => {
+    if (data.file instanceof File) {
+        return data.file.size > 0;
+    }
+    return true;
+}, { message: 'Ebook file is required.', path: ['file'] });
+
 
 const updateProductSchema = z.object({
   id: z.string(),
@@ -172,6 +200,119 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         errors: {},
     };
 }
+
+export async function uploadProductFromGoogleDrive(prevState: any, formData: FormData) {
+    const supabase = createAdminClient();
+
+    const imageDriveId = formData.get('image-drive-id') as string;
+    const imageDriveName = formData.get('image-drive-name') as string;
+    const imageDriveToken = formData.get('image-drive-token') as string;
+
+    const fileDriveId = formData.get('file-drive-id') as string;
+    const fileDriveName = formData.get('file-drive-name') as string;
+    const fileDriveToken = formData.get('file-drive-token') as string;
+
+    let imageInput: any = formData.get('image');
+    if (imageDriveId && imageDriveName && imageDriveToken) {
+        imageInput = { id: imageDriveId, name: imageDriveName, token: imageDriveToken };
+    }
+
+    let fileInput: any = formData.get('file');
+    if (fileDriveId && fileDriveName && fileDriveToken) {
+        fileInput = { id: fileDriveId, name: fileDriveName, token: fileDriveToken };
+    }
+
+    const validatedFields = productFromDriveSchema.safeParse({
+        title: formData.get('title'),
+        description: formData.get('description'),
+        price: formData.get('price'),
+        category: formData.get('category'),
+        image: imageInput,
+        file: fileInput,
+    });
+    
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Please correct the form errors.',
+        };
+    }
+
+    const { title, description, price, category, image, file } = validatedFields.data;
+    
+    let imageUrl: string = '';
+    let imageFileName: string = '';
+    let ebookFileName: string = '';
+    
+    const uploadedFiles: { bucket: string; path: string }[] = [];
+
+    try {
+        // Handle Image Upload
+        if (image instanceof File) {
+            imageFileName = `${Date.now()}-${image.name}`;
+            const { data, error } = await supabase.storage.from('ebook-covers').upload(imageFileName, image);
+            if (error || !data) throw new Error(`Failed to upload cover image: ${error?.message}`);
+            imageUrl = supabase.storage.from('ebook-covers').getPublicUrl(data.path).data.publicUrl;
+            uploadedFiles.push({ bucket: 'ebook-covers', path: data.path });
+        } else {
+            imageFileName = `${Date.now()}-${image.name}`;
+            const result = await uploadFromGoogleDrive({
+                fileId: image.id,
+                accessToken: image.token,
+                fileName: imageFileName,
+                bucket: 'ebook-covers',
+            });
+            imageUrl = result.publicUrl;
+            uploadedFiles.push({ bucket: 'ebook-covers', path: result.filePath });
+        }
+
+        // Handle File Upload
+        if (file instanceof File) {
+            ebookFileName = `${Date.now()}-${file.name}`;
+            const { data, error } = await supabase.storage.from('ebook-files').upload(ebookFileName, file);
+            if (error || !data) throw new Error(`Failed to upload ebook file: ${error?.message}`);
+            uploadedFiles.push({ bucket: 'ebook-files', path: data.path });
+        } else {
+            ebookFileName = `${Date.now()}-${file.name}`;
+            const result = await uploadFromGoogleDrive({
+                fileId: file.id,
+                accessToken: file.token,
+                fileName: ebookFileName,
+                bucket: 'ebook-files',
+            });
+             uploadedFiles.push({ bucket: 'ebook-files', path: result.filePath });
+        }
+
+        // Insert product record into database
+        const { error: dbError } = await supabase.from('ebooks').insert({
+            title, description, price, category,
+            image_url: imageUrl,
+            file_name: ebookFileName,
+            is_disabled: false,
+        });
+
+        if (dbError) {
+            throw new Error(`Failed to save product to database: ${dbError.message}`);
+        }
+
+    } catch (error: any) {
+        // Cleanup uploaded files on any failure
+        for (const uf of uploadedFiles) {
+            await supabase.storage.from(uf.bucket).remove([uf.path]);
+        }
+        return { message: error.message, errors: {} };
+    }
+
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/store');
+    revalidatePath('/');
+
+    return {
+        message: 'Product uploaded successfully!',
+        errors: {},
+    };
+}
+
 
 export async function updateProduct(prevState: any, formData: FormData) {
   const supabase = createAdminClient();
