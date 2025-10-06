@@ -32,8 +32,6 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
   }, [initialEbooks]);
 
   const filteredAndSortedEbooks = useMemo(() => {
-    if (!initialEbooks) return [];
-    
     let filtered = initialEbooks.filter(ebook => !ebook.isDisabled);
 
     if (searchTerm) {
