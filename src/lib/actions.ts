@@ -88,8 +88,17 @@ const reviewSchema = z.object({
   reviewer: z.string().min(2, 'Name must be at least 2 characters.'),
 });
 
+type FormState = {
+  message: string;
+  errors: {
+    name?: string[];
+    email?: string[];
+    service?: string[];
+    message?: string[];
+  };
+};
 
-export async function submitContactRequest(prevState: any, formData: FormData) {
+export async function submitContactRequest(prevState: FormState, formData: FormData): Promise<FormState> {
   const validatedFields = contactSchema.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),

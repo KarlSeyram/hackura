@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
@@ -34,8 +35,21 @@ function SubmitButton() {
   );
 }
 
+type FormState = {
+  message: string;
+  errors: {
+    name?: string[];
+    email?: string[];
+    service?: string[];
+    message?: string[];
+  };
+};
+
 export default function ContactPage() {
-  const initialState = { message: null, errors: {} };
+  const initialState: FormState = {
+    message: '',
+    errors: {},
+  };
   const [state, dispatch] = useFormState(submitContactRequest, initialState);
   const { toast } = useToast();
 
@@ -176,6 +190,11 @@ export default function ContactPage() {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
+            {state.errors?.service && (
+              <p className="text-sm text-destructive">
+                {state.errors.service[0]}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="message">Message</Label>
