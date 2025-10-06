@@ -26,8 +26,29 @@ interface ReviewFormProps {
     ebookId: string;
 }
 
+type FormErrors = {
+  ebookId?: string[];
+  rating?: string[];
+  comment?: string[];
+  reviewer?: string[];
+};
+
+type FormState = {
+  message: string;
+  errors: FormErrors;
+};
+
+
 export function ReviewForm({ ebookId }: ReviewFormProps) {
-  const initialState = { message: null, errors: {} };
+  const initialState: FormState = { 
+    message: '', 
+    errors: {
+      ebookId: [],
+      rating: [],
+      comment: [],
+      reviewer: [],
+    } 
+  };
   const [state, dispatch] = useFormState(submitReviewAction, initialState);
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
