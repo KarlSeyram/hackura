@@ -24,7 +24,6 @@ function SubmitButton() {
   );
 }
 
-// Define the types for form errors and state
 type FormErrors = {
   title?: string[];
   description?: string[];
