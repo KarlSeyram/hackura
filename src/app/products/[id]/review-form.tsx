@@ -42,12 +42,7 @@ type FormState = {
 export function ReviewForm({ ebookId }: ReviewFormProps) {
   const initialState: FormState = { 
     message: '', 
-    errors: {
-      ebookId: [],
-      rating: [],
-      comment: [],
-      reviewer: [],
-    } 
+    errors: {}
   };
   const [state, dispatch] = useFormState(submitReviewAction, initialState);
   const { toast } = useToast();
