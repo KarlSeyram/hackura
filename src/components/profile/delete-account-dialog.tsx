@@ -16,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogTrigger,
   AlertDialogCancel,
-  AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import {
   Form,
@@ -29,13 +28,15 @@ import {
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useFirebase } from '@/firebase/provider';
+import { EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'firebase/auth';
 
 const formSchema = z.object({
   password: z.string().min(1, 'Password is required to confirm deletion.'),
 });
 
 export function DeleteAccountDialog() {
-  const [user, setUser] = useState({ email: 'guest@example.com' });
+  const { user } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -55,21 +56,20 @@ export function DeleteAccountDialog() {
     form.clearErrors();
 
     try {
-      // Fake account deletion
-      console.log('Deleting account for:', user.email);
-      await new Promise(res => setTimeout(res, 1500));
+      const credential = EmailAuthProvider.credential(user.email, values.password);
+      await reauthenticateWithCredential(user, credential);
+      await deleteUser(user);
 
       toast({
         title: 'Account Deleted',
         description: 'Your account has been permanently deleted.',
       });
       
-      // Redirect to home page after deletion
       router.push('/');
       setIsOpen(false);
 
     } catch (error: any) {
-      form.setError('password', { type: 'manual', message: 'Failed to delete account. Please try again.' });
+      form.setError('password', { type: 'manual', message: 'Incorrect password or failed to reauthenticate.' });
     } finally {
       setIsDeleting(false);
     }

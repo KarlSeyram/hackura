@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,12 +10,11 @@ import { ProfileSettings } from '@/components/profile/profile-settings';
 import { MyEbooksList } from '@/components/profile/my-ebooks-list';
 import { ChangePasswordDialog } from '@/components/profile/change-password-dialog';
 import { DeleteAccountDialog } from '@/components/profile/delete-account-dialog';
+import { useFirebase } from '@/firebase/provider';
 
 
 export default function ProfilePage() {
-  // Faking user for now
-  const [user, setUser] = useState({ uid: '123' });
-  const [isUserLoading, setIsUserLoading] = useState(false);
+  const { user, isLoading: isUserLoading } = useFirebase();
   const router = useRouter();
 
   useEffect(() => {

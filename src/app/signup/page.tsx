@@ -16,11 +16,13 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
+import { useFirebase } from '@/firebase/provider';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const formSchema = z.object({
   displayName: z.string().min(2, {
@@ -36,6 +38,7 @@ const formSchema = z.object({
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { auth, user, isLoading: isUserLoading } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +52,21 @@ export default function SignUpPage() {
     },
   });
 
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/profile');
+    }
+  }, [user, isUserLoading, router]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!auth) return;
     setIsLoading(true);
     setError(null);
     try {
-      // Fake signup
-      console.log('Signing up with:', values);
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await updateProfile(userCredential.user, {
+        displayName: values.displayName,
+      });
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
@@ -64,17 +76,26 @@ export default function SignUpPage() {
   }
 
   async function handleGoogleSignIn() {
+    if (!auth) return;
     setIsGoogleLoading(true);
     setError(null);
     try {
-      // Fake Google sign in
-      console.log('Signing up with Google');
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
     } finally {
       setIsGoogleLoading(false);
     }
+  }
+
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (

@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { MtnIcon } from '@/components/icons';
+import { useFirebase } from '@/firebase/provider';
 
 
 type PaymentMethod = 'paystack';
@@ -83,9 +84,7 @@ export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
   const router = useRouter();
   const { toast } = useToast();
-  // Faking user for now
-  const [user, setUser] = useState({ uid: '123', displayName: 'Guest', email: 'guest@example.com' });
-  const [isUserLoading, setIsUserLoading] = useState(false);
+  const { user, isLoading: isUserLoading } = useFirebase();
 
   const [isClient, setIsClient] = useState(false);
   const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');

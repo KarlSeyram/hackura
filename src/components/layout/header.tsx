@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Separator } from '../ui/separator';
-import { useState } from 'react';
+import { useFirebase } from '@/firebase/provider';
+import { signOut } from 'firebase/auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -26,13 +27,12 @@ const navLinks = [
 ];
 
 function UserNav() {
-  // Faking user for now
-  const [user, setUser] = useState<{ displayName: string, email: string, photoURL: string } | null>({ displayName: 'Guest', email: 'guest@example.com', photoURL: '' });
-  const [isUserLoading, setIsUserLoading] = useState(false);
+  const { auth, user, isLoading: isUserLoading } = useFirebase();
 
   const handleLogout = async () => {
-    // Fake logout
-    setUser(null);
+    if (auth) {
+      await signOut(auth);
+    }
   };
 
 

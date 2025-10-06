@@ -7,10 +7,10 @@ import type { Ebook } from '@/lib/definitions';
 import { Loader2, Download, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useFirebase } from '@/firebase/provider';
 
 function EbookRow({ ebook }: { ebook: Ebook }) {
     const [isDownloading, setIsDownloading] = useState(false);
@@ -59,8 +59,7 @@ function EbookRow({ ebook }: { ebook: Ebook }) {
 }
 
 export function MyEbooksList() {
-  const [user, setUser] = useState({ uid: '123' });
-  const [isUserLoading, setIsUserLoading] = useState(false);
+  const { user, isLoading: isUserLoading } = useFirebase();
   const router = useRouter();
   const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,8 +67,6 @@ export function MyEbooksList() {
   useEffect(() => {
     if (!isUserLoading) {
       if (!user) {
-        // This component is rendered inside a protected route, so user should exist.
-        // But as a fallback, we can handle it.
         router.push('/login');
       } else {
         getMyEbooks(user.uid)

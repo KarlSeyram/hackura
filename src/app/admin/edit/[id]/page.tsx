@@ -61,7 +61,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         .single();
       
       if (error || !data) {
-        notFound();
+        setProduct(null);
       } else {
         const ebook: Ebook = {
             id: data.id,
@@ -108,41 +108,44 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     )
   }
 
-  if (!product) {
+  // Only call notFound if loading is finished and product is still null
+  if (!isLoading && !product) {
     notFound();
   }
-
+  
+  // This part will only render if product is not null.
+  // The '!' tells TypeScript that we've handled the null case above.
   return (
     <div className="flex-1 space-y-4">
       <h2 className="font-headline text-3xl font-bold tracking-tight">Edit Product</h2>
       <Card>
         <CardHeader>
-          <CardTitle>Editing: {product.title}</CardTitle>
+          <CardTitle>Editing: {product!.title}</CardTitle>
           <CardDescription>
             Make changes to the product details below. Image and file uploads are not supported on this page.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form ref={formRef} action={dispatch} className="space-y-6">
-            <input type="hidden" name="id" value={product.id} />
+            <input type="hidden" name="id" value={product!.id} />
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
-              <Input id="title" name="title" defaultValue={product.title} />
+              <Input id="title" name="title" defaultValue={product!.title} />
               {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" defaultValue={product.description} rows={5} />
+              <Textarea id="description" name="description" defaultValue={product!.description} rows={5} />
               {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price</Label>
-              <Input id="price" name="price" type="number" step="0.01" defaultValue={product.price} />
+              <Input id="price" name="price" type="number" step="0.01" defaultValue={product!.price} />
               {state?.errors?.price && <p className="text-sm text-destructive">{state.errors.price[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input id="category" name="category" defaultValue={product.category} />
+              <Input id="category" name="category" defaultValue={product!.category} />
               {state?.errors?.category && <p className="text-sm text-destructive">{state.errors.category[0]}</p>}
             </div>
             

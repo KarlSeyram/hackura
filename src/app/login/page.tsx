@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
@@ -17,11 +16,13 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
+import { useFirebase } from '@/firebase/provider';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -34,6 +35,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const { auth, user, isLoading: isUserLoading } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,12 +48,18 @@ export default function LoginPage() {
     },
   });
 
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/profile');
+    }
+  }, [user, isUserLoading, router]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!auth) return;
     setIsLoading(true);
     setError(null);
     try {
-      // Fake login
-      console.log('Logging in with:', values);
+      await signInWithEmailAndPassword(auth, values.email, values.password);
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
@@ -61,17 +69,26 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSignIn() {
+    if (!auth) return;
     setIsGoogleLoading(true);
     setError(null);
     try {
-      // Fake Google sign in
-      console.log('Signing in with Google');
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
     } finally {
       setIsGoogleLoading(false);
     }
+  }
+  
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (

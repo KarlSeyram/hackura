@@ -1,18 +1,18 @@
 
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useFirebase } from '@/firebase/provider';
+import { updateProfile } from 'firebase/auth';
 
 
 const profileSchema = z.object({
@@ -21,27 +21,31 @@ const profileSchema = z.object({
 
 
 export function ProfileSettings() {
-  const [user, setUser] = useState({ displayName: 'Guest', email: 'guest@example.com', photoURL: '' });
-  const [isUserLoading, setIsUserLoading] = useState(false);
+  const { user, auth, isLoading: isUserLoading } = useFirebase();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: user?.displayName || '',
+      displayName: '',
     },
   });
+
+  useEffect(() => {
+    if (user) {
+        form.reset({ displayName: user.displayName || '' });
+    }
+  }, [user, form]);
   
   async function onSubmit(values: z.infer<typeof profileSchema>) {
-    if (!user) return;
+    if (!auth || !auth.currentUser) return;
 
     setIsUpdating(true);
     try {
-      // Fake profile update
-      console.log('Updating profile with:', values);
-      await new Promise(res => setTimeout(res, 1000));
-      setUser(prev => ({...prev, displayName: values.displayName}));
+      await updateProfile(auth.currentUser, {
+        displayName: values.displayName,
+      });
       toast({
         title: 'Success!',
         description: 'Your profile has been updated.',

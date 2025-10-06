@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFirebase } from '@/firebase/provider';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 
 const formSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required.'),
@@ -38,7 +40,7 @@ const formSchema = z.object({
 });
 
 export function ChangePasswordDialog() {
-  const [user, setUser] = useState({ email: 'guest@example.com' });
+  const { user, auth } = useFirebase();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,15 +56,15 @@ export function ChangePasswordDialog() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user || !user.email) return;
+    if (!auth || !user || !user.email) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fake password change
-      console.log('Changing password for:', user.email);
-      await new Promise(res => setTimeout(res, 1000));
+      const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, values.newPassword);
       
       toast({
         title: 'Success!',
@@ -71,7 +73,7 @@ export function ChangePasswordDialog() {
       form.reset();
       setIsOpen(false);
     } catch (error: any) {
-      setError('Failed to update password. Please try again.');
+      setError('Failed to update password. Please check your current password and try again.');
     } finally {
       setIsLoading(false);
     }
