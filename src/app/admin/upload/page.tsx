@@ -14,7 +14,6 @@ import { uploadProduct, uploadProductFromGoogleDrive } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CloudUpload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { global } from 'styled-jsx/css';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -27,7 +26,7 @@ function SubmitButton() {
   );
 }
 
-// Explicitly define the types for form errors and state
+// Define the types for form errors and state
 type FormErrors = {
   title?: string[];
   description?: string[];
@@ -42,12 +41,13 @@ type FormState = {
   errors: FormErrors;
 };
 
-function useActionState<State>(
-  action: (state: State, payload: FormData) => Promise<State>,
+// Custom hook to properly type useFormState
+function useActionState<State extends { message: string, errors: FormErrors }>(
+  action: (state: State, payload: FormData) => Promise<State> | State,
   initialState: State
 ): [State, (payload: FormData) => void] {
   const [state, dispatch] = useFormState(action, initialState);
-  return [state, dispatch];
+  return [state as State, dispatch];
 }
 
 const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
