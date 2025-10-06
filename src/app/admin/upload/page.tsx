@@ -38,7 +38,7 @@ type FormErrors = {
 
 type FormState = {
   message: string;
-  errors?: FormErrors;
+  errors: FormErrors;
 };
 
 
@@ -233,7 +233,7 @@ export default function UploadProductPage() {
                     <Input id="file" name="file" type="file" accept=".pdf,.epub,.zip" />
                     <Button type="button" variant="outline" onClick={() => handleOpenPicker('file')} disabled={!gapiLoaded || !gisLoaded || isDrivePickerLoading}>
                        {isDrivePickerLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
-                       <span className="ml-2 hidden sm:inline">Drive</span>
+                       <span className="ml-2 hidden sm_inline">Drive</span>
                     </Button>
                   </div>
                 )}
