@@ -14,7 +14,9 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     .order("created_at", { ascending: false });
 
   if (!includeDisabled) {
-    query = query.or('is_disabled.is.null,is_disabled.eq.false');
+    // This is a more direct and RLS-friendly way to fetch only enabled ebooks.
+    // The previous .or() filter could misbehave with RLS when a value is null.
+    query = query.eq('is_disabled', false);
   }
 
   const { data, error } = await query;
