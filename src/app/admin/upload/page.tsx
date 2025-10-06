@@ -2,7 +2,6 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
@@ -78,8 +77,8 @@ export default function UploadProductPage() {
   };
 
   useEffect(() => {
-    if (gapiLoaded && gisLoaded && GOOGLE_CLIENT_ID) {
-      const client = google.accounts.oauth2.initTokenClient({
+    if (gapiLoaded && gisLoaded && GOOGLE_CLIENT_ID && typeof window !== 'undefined' && window.google) {
+      const client = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: DRIVE_SCOPES,
         callback: '', // defined later
@@ -89,11 +88,11 @@ export default function UploadProductPage() {
   }, [gapiLoaded, gisLoaded]);
 
   const handleOpenPicker = (fileType: 'image' | 'file') => {
-    if (!tokenClient || !GOOGLE_API_KEY) {
+    if (!tokenClient || !GOOGLE_API_KEY || typeof window === 'undefined' || !window.google || !window.gapi) {
         toast({
             variant: 'destructive',
             title: 'Configuration Error',
-            description: 'Google Drive integration is not configured. Please set API Key and Client ID.'
+            description: 'Google Drive integration is not configured or ready. Please try again in a moment.'
         })
         return;
     };
@@ -105,20 +104,20 @@ export default function UploadProductPage() {
             throw resp;
         }
         
-        const view = new google.picker.View(google.picker.ViewId.DOCS);
+        const view = new window.google.picker.View(window.google.picker.ViewId.DOCS);
         if(fileType === 'image'){
              view.setMimeTypes("image/png,image/jpeg,image/jpg,image/webp");
         } else {
             view.setMimeTypes("application/pdf,application/epub+zip,application/zip");
         }
 
-        const picker = new google.picker.PickerBuilder()
+        const picker = new window.google.picker.PickerBuilder()
             .setAppId(null) // Not needed for OAuth 2.0
             .setOAuthToken(resp.access_token)
             .addView(view)
             .setDeveloperKey(GOOGLE_API_KEY)
             .setCallback((data: any) => {
-                if (data.action === google.picker.Action.PICKED) {
+                if (data.action === window.google.picker.Action.PICKED) {
                     const doc = data.docs[0];
                     const fileInfo = { id: doc.id, name: doc.name, accessToken: resp.access_token };
                     if (fileType === 'image') {
@@ -164,7 +163,9 @@ export default function UploadProductPage() {
   return (
     <>
       <Script src="https://apis.google.com/js/api.js" async onLoad={() => {
-          window.gapi.load('picker', () => setGapiLoaded(true));
+          if (typeof window !== 'undefined') {
+            window.gapi.load('picker', () => setGapiLoaded(true));
+          }
       }} />
       <Script src="https://accounts.google.com/gsi/client" async onLoad={() => setGisLoaded(true)} />
 
