@@ -44,13 +44,15 @@ export function StoreClient({ initialEbooks }: StoreClientProps) {
       filtered = filtered.filter(ebook => ebook.category === selectedCategory);
     }
 
+    const sorted = [...filtered];
+
     if (sortOrder === 'price-asc') {
-      filtered.sort((a, b) => a.price - b.price);
+      sorted.sort((a, b) => a.price - b.price);
     } else if (sortOrder === 'price-desc') {
-      filtered.sort((a, b) => b.price - a.price);
+      sorted.sort((a, b) => b.price - a.price);
     }
 
-    return filtered;
+    return sorted;
   }, [initialEbooks, searchTerm, selectedCategory, sortOrder]);
   
   if (!initialEbooks) {

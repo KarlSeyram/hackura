@@ -14,6 +14,8 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     console.error("Supabase server environment variables are not set.");
     return [];
   }
+  
+  console.log("Attempting to connect to Supabase at:", supabaseUrl);
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -33,6 +35,8 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     return [];
   }
   
+  console.log(`Fetched ${data?.length || 0} ebooks from Supabase.`);
+  
   if (!data) {
       return [];
   }
@@ -45,7 +49,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
     imageUrl: ebook.image_url,
     imageHint: '',
     category: ebook.category || 'General',
-    isDisabled: ebook.is_disabled || false,
+    isDisabled: ebook.is_disabled,
   }));
 
   return fetchedEbooks;

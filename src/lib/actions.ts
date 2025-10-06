@@ -4,8 +4,6 @@
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
-import type { CartItem, Ebook } from '@/lib/definitions';
-import { generateDownloadToken } from './downloadToken';
 import { uploadFromGoogleDrive } from '@/ai/flows/upload-from-google-drive';
 
 
