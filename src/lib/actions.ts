@@ -74,10 +74,10 @@ const productFromDriveSchema = z.object({
 
 const updateProductSchema = z.object({
   id: z.string(),
-  title: z.string().min(1, 'Title is required.'),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
+  title: z.string().min(1, 'Title is required.').trim(),
+  description: z.string().min(10, 'Description must be at least 10 characters.').trim(),
   price: z.coerce.number().min(0, 'Price must be a positive number.'),
-  category: z.string().min(1, 'Category is required.'),
+  category: z.string().min(1, 'Category is required.').trim(),
 });
 
 
