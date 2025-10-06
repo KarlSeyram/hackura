@@ -141,7 +141,7 @@ export async function getMyEbooks(userId: string): Promise<Ebook[]> {
     // 2. Fetch the details for those ebooks
     const { data: ebooks, error: ebooksError } = await supabase
         .from('ebooks')
-        .select('id, title, description, price, image_url, category, file_name')
+        .select('id, title, description, price, image_url, category, file_name, is_disabled')
         .in('id', ebookIds);
 
     if (ebooksError) {
@@ -157,8 +157,10 @@ export async function getMyEbooks(userId: string): Promise<Ebook[]> {
         imageUrl: ebook.image_url,
         imageHint: '',
         category: ebook.category || 'General',
-        file_name: ebook.file_name
+        file_name: ebook.file_name,
+        isDisabled: ebook.is_disabled
     }));
 }
+
 
 
