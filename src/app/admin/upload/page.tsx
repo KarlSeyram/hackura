@@ -14,6 +14,7 @@ import { uploadProduct, uploadProductFromGoogleDrive } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CloudUpload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { global } from 'styled-jsx/css';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
