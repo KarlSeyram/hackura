@@ -5,27 +5,10 @@ import Link from 'next/link';
 import { getEbooks } from '@/lib/data';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { createClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { subDays, format } from 'date-fns';
 import { SalesChart } from '@/components/admin/sales-chart';
-
-
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Supabase environment variables are not set.');
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
 
 
 async function getStats() {

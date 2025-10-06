@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useEffect, useState, useRef } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@/lib/supabase/client';
 import type { Ebook } from '@/lib/definitions';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -53,10 +53,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   useEffect(() => {
     const fetchProduct = async () => {
       setIsLoading(true);
-      const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createBrowserClient();
       const { data, error } = await supabase
         .from('ebooks')
         .select('*')

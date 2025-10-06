@@ -2,68 +2,59 @@
 'use server';
 
 import type { Ebook, Review } from './definitions';
-import { createClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks(options: { includeDisabled?: boolean } = {}): Promise<Ebook[]> {
   const { includeDisabled = false } = options;
   
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  try {
+    const supabase = createAdminClient();
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Supabase server environment variables are not set.");
-    return [];
-  }
-  
-  console.log("Attempting to connect to Supabase at:", supabaseUrl);
+    let query = supabase
+      .from("ebooks")
+      .select("id, title, description, price, image_url, category, is_disabled")
+      .order("created_at", { ascending: false });
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (!includeDisabled) {
+      query = query.eq('is_disabled', false);
+    }
 
-  let query = supabase
-    .from("ebooks")
-    .select("id, title, description, price, image_url, category, is_disabled")
-    .order("created_at", { ascending: false });
+    const { data, error } = await query;
 
-  if (!includeDisabled) {
-    query = query.eq('is_disabled', false);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error fetching ebooks from Supabase:", error);
-    return [];
-  }
-  
-  console.log(`Fetched ${data?.length || 0} ebooks from Supabase.`);
-  
-  if (!data) {
+    if (error) {
+      console.error("Error fetching ebooks from Supabase:", error);
       return [];
+    }
+    
+    if (!data) {
+        return [];
+    }
+
+    const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
+      id: ebook.id,
+      title: ebook.title,
+      description: ebook.description, 
+      price: ebook.price,
+      imageUrl: ebook.image_url,
+      imageHint: '',
+      category: ebook.category || 'General',
+      isDisabled: ebook.is_disabled,
+    }));
+
+    return fetchedEbooks;
+
+  } catch (error) {
+    if (error instanceof Error) {
+        console.error("Error in getEbooks function:", error.message);
+    } else {
+        console.error("An unknown error occurred in getEbooks:", error);
+    }
+    return [];
   }
-
-  const fetchedEbooks: Ebook[] = data.map((ebook, index) => ({
-    id: ebook.id,
-    title: ebook.title,
-    description: ebook.description, 
-    price: ebook.price,
-    imageUrl: ebook.image_url,
-    imageHint: '',
-    category: ebook.category || 'General',
-    isDisabled: ebook.is_disabled,
-  }));
-
-  return fetchedEbooks;
 }
 
 export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        console.error("Supabase server environment variables are not set for reviews.");
-        return [];
-    }
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createAdminClient();
     const { data, error } = await supabase
         .from('reviews')
         .select('id, ebook_id, reviewer_name, rating, comment')
@@ -85,14 +76,7 @@ export async function getReviewsForEbook(ebookId: string): Promise<Review[]> {
 }
 
 export async function submitReview(ebookId: string, rating: number, comment: string, reviewer: string) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        console.error("Supabase server environment variables are not set for submitting reviews.");
-        return { success: false, message: 'Server configuration error.' };
-    }
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createAdminClient();
     const { error } = await supabase.from('reviews').insert({
         ebook_id: ebookId,
         rating,

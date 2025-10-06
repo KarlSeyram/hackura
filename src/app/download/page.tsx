@@ -1,5 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Download, AlertCircle } from 'lucide-react';
 import Link from 'next/link';

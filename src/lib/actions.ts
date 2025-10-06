@@ -2,27 +2,13 @@
 'use server';
 
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { uploadFromGoogleDrive } from '@/ai/flows/upload-from-google-drive';
+import { createAdminClient } from '@/lib/supabase/server';
 
 
-// Helper function to create admin client
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Helper function to create admin client - REMOVED because it's now in server.ts
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Supabase environment variables are not set.');
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),

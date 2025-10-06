@@ -1,27 +1,10 @@
 
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import type { CartItem, PurchaseLink, Ebook } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import { generateDownloadToken, verifyDownloadToken } from '@/lib/downloadToken';
-
-// Helper function to create admin client
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Supabase environment variables are not set.');
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+import { createAdminClient } from '@/lib/supabase/server';
 
 
 export async function recordPurchase(userId: string, cartItems: CartItem[], paymentReference: string) {
