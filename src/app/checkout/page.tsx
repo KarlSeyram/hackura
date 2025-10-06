@@ -14,12 +14,10 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { PayPalIcon, MtnIcon } from '@/components/icons';
-import { PayPalCheckoutButton } from '@/components/checkout/paypal-button';
-import { PayPalProvider } from '@/components/checkout/paypal-provider';
+import { MtnIcon } from '@/components/icons';
 
 
-type PaymentMethod = 'paystack' | 'paypal';
+type PaymentMethod = 'paystack';
 
 function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
   const [name, setName] = useState(initialName);
@@ -255,96 +253,77 @@ export default function CheckoutPage() {
   }
 
   return (
-    <PayPalProvider>
-      <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div className="order-last md:order-first">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="space-y-4">
-              {cartItems.map(item => (
-                <div key={item.id} className="flex items-center gap-4">
-                  <div className="relative h-20 w-16 flex-shrink-0 overflow-hidden rounded-md border">
-                    <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium line-clamp-1">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                  </div>
-                  <p className="text-sm font-medium">
-                    {new Intl.NumberFormat(undefined, { style: 'currency', currency: paystackCurrency }).format(item.price * item.quantity)}
-                  </p>
+    <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="order-last md:order-first">
+          <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+          <div className="space-y-4">
+            {cartItems.map(item => (
+              <div key={item.id} className="flex items-center gap-4">
+                <div className="relative h-20 w-16 flex-shrink-0 overflow-hidden rounded-md border">
+                  <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
                 </div>
-              ))}
-            </div>
-            <div className="mt-6 border-t pt-4">
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>{formattedTotalPrice}</span>
+                <div className="flex-1">
+                  <p className="font-medium line-clamp-1">{item.title}</p>
+                  <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                </div>
+                <p className="text-sm font-medium">
+                  {new Intl.NumberFormat(undefined, { style: 'currency', currency: paystackCurrency }).format(item.price * item.quantity)}
+                </p>
               </div>
-            </div>
+            ))}
           </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
-            <div className="space-y-6">
-              <UserInfoForm 
-                onFormChange={handleFormChange}
-                initialName={user.displayName || ''}
-                initialEmail={user.email || ''}
-              />
-
-              <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
-                  <AccordionItem value="paystack">
-                      <AccordionTrigger>
-                          <div className="flex items-center gap-2">
-                              <CreditCard />
-                              <span>Card & Mobile Money</span>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                          {isClient && (
-                             <Button
-                                asChild
-                                className="w-full"
-                                disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
-                              >
-                                <PaystackButton
-                                  {...paystackComponentProps}
-                                  className="w-full h-full disabled:cursor-not-allowed"
-                                />
-                              </Button>
-                          )}
-                      </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="paypal">
-                      <AccordionTrigger>
-                          <div className="flex items-center gap-2">
-                              <PayPalIcon className="h-6 w-6" />
-                              <span>PayPal</span>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                           <PayPalCheckoutButton
-                              cartItems={cartItems}
-                              totalPrice={totalPrice}
-                              onPaymentSuccess={(orderId) => handleGenericPaymentSuccess(orderId)}
-                              onPaymentError={handlePaymentError}
-                              disabled={!isFormValid}
-                            />
-                      </AccordionContent>
-                  </AccordionItem>
-              </Accordion>
-
-               <Button variant="outline" asChild className="w-full">
-                  <Link href="/store">
-                      <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
-                  </Link>
-              </Button>
+          <div className="mt-6 border-t pt-4">
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>{formattedTotalPrice}</span>
             </div>
           </div>
         </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
+          <div className="space-y-6">
+            <UserInfoForm 
+              onFormChange={handleFormChange}
+              initialName={user.displayName || ''}
+              initialEmail={user.email || ''}
+            />
+
+            <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
+                <AccordionItem value="paystack">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                            <CreditCard />
+                            <span>Card & Mobile Money</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                        {isClient && (
+                           <Button
+                              asChild
+                              className="w-full"
+                              disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
+                            >
+                              <PaystackButton
+                                {...paystackComponentProps}
+                                className="w-full h-full disabled:cursor-not-allowed"
+                              />
+                            </Button>
+                        )}
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+
+             <Button variant="outline" asChild className="w-full">
+                <Link href="/store">
+                    <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
+                </Link>
+            </Button>
+          </div>
+        </div>
       </div>
-    </PayPalProvider>
+    </div>
   );
 }
