@@ -3,7 +3,7 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import { z } from 'zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import Script from 'next/script';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,12 +42,12 @@ type FormState = {
 };
 
 // Custom hook to properly type useFormState
-function useActionState<State extends FormState>(
+function useActionState<State extends object>(
   action: (state: State, payload: FormData) => Promise<State> | State,
   initialState: State
 ): [State, (payload: FormData) => void] {
   const [state, dispatch] = useFormState(action, initialState);
-  return [state as State, dispatch];
+  return [state, dispatch];
 }
 
 
