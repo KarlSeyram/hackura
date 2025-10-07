@@ -23,7 +23,8 @@ import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
+import { nonBlockingSetDoc } from '@/firebase/non-blocking-updates';
 
 const formSchema = z.object({
   displayName: z.string().min(2, {
@@ -74,7 +75,7 @@ export default function SignUpPage() {
 
       // Create a document in Firestore 'users' collection
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
+      nonBlockingSetDoc(userDocRef, {
         displayName: values.displayName,
         email: user.email,
       }, { merge: true });
@@ -99,7 +100,7 @@ export default function SignUpPage() {
 
       // Create a document in Firestore 'users' collection if it's a new user
        const userDocRef = doc(firestore, 'users', user.uid);
-       await setDoc(userDocRef, {
+       nonBlockingSetDoc(userDocRef, {
         displayName: user.displayName,
         email: user.email,
       }, { merge: true });

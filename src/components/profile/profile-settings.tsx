@@ -14,10 +14,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useFirebase } from '@/firebase/provider';
 import { updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { countries } from '@/lib/countries';
+import { nonBlockingSetDoc } from '@/firebase/non-blocking-updates';
 
 
 const profileSchema = z.object({
@@ -95,14 +96,16 @@ export function ProfileSettings() {
 
       // Update Firestore document
       const userRef = doc(firestore, 'users', auth.currentUser.uid);
-      await setDoc(userRef, {
+      const dataToSave = {
         displayName: values.displayName,
         email: auth.currentUser.email,
         age: values.age,
         country: values.country,
         bio: values.bio,
         phoneNumber: fullPhoneNumber,
-      }, { merge: true });
+      };
+
+      nonBlockingSetDoc(userRef, dataToSave, { merge: true });
 
       toast({
         title: 'Success!',

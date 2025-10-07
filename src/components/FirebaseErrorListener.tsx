@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -17,11 +18,8 @@ export function FirebaseErrorListener() {
     // Define the callback function for handling permission errors.
     const handlePermissionError = (error: FirestorePermissionError) => {
       console.error('Firestore Permission Error Caught:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Permission Denied',
-        description: `You do not have permission to ${error.operation} data at "${error.path}". Please check your security rules or login status.`,
-      });
+      // Throw the error to make it visible in the Next.js development overlay
+      throw error;
     };
 
     // Subscribe to the 'permission-error' event when the component mounts.

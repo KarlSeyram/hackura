@@ -1,10 +1,12 @@
+
 'use client';
 import {
   DocumentReference,
   setDoc,
   updateDoc,
   deleteDoc,
-  // Add other Firestore write operations as needed
+  SetOptions,
+  Firestore,
 } from 'firebase/firestore';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError } from './errors';
@@ -13,15 +15,16 @@ import { FirestorePermissionError } from './errors';
  * Executes a setDoc operation in a non-blocking manner with centralized error handling.
  * @param {DocumentReference} docRef - The document reference to set.
  * @param {any} data - The data to write to the document.
+ * @param {SetOptions} [options] - Options for the set operation (e.g., { merge: true }).
  */
-export function nonBlockingSetDoc(docRef: DocumentReference, data: any): void {
-  setDoc(docRef, data).catch(error => {
+export function nonBlockingSetDoc(docRef: DocumentReference, data: any, options?: SetOptions): void {
+  setDoc(docRef, data, options || {}).catch(error => {
     const contextualError = new FirestorePermissionError({
-      operation: 'create', // or 'update' depending on the logic
+      operation: options && 'merge' in options ? 'update' : 'create',
       path: docRef.path,
+      requestResourceData: data,
     });
     errorEmitter.emit('permission-error', contextualError);
-    console.error('Non-blocking setDoc failed:', contextualError);
   });
 }
 
@@ -35,9 +38,9 @@ export function nonBlockingUpdateDoc(docRef: DocumentReference, data: any): void
     const contextualError = new FirestorePermissionError({
       operation: 'update',
       path: docRef.path,
+      requestResourceData: data,
     });
     errorEmitter.emit('permission-error', contextualError);
-    console.error('Non-blocking updateDoc failed:', contextualError);
   });
 }
 
@@ -52,6 +55,5 @@ export function nonBlockingDeleteDoc(docRef: DocumentReference): void {
       path: docRef.path,
     });
     errorEmitter.emit('permission-error', contextualError);
-    console.error('Non-blocking deleteDoc failed:', contextualError);
   });
 }
