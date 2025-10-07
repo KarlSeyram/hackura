@@ -10,6 +10,7 @@ import { LayoutClient } from './layout-client';
 import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { AnalyticsProvider } from '@/components/analytics/analytics-provider';
 
 const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
 
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
   title: 'Hackura',
   description: 'Your one-stop shop for tech and cybersecurity ebooks.',
 };
+
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export default function RootLayout({
   children,
@@ -32,13 +35,37 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {gaMeasurementId && (
+          <>
+            <Script
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+            />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaMeasurementId}', {
+                    page_path: window.location.pathname,
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
       </head>
       <body>
         <FirebaseClientProvider>
           <CartProvider>
-            <LayoutClient>
-              {children}
-            </LayoutClient>
+            <AnalyticsProvider>
+              <LayoutClient>
+                {children}
+              </LayoutClient>
+            </AnalyticsProvider>
             <Toaster />
             <Chatbot />
             <FirebaseErrorListener />

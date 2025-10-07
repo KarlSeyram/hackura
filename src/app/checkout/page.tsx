@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import { recordPurchase, applyDiscount } from '@/app/actions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { MtnIcon, GoogleIcon } from '@/components/icons';
 import { useFirebase } from '@/firebase/provider';
+import * as ga from '@/lib/ga';
 
 
 function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
@@ -151,6 +153,18 @@ export default function CheckoutPage() {
       });
       return;
     }
+
+    ga.event('purchase', {
+      currency: paystackCurrency,
+      value: discountedPrice,
+      items: cartItems.map(item => ({
+        item_id: item.id,
+        item_name: item.title,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+    });
+
     console.log('Payment successful. Ref:', reference);
     setPaymentState('processing');
     toast({
@@ -452,7 +466,7 @@ export default function CheckoutPage() {
                             disabled={!isFormValid || usdPrice <= 0}
                             createOrder={(data: CreateOrderData, actions) => {
                                 return actions.order.create({
-                                  intent: 'CAPTURE',
+                                  intent: "CAPTURE",
                                   purchase_units: [
                                     {
                                       amount: {
