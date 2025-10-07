@@ -39,17 +39,27 @@ export default function ShareButton({ product }: ShareButtonProps) {
 
   const handleShareClick = async () => {
     const productUrl = getProductUrl();
+    const fallbackDescription = `Check out this ebook: ${product.title}`;
 
-    // Use Web Share API if available, as it's the best mobile experience
+    setIsLoading(true);
+
+    let shareableDescription = fallbackDescription;
+    try {
+      const result = await generateShareableLinkWithPreview({
+        productName: product.title,
+        productDescription: product.description,
+        productUrl: productUrl,
+      });
+      if (result?.shareableDescription) {
+        shareableDescription = result.shareableDescription;
+      }
+    } catch (error) {
+        console.error('AI share text generation failed, using fallback:', error);
+    }
+    
+    // Use Web Share API if available (mobile)
     if (navigator.share) {
-      setIsLoading(true);
       try {
-        const { shareableDescription } = await generateShareableLinkWithPreview({
-          productName: product.title,
-          productDescription: product.description,
-          productUrl: productUrl,
-        });
-
         await navigator.share({
           title: product.title,
           text: shareableDescription,
@@ -69,22 +79,9 @@ export default function ShareButton({ product }: ShareButtonProps) {
       }
     } else {
       // Fallback for desktop: open the dialog
+      setShareableContent({ description: shareableDescription, url: productUrl });
       setIsDialogOpen(true);
-      setIsLoading(true);
-       try {
-        const { shareableDescription } = await generateShareableLinkWithPreview({
-          productName: product.title,
-          productDescription: product.description,
-          productUrl: productUrl,
-        });
-        setShareableContent({ description: shareableDescription, url: productUrl });
-      } catch (error) {
-        console.error('Error generating share content:', error);
-        // Use fallback content if AI fails
-        setShareableContent({ description: product.description.substring(0, 150) + '...', url: productUrl });
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
   };
 
