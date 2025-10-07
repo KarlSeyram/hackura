@@ -186,96 +186,35 @@
     ]
   },
   "firestore": {
-    "collections": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/entities/UserProfile"
-          },
-          "description": "Stores user profile information, keyed by the user's UID from Firebase Authentication. Users can read and write their own profile.",
-          "permissions": {
-            "read": "request.auth.uid == userId",
-            "write": "request.auth.uid == userId"
-          },
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            }
-          ]
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
       },
-      {
-        "path": "/ebooks/{ebookId}",
-        "definition": {
-          "entityName": "Ebook",
-          "schema": {
-            "$ref": "#/entities/Ebook"
-          },
-          "description": "Stores ebook data. Admin write access controlled via separate role collection.",
-          "params": [
-            {
-              "name": "ebookId",
-              "description": "The unique identifier for the ebook."
-            }
-          ]
-        }
+      "description": "Stores user profile information, keyed by the user's UID from Firebase Authentication. Users can read and write their own profile."
+    },
+    "/ebooks/{ebookId}": {
+      "schema": {
+        "$ref": "#/entities/Ebook"
       },
-      {
-        "path": "/services/{serviceId}",
-        "definition": {
-          "entityName": "Service",
-          "schema": {
-            "$ref": "#/entities/Service"
-          },
-          "description": "Stores cybersecurity service data. Admin write access controlled via separate role collection.",
-          "params": [
-            {
-              "name": "serviceId",
-              "description": "The unique identifier for the service."
-            }
-          ]
-        }
+      "description": "Stores ebook data. Admin write access controlled via separate role collection."
+    },
+    "/services/{serviceId}": {
+      "schema": {
+        "$ref": "#/entities/Service"
       },
-      {
-        "path": "/contact_requests/{contactRequestId}",
-        "definition": {
-          "entityName": "ContactRequest",
-          "schema": {
-            "$ref": "#/entities/ContactRequest"
-          },
-          "description": "Stores contact form submissions. Only accessible by admins.",
-          "params": [
-            {
-              "name": "contactRequestId",
-              "description": "The unique identifier for the contact request."
-            }
-          ]
-        }
+      "description": "Stores cybersecurity service data. Admin write access controlled via separate role collection."
+    },
+    "/contact_requests/{contactRequestId}": {
+      "schema": {
+        "$ref": "#/entities/ContactRequest"
       },
-      {
-        "path": "/users/{userId}/cart_items/{cartItemId}",
-        "definition": {
-          "entityName": "CartItem",
-          "schema": {
-            "$ref": "#/entities/CartItem"
-          },
-          "description": "Stores cart items for a specific user. Path-based ownership ensures only the user can access their cart data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "cartItemId",
-              "description": "The unique identifier for the cart item."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to support CyberShelf's core features, focusing on ebooks, services, contact requests, and shopping cart functionality. Authorization Independence is achieved by avoiding `get()` calls in security rules, primarily through path-based ownership and structural segregation. All data related to a specific user's cart is stored under their user ID, eliminating the need to fetch parent document data for authorization. Separate collections for ebooks, services, and contact requests ensure a homogeneous security posture. The structure prioritizes clarity and predictability with explicit state modeling where necessary and consistent naming conventions.\n\n*   `/users/{userId}`: This collection stores public-facing user profiles. It is keyed by the user's UID from Firebase Authentication, which allows for secure, path-based access control where users can only write to their own profile.\n*   `/ebooks`: Stores ebook data. This collection is globally readable but writeable only by admins (handled through separate admin role check).\n*   `/services`: Stores cybersecurity service data. Similar to ebooks, globally readable, admin-writeable.\n*   `/contact_requests`: Stores contact form submissions. Publicly createable, but only readable by admins.\n*   `/users/{userId}/cart_items`: Stores cart items related to a particular user. This is a path-based ownership model, ensuring only the user has access to their cart data.\n\nThis design ensures QAPs by:\n\n*   Segregating data with different access requirements into separate collections, enabling secure `list` operations without complex filtering in rules.\n*   Using path-based ownership for user-specific data (cart items, profiles), making list operations secure and efficient, as rules can easily verify ownership based on the path."
+      "description": "Stores contact form submissions. Only accessible by admins."
+    },
+    "/users/{userId}/cart_items/{cartItemId}": {
+      "schema": {
+        "$ref": "#/entities/CartItem"
+      },
+      "description": "Stores cart items for a specific user. Path-based ownership ensures only the user can access their cart data."
+    }
   }
 }
