@@ -16,6 +16,8 @@ import { useFirebase } from '@/firebase/provider';
 import { updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase/firestore/use-doc';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { countries } from '@/lib/countries';
 
 
 const profileSchema = z.object({
@@ -23,6 +25,8 @@ const profileSchema = z.object({
   age: z.coerce.number().min(0, 'Age must be a positive number.').optional(),
   country: z.string().optional(),
   bio: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  countryCode: z.string().optional(),
 });
 
 
@@ -45,6 +49,8 @@ export function ProfileSettings() {
       age: 0,
       country: '',
       bio: '',
+      phoneNumber: '',
+      countryCode: '',
     },
   });
 
@@ -56,6 +62,18 @@ export function ProfileSettings() {
         form.setValue('age', userProfile.age || 0);
         form.setValue('country', userProfile.country || '');
         form.setValue('bio', userProfile.bio || '');
+        
+        const fullPhoneNumber = userProfile.phoneNumber || '';
+        const countryCodeMatch = fullPhoneNumber.match(/^(\+\d+)/);
+
+        if (countryCodeMatch) {
+            const countryCode = countryCodeMatch[1];
+            const number = fullPhoneNumber.substring(countryCode.length).trim();
+            form.setValue('countryCode', countryCode);
+            form.setValue('phoneNumber', number);
+        } else {
+            form.setValue('phoneNumber', fullPhoneNumber);
+        }
     }
   }, [user, userProfile, form]);
   
@@ -71,6 +89,10 @@ export function ProfileSettings() {
           });
       }
 
+      const fullPhoneNumber = values.countryCode && values.phoneNumber 
+          ? `${values.countryCode}${values.phoneNumber}` 
+          : values.phoneNumber;
+
       // Update Firestore document
       const userRef = doc(firestore, 'users', auth.currentUser.uid);
       await setDoc(userRef, {
@@ -78,7 +100,8 @@ export function ProfileSettings() {
         email: auth.currentUser.email,
         age: values.age,
         country: values.country,
-        bio: values.bio
+        bio: values.bio,
+        phoneNumber: fullPhoneNumber,
       }, { merge: true });
 
       toast({
@@ -133,6 +156,46 @@ export function ProfileSettings() {
                 </FormItem>
             )}
             />
+             <div className="space-y-2">
+                <FormLabel>Phone Number</FormLabel>
+                <div className="flex gap-2">
+                    <FormField
+                    control={form.control}
+                    name="countryCode"
+                    render={({ field }) => (
+                        <FormItem className="w-1/3">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Code" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="max-h-64">
+                            {countries.map(country => (
+                                <SelectItem key={country.code} value={country.dial_code}>
+                                {country.code} ({country.dial_code})
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                        <FormItem className="flex-1">
+                        <FormControl>
+                            <Input type="tel" placeholder="Phone number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                 control={form.control}
