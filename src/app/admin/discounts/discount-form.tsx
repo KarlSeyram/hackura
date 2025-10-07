@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import { Loader2, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -53,7 +53,7 @@ export function DiscountForm({ discount, onFinished }: DiscountFormProps) {
   const isSubmitted = useRef(false);
 
   // Separate state for the date picker
-  const [date, setDate] = React.useState<Date | undefined>(
+  const [date, setDate] = useState<Date | undefined>(
     discount?.expires_at ? new Date(discount.expires_at) : undefined
   );
 
