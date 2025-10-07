@@ -19,6 +19,7 @@ import { useDoc } from '@/firebase/firestore/use-doc';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { countries } from '@/lib/countries';
 import { nonBlockingSetDoc } from '@/firebase/non-blocking-updates';
+import { useRouter } from 'next/navigation';
 
 
 const profileSchema = z.object({
@@ -34,6 +35,7 @@ const profileSchema = z.object({
 export function ProfileSettings() {
   const { user, auth, firestore, isLoading: isUserLoading } = useFirebase();
   const { toast } = useToast();
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const userDocRef = useMemo(() => {
@@ -78,6 +80,12 @@ export function ProfileSettings() {
     }
   }, [user, userProfile, form]);
   
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     if (!auth?.currentUser || !firestore) return;
 
@@ -111,6 +119,8 @@ export function ProfileSettings() {
         title: 'Success!',
         description: 'Your profile has been updated.',
       });
+
+      router.push('/profile');
     } catch (error: any) {
        toast({
         variant: 'destructive',
