@@ -7,9 +7,6 @@ import { uploadFromGoogleDrive } from '@/ai/flows/upload-from-google-drive';
 import { createAdminClient } from '@/lib/supabase/server';
 
 
-// Helper function to create admin client - REMOVED because it's now in server.ts
-
-
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
