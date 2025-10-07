@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
-import { Share2, Copy, Loader2, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Share2, Copy, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { Ebook } from '@/lib/definitions';
@@ -26,46 +26,66 @@ interface ShareButtonProps {
 
 export default function ShareButton({ product }: ShareButtonProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [shareableContent, setShareableContent] = useState({ description: '', url: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasCopied, setHasCopied] = useState(false);
+  const [shareableContent, setShareableContent] = useState({ 
+    description: `Check out this great ebook: "${product.title}"`, 
+    url: '' 
+  });
   
   const getProductUrl = () => {
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/products/${product.id}`;
     }
-    return `http://localhost:9002/products/${product.id}`;
+    // This is a fallback for server-side or build-time rendering, though it's unlikely to be used in this client component logic.
+    return `https://your-domain.com/products/${product.id}`;
   };
 
-  const handleShareClick = async () => {
-    const productUrl = getProductUrl();
-    const fallbackDescription = `Check out this ebook: ${product.title}`;
+  useEffect(() => {
+    // When the dialog opens, start fetching the AI description.
+    if (isDialogOpen) {
+      const productUrl = getProductUrl();
+      setShareableContent(prev => ({ ...prev, url: productUrl }));
+      setIsLoading(true);
 
-    setIsLoading(true);
-
-    let shareableDescription = fallbackDescription;
-    try {
-      const result = await generateShareableLinkWithPreview({
+      generateShareableLinkWithPreview({
         productName: product.title,
         productDescription: product.description,
         productUrl: productUrl,
-      });
-      if (result?.shareableDescription) {
-        shareableDescription = result.shareableDescription;
-      }
-    } catch (error) {
+      }).then(result => {
+        if (result?.shareableDescription) {
+          setShareableContent(prev => ({ ...prev, description: result.shareableDescription }));
+        }
+      }).catch(error => {
         console.error('AI share text generation failed, using fallback:', error);
+        // The fallback is already set in the initial state, so no update needed on error.
+      }).finally(() => {
+        setIsLoading(false);
+      });
     }
+  }, [isDialogOpen, product.title, product.description, product.id]);
+  
+  useEffect(() => {
+    if (hasCopied) {
+      const timer = setTimeout(() => setHasCopied(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasCopied]);
+
+  const handleShareClick = async () => {
+    const productUrl = getProductUrl();
     
-    // Use Web Share API if available (mobile)
+    // Mobile/Web Share API - Fast path, no AI
     if (navigator.share) {
       try {
         await navigator.share({
           title: product.title,
-          text: shareableDescription,
+          text: `Check out this ebook: ${product.title}`,
           url: productUrl,
         });
       } catch (error) {
+        // AbortError is expected if the user cancels the share sheet.
         if ((error as DOMException).name !== 'AbortError') {
           console.error('Error sharing product:', error);
           toast({
@@ -74,19 +94,16 @@ export default function ShareButton({ product }: ShareButtonProps) {
             description: 'Could not share product at this time.',
           });
         }
-      } finally {
-        setIsLoading(false);
       }
     } else {
-      // Fallback for desktop: open the dialog
-      setShareableContent({ description: shareableDescription, url: productUrl });
+      // Desktop - open dialog, which will trigger the AI flow via useEffect
       setIsDialogOpen(true);
-      setIsLoading(false);
     }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+    setHasCopied(true);
     toast({
       title: 'Copied!',
       description: 'The content has been copied to your clipboard.',
@@ -95,12 +112,8 @@ export default function ShareButton({ product }: ShareButtonProps) {
 
   return (
     <>
-      <Button size="icon" variant="outline" onClick={handleShareClick} disabled={isLoading} className="h-8 w-8">
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Share2 className="h-4 w-4" />
-        )}
+      <Button size="icon" variant="outline" onClick={handleShareClick} className="h-8 w-8">
+        <Share2 className="h-4 w-4" />
         <span className="sr-only">Share</span>
       </Button>
 
@@ -112,34 +125,35 @@ export default function ShareButton({ product }: ShareButtonProps) {
               Copy the text below to share it on your favorite platform.
             </DialogDescription>
           </DialogHeader>
-          {isLoading ? (
-             <div className="flex items-center justify-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
-             </div>
-          ) : (
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="share-description">Share Text</Label>
+          <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                  <Label htmlFor="share-description">Share Text</Label>
+                  {isLoading ? (
+                    <div className="h-[78px] w-full flex items-center justify-center rounded-md border bg-muted">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
                     <Textarea id="share-description" readOnly value={shareableContent.description} rows={3} />
-                </div>
-                <div className="space-y-2">
-                     <Label htmlFor="share-url">URL</Label>
-                     <div className="flex items-center gap-2">
-                        <Input id="share-url" readOnly value={shareableContent.url} />
-                        <Button variant="outline" size="icon" onClick={() => copyToClipboard(shareableContent.url)}>
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                     </div>
-                </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => copyToClipboard(`${shareableContent.description}\n${shareableContent.url}`)}>
-                <Copy className="mr-2 h-4 w-4" /> Copy All
-            </Button>
-            <DialogClose asChild>
+                  )}
+              </div>
+              <div className="space-y-2">
+                   <Label htmlFor="share-url">URL</Label>
+                   <div className="flex items-center gap-2">
+                      <Input id="share-url" readOnly value={shareableContent.url} />
+                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(shareableContent.url)}>
+                          {hasCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                   </div>
+              </div>
+          </div>
+          <DialogFooter className="sm:justify-between gap-2">
+             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
+            <Button onClick={() => copyToClipboard(`${shareableContent.description}\n${shareableContent.url}`)} disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
+                Copy All
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
