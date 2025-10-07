@@ -1,5 +1,5 @@
 
-import { google } from 'googleapis';
+import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { subDays, format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,93 +7,89 @@ import { AlertTriangle, Users, BookOpen, Percent, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // --- Configuration ---
-// IMPORTANT: Replace with your actual GA4 Property ID
-const propertyId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.replace('G-', '') || '';
+// IMPORTANT: Set these in your .env.local file
+const propertyId = process.env.GA_PROPERTY_ID || '';
+const clientEmail = process.env.GA_CLIENT_EMAIL || '';
+const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, '\n') || '';
+
 
 // --- Authentication ---
-// Instructions:
-// 1. Create a service account in Google Cloud Platform with "Analytics Viewer" role.
-// 2. Generate a JSON key for this service account.
-// 3. Store the key in environment variables (e.g., in Vercel or .env.local).
-//    - GOOGLE_CLIENT_EMAIL=service-account-email@...
-//    - GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
-const auth = new google.auth.GoogleAuth({
+const analyticsDataClient = new BetaAnalyticsDataClient({
     credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        client_email: clientEmail,
+        private_key: privateKey,
     },
-    scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
-});
-
-const analyticsDataClient = google.analyticsdata({
-    version: 'v1beta',
-    auth,
 });
 
 // --- Data Fetching Functions ---
 
 async function getAnalyticsData() {
-    if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-        throw new Error('Google service account credentials are not configured.');
+    if (!clientEmail || !privateKey) {
+        return {
+            totalUsers: 0,
+            topPages: [],
+            conversionRate: 0,
+            error: 'Google service account credentials are not configured.',
+        };
     }
     if (!propertyId) {
-        throw new Error('GA4 Property ID is not configured.');
+       return {
+            totalUsers: 0,
+            topPages: [],
+            conversionRate: 0,
+            error: 'GA_PROPERTY_ID is not configured in environment variables.',
+        };
     }
 
     const today = new Date();
     const startDate = format(subDays(today, 29), 'yyyy-MM-dd'); // Last 30 days
     const endDate = format(today, 'yyyy-MM-dd');
+    const propertyPath = `properties/${propertyId}`;
 
     try {
         const [totalUsersRes, topPagesRes, conversionRes] = await Promise.all([
             // 1. Total Visitors
-            analyticsDataClient.properties.runReport({
-                property: `properties/${propertyId}`,
-                requestBody: {
-                    dateRanges: [{ startDate, endDate }],
-                    metrics: [{ name: 'totalUsers' }],
-                },
+            analyticsDataClient.runReport({
+                property: propertyPath,
+                dateRanges: [{ startDate, endDate }],
+                metrics: [{ name: 'totalUsers' }],
             }),
             // 2. Most Visited Book Pages
-            analyticsDataClient.properties.runReport({
-                property: `properties/${propertyId}`,
-                requestBody: {
-                    dateRanges: [{ startDate, endDate }],
-                    dimensions: [{ name: 'pagePathPlusQueryString' }, { name: 'pageTitle' }],
-                    metrics: [{ name: 'screenPageViews' }],
-                    dimensionFilter: {
-                        filter: {
-                            fieldName: 'pagePath',
-                            stringFilter: { matchType: 'BEGINS_WITH', value: '/products/' }
-                        }
-                    },
-                    limit: 5,
-                    orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+            analyticsDataClient.runReport({
+                property: propertyPath,
+                dateRanges: [{ startDate, endDate }],
+                dimensions: [{ name: 'pagePathPlusQueryString' }, { name: 'pageTitle' }],
+                metrics: [{ name: 'screenPageViews' }],
+                dimensionFilter: {
+                    filter: {
+                        fieldName: 'pagePath',
+                        stringFilter: { matchType: 'BEGINS_WITH', value: '/products/' }
+                    }
                 },
+                limit: 5,
+                orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
             }),
              // 3. Conversion Rate (simple version: purchases / users)
-            analyticsDataClient.properties.runReport({
-                property: `properties/${propertyId}`,
-                requestBody: {
-                    dateRanges: [{ startDate, endDate }],
-                    metrics: [{ name: 'totalUsers' }, { name: 'ecommercePurchases' }],
-                },
+            analyticsDataClient.runReport({
+                property: propertyPath,
+                dateRanges: [{ startDate, endDate }],
+                metrics: [{ name: 'totalUsers' }, { name: 'ecommercePurchases' }],
             }),
         ]);
 
         // Process Total Visitors
-        const totalUsers = totalUsersRes.data.rows?.[0]?.metricValues?.[0]?.value || '0';
+        const totalUsers = totalUsersRes[0].rows?.[0]?.metricValues?.[0]?.value || '0';
 
         // Process Top Pages
-        const topPages = topPagesRes.data.rows?.map(row => ({
+        const topPages = topPagesRes[0].rows?.map(row => ({
             path: row.dimensionValues?.[0]?.value || 'N/A',
             title: row.dimensionValues?.[1]?.value?.replace(' | Hackura', '') || 'Unknown Title',
             views: row.metricValues?.[0]?.value || '0',
         })) || [];
         
         // Process Conversion Rate
-        const totalVisitorsForConversion = parseInt(conversionRes.data.rows?.[0]?.metricValues?.[0]?.value || '0');
-        const totalPurchases = parseInt(conversionRes.data.rows?.[0]?.metricValues?.[1]?.value || '0');
+        const totalVisitorsForConversion = parseInt(conversionRes[0].rows?.[0]?.metricValues?.[0]?.value || '0');
+        const totalPurchases = parseInt(conversionRes[0].rows?.[0]?.metricValues?.[1]?.value || '0');
         const conversionRate = totalVisitorsForConversion > 0 ? (totalPurchases / totalVisitorsForConversion) * 100 : 0;
 
 
@@ -128,7 +124,7 @@ export default async function AnalyticsPage() {
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Failed to Load Analytics Data</AlertTitle>
                     <AlertDescription>
-                        <p>Could not connect to the Google Analytics API. Please ensure your service account credentials and GA4 Property ID are correctly configured in your environment variables.</p>
+                        <p>Could not connect to the Google Analytics API. Please ensure your service account credentials and GA Property ID are correctly configured in your environment variables.</p>
                         <p className="font-mono text-xs mt-2">{error}</p>
                     </AlertDescription>
                 </Alert>
@@ -141,8 +137,8 @@ export default async function AnalyticsPage() {
                             <li>Navigate to "IAM & Admin" &gt; "Service Accounts".</li>
                             <li>Create a new service account with the "Analytics Viewer" role.</li>
                             <li>Create a JSON key for the service account and download it.</li>
-                            <li>Set the `GOOGLE_CLIENT_EMAIL` and `GOOGLE_PRIVATE_KEY` in your environment variables using the values from the JSON key file.</li>
-                             <li>Ensure `NEXT_PUBLIC_GA_MEASUREMENT_ID` is also set.</li>
+                            <li>Set the `GA_CLIENT_EMAIL` and `GA_PRIVATE_KEY` in your environment variables using the values from the JSON key file.</li>
+                             <li>Ensure `GA_PROPERTY_ID` is also set with your GA4 Property ID (not the Measurement ID 'G-...').</li>
                         </ol>
                     </AlertDescription>
                 </Alert>
