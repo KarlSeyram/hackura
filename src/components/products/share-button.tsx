@@ -30,9 +30,17 @@ export default function ShareButton({ product }: ShareButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [shareableContent, setShareableContent] = useState({ description: '', url: '' });
   
-  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}/products/${product.id}` : '';
+  const getProductUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/products/${product.id}`;
+    }
+    return '';
+  };
 
   const handleShareClick = async () => {
+    const productUrl = getProductUrl();
+    if (!productUrl) return;
+
     // Use Web Share API if available, as it's the best mobile experience
     if (navigator.share) {
       setIsLoading(true);
