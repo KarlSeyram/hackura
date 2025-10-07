@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { PaystackButton } from 'react-paystack';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { PayPalScriptProvider, PayPalButtons, type OnApproveData, type CreateOrderData } from '@paypal/react-paypal-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -122,7 +122,7 @@ export default function CheckoutPage() {
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
-  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '';
+  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test';
   
   const handleFormChange = (newName: string, newEmail: string, isValid: boolean) => {
     setName(newName);
@@ -269,7 +269,7 @@ export default function CheckoutPage() {
   }
 
   return (
-   <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD" }}>
+   <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "GHS" }}>
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -343,18 +343,21 @@ export default function CheckoutPage() {
                           <PayPalButtons
                             style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
                             disabled={!isFormValid || totalPrice === 0}
-                            createOrder={async (data, actions) => {
+                            createOrder={async (data: CreateOrderData, actions) => {
                                 return actions.order.create({
-                                    purchase_units: [{
-                                        amount: {
-                                            value: (totalPrice / 10).toFixed(2), // Example conversion, adjust as needed
-                                            currency_code: 'USD',
-                                        },
-                                        description: 'Hackura Ebooks Purchase',
-                                    }]
+                                  intent: 'CAPTURE',
+                                  purchase_units: [
+                                    {
+                                      amount: {
+                                        value: totalPrice.toFixed(2),
+                                        currency_code: 'GHS',
+                                      },
+                                      description: 'Hackura Ebook Purchase',
+                                    },
+                                  ],
                                 });
                             }}
-                            onApprove={async (data, actions) => {
+                            onApprove={async (data: OnApproveData, actions) => {
                               if (actions.order) {
                                 const details = await actions.order.capture();
                                 handlePaypalPaymentSuccess(details);
@@ -370,7 +373,7 @@ export default function CheckoutPage() {
                             }}
                           />
                         )}
-                        {!paypalClientId && <p className="text-sm text-center text-destructive">PayPal is not configured.</p>}
+                        {paypalClientId === 'test' && <p className="text-sm text-center text-destructive">PayPal is not configured.</p>}
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
@@ -387,3 +390,4 @@ export default function CheckoutPage() {
    </PayPalScriptProvider>
   );
 }
+
