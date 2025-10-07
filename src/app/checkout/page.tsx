@@ -8,12 +8,12 @@ import type { OnApproveData, CreateOrderData } from '@paypal/paypal-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingCart, Loader2, CreditCard } from 'lucide-react';
+import { ShoppingCart, Loader2, CreditCard, Tag, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { recordPurchase } from '@/app/actions';
+import { recordPurchase, applyDiscount } from '@/app/actions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { MtnIcon, GoogleIcon } from '@/components/icons';
 import { useFirebase } from '@/firebase/provider';
@@ -93,12 +93,19 @@ export default function CheckoutPage() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [usdPrice, setUsdPrice] = useState(0);
 
+  const [promoCode, setPromoCode] = useState('');
+  const [discount, setDiscount] = useState<{ code: string; percent: number } | null>(null);
+  const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+
+  const discountedPrice = discount ? totalPrice * (1 - discount.percent / 100) : totalPrice;
+
+
   useEffect(() => {
     setIsClient(true);
     // A simple, static conversion rate. In a real-world app, you'd fetch this from an API.
     const GHS_TO_USD_RATE = 0.067;
-    setUsdPrice(totalPrice * GHS_TO_USD_RATE);
-  }, [totalPrice]);
+    setUsdPrice(discountedPrice * GHS_TO_USD_RATE);
+  }, [discountedPrice]);
 
   useEffect(() => {
     if (isClient && !isUserLoading) {
@@ -158,7 +165,13 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = async (reference: any) => {
     try {
       if (!user) throw new Error('User not authenticated.');
-      await recordPurchase(user.uid, cartItems, reference.reference);
+      await recordPurchase({
+        userId: user.uid,
+        cartItems,
+        paymentReference: reference.reference,
+        finalPrice: discountedPrice,
+        discountCode: discount?.code,
+      });
       handleGenericPaymentSuccess(reference.reference);
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
@@ -174,8 +187,13 @@ export default function CheckoutPage() {
   const handlePaypalPaymentSuccess = async (details: any) => {
     try {
       if (!user) throw new Error('User not authenticated.');
-      // The 'id' from paypal details is the transaction ID, which we use as the reference
-      await recordPurchase(user.uid, cartItems, details.id);
+      await recordPurchase({
+        userId: user.uid,
+        cartItems,
+        paymentReference: details.id,
+        finalPrice: discountedPrice,
+        discountCode: discount?.code,
+      });
       handleGenericPaymentSuccess(details.id);
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
@@ -208,9 +226,39 @@ export default function CheckoutPage() {
     setPaymentState('idle');
   }
 
+  const handleApplyDiscount = async () => {
+    if (!promoCode) return;
+    setIsApplyingDiscount(true);
+    const result = await applyDiscount(promoCode);
+    if (result.success && result.discount) {
+      setDiscount({ code: result.discount.code, percent: result.discount.percent });
+      toast({
+        title: 'Discount Applied!',
+        description: `${result.discount.percent}% off your order.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Code',
+        description: result.message,
+      });
+      setDiscount(null);
+    }
+    setIsApplyingDiscount(false);
+  };
+
+  const removeDiscount = () => {
+    setDiscount(null);
+    setPromoCode('');
+    toast({
+      title: 'Discount Removed',
+      description: 'The promo code has been removed from your order.',
+    });
+  };
+
   const paystackComponentProps = {
     email,
-    amount: Math.round(totalPrice * 100),
+    amount: Math.round(discountedPrice * 100),
     currency: paystackCurrency,
     reference: `hackura_paystack_${new Date().getTime()}`,
     metadata: {
@@ -229,6 +277,16 @@ export default function CheckoutPage() {
           display_name: "Cart Items",
           variable_name: "cart_items",
           value: JSON.stringify(cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))),
+        },
+        {
+          display_name: "Discount Code",
+          variable_name: "discount_code",
+          value: discount?.code || "",
+        },
+        {
+          display_name: "Final Price",
+          variable_name: "final_price",
+          value: discountedPrice,
         }
       ]
     },
@@ -242,6 +300,11 @@ export default function CheckoutPage() {
     style: 'currency',
     currency: paystackCurrency,
   }).format(totalPrice);
+
+  const formattedDiscountedPrice = new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: paystackCurrency,
+  }).format(discountedPrice);
 
   
   if (!isClient || isUserLoading || !user) {
@@ -295,10 +358,20 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
-          <div className="mt-6 border-t pt-4">
+          <div className="mt-6 border-t pt-4 space-y-2">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Subtotal</span>
+              <span>{formattedTotalPrice}</span>
+            </div>
+             {discount && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Discount ({discount.percent}%)</span>
+                <span className="text-green-600">- {new Intl.NumberFormat(undefined, { style: 'currency', currency: paystackCurrency }).format(totalPrice - discountedPrice)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>{formattedTotalPrice}</span>
+              <span>{formattedDiscountedPrice}</span>
             </div>
           </div>
         </div>
@@ -311,6 +384,36 @@ export default function CheckoutPage() {
               initialName={user.displayName || ''}
               initialEmail={user.email || ''}
             />
+
+            {!discount ? (
+              <div className="flex items-end gap-2">
+                <div className="flex-grow space-y-2">
+                  <Label htmlFor="promo-code">Promo Code</Label>
+                  <Input 
+                    id="promo-code" 
+                    placeholder="Enter code" 
+                    value={promoCode} 
+                    onChange={e => setPromoCode(e.target.value)} 
+                    disabled={isApplyingDiscount}
+                  />
+                </div>
+                <Button onClick={handleApplyDiscount} disabled={!promoCode || isApplyingDiscount}>
+                  {isApplyingDiscount && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Apply
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
+                 <div className="flex items-center gap-2 font-medium text-green-600">
+                    <Tag className="h-4 w-4"/>
+                    <span>Code "{discount.code}" applied!</span>
+                 </div>
+                 <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={removeDiscount}>
+                    <X className="h-4 w-4"/>
+                 </Button>
+              </div>
+            )}
+
 
             <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
                 <AccordionItem value="paystack">
@@ -325,7 +428,7 @@ export default function CheckoutPage() {
                            <Button
                               asChild
                               className="w-full"
-                              disabled={!isFormValid || totalPrice === 0 || !paystackPublicKey}
+                              disabled={!isFormValid || discountedPrice <= 0 || !paystackPublicKey}
                             >
                               <PaystackButton
                                 {...paystackComponentProps}
@@ -346,7 +449,7 @@ export default function CheckoutPage() {
                         {isClient && isFormValid && usdPrice > 0 && paypalClientId && paypalClientId !== 'test' ? (
                           <PayPalButtons
                             style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                            disabled={!isFormValid || usdPrice === 0}
+                            disabled={!isFormValid || usdPrice <= 0}
                             createOrder={(data: CreateOrderData, actions) => {
                                 return actions.order.create({
                                   intent: 'CAPTURE',

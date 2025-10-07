@@ -29,9 +29,15 @@ async function handlePaystack(req: Request) {
         const customFields = metadata.custom_fields || [];
         const userIdField = customFields.find((f: any) => f.variable_name === 'user_id');
         const cartItemsField = customFields.find((f: any) => f.variable_name === 'cart_items');
+        const finalPriceField = customFields.find((f: any) => f.variable_name === 'final_price');
+        const discountCodeField = customFields.find((f: any) => f.variable_name === 'discount_code');
+
 
         const userId = userIdField?.value;
         const cartItems: CartItem[] = cartItemsField ? JSON.parse(cartItemsField.value) : [];
+        const finalPrice = finalPriceField ? parseFloat(finalPriceField.value) : metadata.amount / 100;
+        const discountCode = discountCodeField?.value;
+
 
         if (!userId || !cartItems || cartItems.length === 0) {
             console.error('Missing userId or cartItems in Paystack metadata custom fields.');
@@ -39,7 +45,7 @@ async function handlePaystack(req: Request) {
         }
 
         try {
-            await recordPurchase(userId, cartItems, reference);
+            await recordPurchase({userId, cartItems, paymentReference: reference, finalPrice, discountCode });
             return NextResponse.json({ message: 'Purchase recorded successfully.' }, { status: 200 });
         } catch (error) {
             console.error('Error recording purchase from Paystack:', error);

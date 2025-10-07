@@ -7,13 +7,18 @@ import { generateDownloadToken, verifyDownloadToken } from '@/lib/downloadToken'
 import { createAdminClient } from '@/lib/supabase/server';
 
 
-export async function recordPurchase(userId: string, cartItems: CartItem[], paymentReference: string) {
+export async function recordPurchase(
+  { userId, cartItems, paymentReference, finalPrice, discountCode }: 
+  { userId: string; cartItems: CartItem[]; paymentReference: string; finalPrice: number; discountCode?: string; }
+) {
   const supabase = createAdminClient();
 
   const purchaseRecords = cartItems.map(item => ({
     ebook_id: item.id,
     payment_ref: paymentReference,
-    user_id: userId, 
+    user_id: userId,
+    final_price: finalPrice,
+    discount_code: discountCode,
   }));
 
   if (purchaseRecords.length > 0) {
@@ -160,4 +165,47 @@ export async function getMyEbooks(userId: string): Promise<Ebook[]> {
         file_name: ebook.file_name,
         isDisabled: ebook.is_disabled
     }));
+}
+
+
+export async function applyDiscount(code: string): Promise<{
+  success: boolean;
+  message: string;
+  discount?: {
+    code: string;
+    percent: number;
+  };
+}> {
+  if (!code) {
+    return { success: false, message: 'Please enter a discount code.' };
+  }
+  const supabase = createAdminClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('discounts')
+    .select('code, discount_percent, expires_at, is_active')
+    .eq('code', code.trim().toUpperCase())
+    .single();
+
+  if (error || !data) {
+    return { success: false, message: 'This discount code is not valid.' };
+  }
+
+  if (!data.is_active) {
+    return { success: false, message: 'This discount code is no longer active.' };
+  }
+
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    return { success: false, message: 'This discount code has expired.' };
+  }
+
+  return {
+    success: true,
+    message: 'Discount applied!',
+    discount: {
+      code: data.code,
+      percent: data.discount_percent,
+    },
+  };
 }

@@ -53,6 +53,8 @@ export type Purchase = {
   user_id?: string; // Optional user ID
   ebook_id: string;
   payment_ref: string;
+  final_price: number;
+  discount_code?: string;
 };
 
 export type Review = {
@@ -68,3 +70,12 @@ export type QuizQuestion = {
   text: string;
   options: { id: string; text: string }[];
 };
+
+export type Discount = {
+    id: string;
+    code: string;
+    discount_percent: number;
+    is_active: boolean;
+    expires_at: string | null;
+    created_at: string;
+}
