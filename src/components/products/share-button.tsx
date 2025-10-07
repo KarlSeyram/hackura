@@ -38,7 +38,7 @@ export default function ShareButton({ product }: ShareButtonProps) {
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/products/${product.id}`;
     }
-    // This is a fallback for server-side or build-time rendering, though it's unlikely to be used in this client component logic.
+    // This is a fallback for server-side or build-time rendering.
     return `https://your-domain.com/products/${product.id}`;
   };
 
@@ -73,32 +73,9 @@ export default function ShareButton({ product }: ShareButtonProps) {
     }
   }, [hasCopied]);
 
-  const handleShareClick = async () => {
-    const productUrl = getProductUrl();
-    
-    // Mobile/Web Share API - Fast path, no AI
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.title,
-          text: `Check out this ebook: ${product.title}`,
-          url: productUrl,
-        });
-      } catch (error) {
-        // AbortError is expected if the user cancels the share sheet.
-        if ((error as DOMException).name !== 'AbortError') {
-          console.error('Error sharing product:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Could not share product at this time.',
-          });
-        }
-      }
-    } else {
-      // Desktop - open dialog, which will trigger the AI flow via useEffect
-      setIsDialogOpen(true);
-    }
+  const handleShareClick = () => {
+    // Always open the dialog for a consistent experience on all devices.
+    setIsDialogOpen(true);
   };
 
   const copyToClipboard = (text: string) => {
