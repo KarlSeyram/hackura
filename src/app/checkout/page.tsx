@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { PaystackButton } from 'react-paystack';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,11 +15,9 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { recordPurchase } from '@/app/actions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { MtnIcon } from '@/components/icons';
+import { MtnIcon, GoogleIcon } from '@/components/icons';
 import { useFirebase } from '@/firebase/provider';
 
-
-type PaymentMethod = 'paystack';
 
 function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
   const [name, setName] = useState(initialName);
@@ -123,6 +122,7 @@ export default function CheckoutPage() {
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   const paystackCurrency = process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY || 'GHS';
+  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '';
   
   const handleFormChange = (newName: string, newEmail: string, isValid: boolean) => {
     setName(newName);
@@ -156,6 +156,23 @@ export default function CheckoutPage() {
       if (!user) throw new Error('User not authenticated.');
       await recordPurchase(user.uid, cartItems, reference.reference);
       handleGenericPaymentSuccess(reference.reference);
+    } catch (error) {
+      console.error('Failed during post-payment processing:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error Processing Purchase',
+        description: 'There was an issue saving your purchase. Please contact support.',
+      });
+      setPaymentState('idle');
+    }
+  };
+
+  const handlePaypalPaymentSuccess = async (details: any) => {
+    try {
+      if (!user) throw new Error('User not authenticated.');
+      // The 'id' from paypal details is the transaction ID, which we use as the reference
+      await recordPurchase(user.uid, cartItems, details.id);
+      handleGenericPaymentSuccess(details.id);
     } catch (error) {
       console.error('Failed during post-payment processing:', error);
       toast({
@@ -252,6 +269,7 @@ export default function CheckoutPage() {
   }
 
   return (
+   <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD" }}>
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -313,6 +331,48 @@ export default function CheckoutPage() {
                         )}
                     </AccordionContent>
                 </AccordionItem>
+                 <AccordionItem value="paypal">
+                    <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                           <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#00457C]"><title>PayPal</title><path d="M7.076 21.337H2.478L.002 3.141h4.943c.319 0 .618.17.787.45l2.426 3.863c.17.28.469.45.787.45h2.153c2.934 0 5.103 2.122 5.103 4.965 0 2.51-1.745 4.312-4.148 4.887l-2.404.576h-.697c-.304 0-.583.178-.737.458l-2.098 3.342zm11.751-13.076l-2.262 13.076H9.363l2.26-13.076h7.204z"/></svg>
+                            <span>Pay with PayPal</span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                        {isClient && isFormValid && totalPrice > 0 && paypalClientId && (
+                          <PayPalButtons
+                            style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                            disabled={!isFormValid || totalPrice === 0}
+                            createOrder={async (data, actions) => {
+                                return actions.order.create({
+                                    purchase_units: [{
+                                        amount: {
+                                            value: (totalPrice / 10).toFixed(2), // Example conversion, adjust as needed
+                                            currency_code: 'USD',
+                                        },
+                                        description: 'Hackura Ebooks Purchase',
+                                    }]
+                                });
+                            }}
+                            onApprove={async (data, actions) => {
+                              if (actions.order) {
+                                const details = await actions.order.capture();
+                                handlePaypalPaymentSuccess(details);
+                              }
+                            }}
+                            onError={(err) => {
+                                console.error("PayPal Error:", err);
+                                toast({
+                                    variant: "destructive",
+                                    title: "PayPal Error",
+                                    description: "An error occurred with the PayPal transaction. Please try again.",
+                                });
+                            }}
+                          />
+                        )}
+                        {!paypalClientId && <p className="text-sm text-center text-destructive">PayPal is not configured.</p>}
+                    </AccordionContent>
+                </AccordionItem>
             </Accordion>
 
              <Button variant="outline" asChild className="w-full">
@@ -324,5 +384,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+   </PayPalScriptProvider>
   );
 }
