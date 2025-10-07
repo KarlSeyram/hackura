@@ -15,22 +15,6 @@
           "type": "string",
           "format": "email",
           "description": "The user's email address."
-        },
-        "age": {
-          "type": "number",
-          "description": "The user's age."
-        },
-        "country": {
-          "type": "string",
-          "description": "The user's country of residence."
-        },
-        "bio": {
-          "type": "string",
-          "description": "A short biography about the user."
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "The user's phone number."
         }
       },
       "required": [
@@ -190,7 +174,7 @@
       "schema": {
         "$ref": "#/entities/UserProfile"
       },
-      "description": "Stores user profile information, keyed by the user's UID from Firebase Authentication. Users can read and write their own profile."
+      "description": "Stores user profile information, keyed by the user's UID from Firebase Authentication."
     },
     "/ebooks/{ebookId}": {
       "schema": {
