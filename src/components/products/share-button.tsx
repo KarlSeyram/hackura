@@ -34,12 +34,11 @@ export default function ShareButton({ product }: ShareButtonProps) {
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/products/${product.id}`;
     }
-    return '';
+    return `http://localhost:9002/products/${product.id}`;
   };
 
   const handleShareClick = async () => {
     const productUrl = getProductUrl();
-    if (!productUrl) return;
 
     // Use Web Share API if available, as it's the best mobile experience
     if (navigator.share) {
