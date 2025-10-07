@@ -1,3 +1,4 @@
+
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import { Auth, getAuth, connectAuthEmulator } from 'firebase/auth';
 import { Firestore, getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
@@ -39,8 +40,12 @@ export function initializeFirebase() {
       connectAuthEmulator(auth, `http://${process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST}`, { disableWarnings: true });
     }
     // Check if the Firestore emulator is running and connect if so.
-    if (process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST && !firestore.emulatorConfig) {
-      connectFirestoreEmulator(firestore, 'localhost', 8080);
+    if (process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST) {
+        try {
+            connectFirestoreEmulator(firestore, 'localhost', 8080);
+        } catch (e) {
+            // Emulator may already be connected
+        }
     }
   }
 
