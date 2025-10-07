@@ -160,6 +160,44 @@
         "ebookId",
         "quantity"
       ]
+    },
+    "Discount": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Discount",
+      "description": "Represents a promotional discount code.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "discount_percent": { "type": "integer" },
+        "is_active": { "type": "boolean" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "discount_percent", "is_active"]
+    },
+    "Subscriber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subscriber",
+      "description": "Represents an email marketing subscriber.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email"]
+    },
+    "UserRole": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User Role",
+      "description": "Assigns a role to a specific user.",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["user_id", "role"]
     }
   },
   "auth": {
@@ -199,6 +237,18 @@
         "$ref": "#/entities/CartItem"
       },
       "description": "Stores cart items for a specific user. Path-based ownership ensures only the user can access their cart data."
+    },
+    "/discounts/{discountId}": {
+      "schema": { "$ref": "#/entities/Discount" },
+      "description": "Stores promotional discount codes. Managed by admins."
+    },
+    "/subscribers/{subscriberId}": {
+      "schema": { "$ref": "#/entities/Subscriber" },
+      "description": "Stores email marketing subscribers."
+    },
+    "/user_roles/{userId}": {
+      "schema": { "$ref": "#/entities/UserRole" },
+      "description": "Stores roles for users, like 'admin'. Keyed by user ID."
     }
   }
 }
