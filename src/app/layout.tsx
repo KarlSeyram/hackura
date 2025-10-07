@@ -11,7 +11,10 @@ import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
+const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Hackura',
   description: 'Your one-stop shop for tech and cybersecurity ebooks.',
 };

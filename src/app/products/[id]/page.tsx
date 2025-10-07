@@ -29,6 +29,8 @@ export async function generateMetadata(
       description: 'The product you are looking for does not exist.',
     }
   }
+  
+  const imageUrl = product.imageUrl;
 
   return {
     title: product.title,
@@ -36,21 +38,21 @@ export async function generateMetadata(
     openGraph: {
       title: product.title,
       description: product.description,
-      images: [
+      images: imageUrl ? [
         {
-          url: product.imageUrl,
-          width: 800,
-          height: 800,
+          url: imageUrl,
+          width: 1200,
+          height: 630,
           alt: product.title,
         },
-      ],
+      ] : [],
       type: 'website',
     },
      twitter: {
       card: 'summary_large_image',
       title: product.title,
       description: product.description,
-      images: [product.imageUrl],
+      images: imageUrl ? [imageUrl] : [],
     },
   }
 }
