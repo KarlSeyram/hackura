@@ -8,6 +8,7 @@ import {
   UploadCloud,
   Inbox,
   Home,
+  Tag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -24,6 +25,7 @@ const adminNavItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/upload', label: 'Upload', icon: UploadCloud },
   { href: '/admin/requests', label: 'Requests', icon: Inbox },
+  { href: '/admin/discounts', label: 'Discounts', icon: Tag },
 ];
 
 export function AdminSidebar() {
@@ -40,7 +42,7 @@ export function AdminSidebar() {
       <SidebarContent>
         <SidebarMenu>
           {adminNavItems.map(item => {
-            const isActive = pathname === item.href;
+            const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.href}>

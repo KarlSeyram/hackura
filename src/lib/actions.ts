@@ -85,6 +85,15 @@ const reviewSchema = z.object({
   reviewer: z.string().min(2, 'Name must be at least 2 characters.'),
 });
 
+const discountSchema = z.object({
+  id: z.string().optional(),
+  code: z.string().min(3, 'Code must be at least 3 characters.').max(50).trim().toUpperCase(),
+  discount_percent: z.coerce.number().int().min(1, 'Percent must be at least 1.').max(100, 'Percent cannot exceed 100.'),
+  is_active: z.boolean(),
+  expires_at: z.string().nullable().optional(),
+});
+
+
 type FormState = {
   message: string;
   errors: {
@@ -483,4 +492,78 @@ export async function toggleProductDisabledStatus(productId: string, currentStat
     revalidatePath('/');
 
     return { success: true, message: 'Product status updated.' };
+}
+
+
+export async function createOrUpdateDiscount(prevState: any, formData: FormData) {
+  const supabase = createAdminClient();
+  const id = formData.get('id') as string;
+  const isEdit = !!id;
+
+  const validatedFields = discountSchema.safeParse({
+    id: id,
+    code: formData.get('code'),
+    discount_percent: formData.get('discount_percent'),
+    is_active: formData.get('is_active') === 'on',
+    expires_at: formData.get('expires_at') || null,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please correct the form errors.',
+    };
+  }
+
+  const { code, discount_percent, is_active, expires_at } = validatedFields.data;
+  
+  if (isEdit) {
+    const { error } = await supabase.from('discounts')
+      .update({ code, discount_percent, is_active, expires_at })
+      .eq('id', id);
+
+    if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+             return { message: `Discount code "${code}" already exists.`, errors: { code: ['This code is already in use.'] } };
+        }
+      return { message: `Failed to update discount: ${error.message}`, errors: {} };
+    }
+  } else {
+    const { error } = await supabase.from('discounts').insert({
+        code, discount_percent, is_active, expires_at
+    });
+     if (error) {
+        if (error.code === '23505') {
+            return { message: `Discount code "${code}" already exists.`, errors: { code: ['This code is already in use.'] } };
+        }
+      return { message: `Failed to create discount: ${error.message}`, errors: {} };
+    }
+  }
+
+  revalidatePath('/admin/discounts');
+
+  return {
+    message: `Discount "${code}" has been ${isEdit ? 'updated' : 'created'} successfully!`,
+    errors: {},
+  };
+}
+
+export async function deleteDiscount(id: string): Promise<{ success: boolean; message: string; }> {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from('discounts').delete().eq('id', id);
+    if (error) {
+        return { success: false, message: 'Failed to delete discount.' };
+    }
+    revalidatePath('/admin/discounts');
+    return { success: true, message: 'Discount deleted.' };
+}
+
+export async function toggleDiscountStatus(id: string, currentStatus: boolean): Promise<{ success: boolean; message: string; }> {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from('discounts').update({ is_active: !currentStatus }).eq('id', id);
+    if (error) {
+        return { success: false, message: 'Failed to update discount status.' };
+    }
+    revalidatePath('/admin/discounts');
+    return { success: true, message: 'Discount status updated.' };
 }
