@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { PaystackButton } from 'react-paystack';
-import { PayPalScriptProvider, PayPalButtons, type OnApproveData, type CreateOrderData } from '@paypal/react-paypal-js';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import type { OnApproveData, CreateOrderData } from '@paypal/paypal-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -91,10 +91,14 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isFormValid, setIsFormValid] = useState(false);
+  const [usdPrice, setUsdPrice] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // A simple, static conversion rate. In a real-world app, you'd fetch this from an API.
+    const GHS_TO_USD_RATE = 0.067;
+    setUsdPrice(totalPrice * GHS_TO_USD_RATE);
+  }, [totalPrice]);
 
   useEffect(() => {
     if (isClient && !isUserLoading) {
@@ -269,7 +273,7 @@ export default function CheckoutPage() {
   }
 
   return (
-   <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "GHS" }}>
+   <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD" }}>
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="font-headline text-3xl font-bold tracking-tight mb-8">Checkout</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -313,7 +317,7 @@ export default function CheckoutPage() {
                     <AccordionTrigger>
                         <div className="flex items-center gap-2">
                             <CreditCard />
-                            <span>Card & Mobile Money</span>
+                            <span>Card & Mobile Money (GHS)</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
@@ -335,22 +339,22 @@ export default function CheckoutPage() {
                     <AccordionTrigger>
                         <div className="flex items-center gap-2">
                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#00457C]"><title>PayPal</title><path d="M7.076 21.337H2.478L.002 3.141h4.943c.319 0 .618.17.787.45l2.426 3.863c.17.28.469.45.787.45h2.153c2.934 0 5.103 2.122 5.103 4.965 0 2.51-1.745 4.312-4.148 4.887l-2.404.576h-.697c-.304 0-.583.178-.737.458l-2.098 3.342zm11.751-13.076l-2.262 13.076H9.363l2.26-13.076h7.204z"/></svg>
-                            <span>Pay with PayPal</span>
+                            <span>Pay with PayPal (USD)</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4">
-                        {isClient && isFormValid && totalPrice > 0 && paypalClientId && (
+                        {isClient && isFormValid && usdPrice > 0 && paypalClientId && paypalClientId !== 'test' ? (
                           <PayPalButtons
                             style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                            disabled={!isFormValid || totalPrice === 0}
-                            createOrder={async (data: CreateOrderData, actions) => {
+                            disabled={!isFormValid || usdPrice === 0}
+                            createOrder={(data: CreateOrderData, actions) => {
                                 return actions.order.create({
                                   intent: 'CAPTURE',
                                   purchase_units: [
                                     {
                                       amount: {
-                                        value: totalPrice.toFixed(2),
-                                        currency_code: 'GHS',
+                                        value: usdPrice.toFixed(2),
+                                        currency_code: 'USD',
                                       },
                                       description: 'Hackura Ebook Purchase',
                                     },
@@ -360,7 +364,13 @@ export default function CheckoutPage() {
                             onApprove={async (data: OnApproveData, actions) => {
                               if (actions.order) {
                                 const details = await actions.order.capture();
-                                handlePaypalPaymentSuccess(details);
+                                await handlePaypalPaymentSuccess(details);
+                              } else {
+                                toast({
+                                  variant: "destructive",
+                                  title: "PayPal Error",
+                                  description: "Could not finalize PayPal transaction.",
+                                });
                               }
                             }}
                             onError={(err) => {
@@ -372,8 +382,9 @@ export default function CheckoutPage() {
                                 });
                             }}
                           />
+                        ) : (
+                          <p className="text-sm text-center text-muted-foreground">PayPal is not configured or the amount is too low for USD transaction.</p>
                         )}
-                        {paypalClientId === 'test' && <p className="text-sm text-center text-destructive">PayPal is not configured.</p>}
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
@@ -390,4 +401,3 @@ export default function CheckoutPage() {
    </PayPalScriptProvider>
   );
 }
-
