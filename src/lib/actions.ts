@@ -94,6 +94,11 @@ const discountSchema = z.object({
 });
 
 
+const subscriberSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+});
+
+
 type FormState = {
   message: string;
   errors: {
@@ -566,4 +571,44 @@ export async function toggleDiscountStatus(id: string, currentStatus: boolean): 
     }
     revalidatePath('/admin/discounts');
     return { success: true, message: 'Discount status updated.' };
+}
+
+
+export async function submitSubscriber(prevState: any, formData: FormData): Promise<{message: string; errors: { email?: string[] }}> {
+  const validatedFields = subscriberSchema.safeParse({
+    email: formData.get('email'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please enter a valid email address.',
+    };
+  }
+  
+  const supabase = createAdminClient();
+  const { email } = validatedFields.data;
+
+  // We use upsert to prevent errors if the email already exists.
+  // The `onConflict` option tells Supabase to do nothing if a row with the same email already exists.
+  const { error } = await supabase.from('subscribers').upsert(
+    { email },
+    { onConflict: 'email', ignoreDuplicates: true }
+  );
+
+  if (error) {
+    console.error("Error adding subscriber:", error);
+    return {
+      errors: {},
+      message: "Sorry, there was an issue with our system. Please try again later.",
+    };
+  }
+
+  // NOTE: In the next step, we'll trigger an Edge Function from this insert 
+  // to send a welcome email with a discount code.
+  
+  return {
+    errors: {},
+    message: 'Check your inbox for a welcome message and a 20% discount!',
+  };
 }
