@@ -23,6 +23,7 @@ import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   displayName: z.string().min(2, {
@@ -38,7 +39,7 @@ const formSchema = z.object({
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { auth, user, isLoading: isUserLoading } = useFirebase();
+  const { auth, firestore, user, isLoading: isUserLoading } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,14 +60,26 @@ export default function SignUpPage() {
   }, [user, isUserLoading, router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsLoading(true);
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      await updateProfile(userCredential.user, {
+      const { user } = userCredential;
+
+      // Update Firebase Auth profile
+      await updateProfile(user, {
         displayName: values.displayName,
       });
+
+      // Create a document in Firestore 'users' collection
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, {
+        displayName: values.displayName,
+        email: user.email,
+      }, { merge: true });
+
+
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
@@ -76,12 +89,21 @@ export default function SignUpPage() {
   }
 
   async function handleGoogleSignIn() {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsGoogleLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const userCredential = await signInWithPopup(auth, provider);
+      const { user } = userCredential;
+
+      // Create a document in Firestore 'users' collection if it's a new user
+       const userDocRef = doc(firestore, 'users', user.uid);
+       await setDoc(userDocRef, {
+        displayName: user.displayName,
+        email: user.email,
+      }, { merge: true });
+
       router.push('/profile');
     } catch (error: any) {
       setError(error.message);
@@ -89,7 +111,7 @@ export default function SignUpPage() {
       setIsGoogleLoading(false);
     }
   }
-
+  
   if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
