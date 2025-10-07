@@ -35,11 +35,11 @@ export function initializeFirebase() {
   // This is a check to see if we're in a browser environment before using window.
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     // Check if the Auth emulator is running and connect if so.
-    if (process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST) {
+    if (process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST && !auth.emulatorConfig) {
       connectAuthEmulator(auth, `http://${process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST}`, { disableWarnings: true });
     }
     // Check if the Firestore emulator is running and connect if so.
-    if (process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST) {
+    if (process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST && !firestore.emulatorConfig) {
       connectFirestoreEmulator(firestore, 'localhost', 8080);
     }
   }

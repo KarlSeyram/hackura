@@ -11,6 +11,7 @@ import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { AnalyticsProvider } from '@/components/analytics/analytics-provider';
+import { Suspense } from 'react';
 
 const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
 
@@ -61,11 +62,13 @@ export default function RootLayout({
       <body>
         <FirebaseClientProvider>
           <CartProvider>
-            <AnalyticsProvider>
-              <LayoutClient>
-                {children}
-              </LayoutClient>
-            </AnalyticsProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <AnalyticsProvider>
+                <LayoutClient>
+                  {children}
+                </LayoutClient>
+              </AnalyticsProvider>
+            </Suspense>
             <Toaster />
             <Chatbot />
             <FirebaseErrorListener />
