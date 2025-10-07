@@ -35,18 +35,26 @@ const generateShareableLinkWithPreviewPrompt = ai.definePrompt({
   name: 'generateShareableLinkWithPreviewPrompt',
   input: {schema: GenerateShareableLinkWithPreviewInputSchema},
   output: {schema: GenerateShareableLinkWithPreviewOutputSchema},
-  prompt: `You are an expert marketing assistant, skilled at writing compelling and concise social media copy.
+  prompt: `You are a world-class social media marketing expert, known for crafting viral posts that drive engagement and sales.
 
-Your task is to generate a short, engaging description for the following ebook product that can be shared on platforms like Twitter or LinkedIn.
+Your task is to write a highly persuasive and captivating description for the following ebook.
 
-The description should be no more than 250 characters.
+**Instructions:**
+1.  **Use a captivating tone:** Start with a hook that grabs attention.
+2.  **Highlight the benefit:** Focus on what the reader will gain or be able to do after reading the book.
+3.  **Include a Call-to-Action:** Encourage people to check it out.
+4.  **Use Emojis:** Add 1-2 relevant emojis to make the text visually appealing.
+5.  **Keep it concise:** The entire description should be under 280 characters, perfect for platforms like X.
 
-Product Title: {{{productName}}}
-Full Description: {{{productDescription}}}
-Product URL: {{{productUrl}}}
+**Product Details:**
+*   **Title:** {{{productName}}}
+*   **Description:** {{{productDescription}}}
+*   **URL:** {{{productUrl}}}
 
-Generate only the 'shareableDescription'.
-`,
+Generate only the 'shareableDescription'. Do not include the product URL in your response, as it will be appended automatically.
+
+**Example Output:**
+"Ready to master ethical hacking? 🚀 This guide breaks down complex concepts into easy-to-follow steps. Level up your security skills and become a pen-testing pro. Check it out!"`,
 });
 
 const generateShareableLinkWithPreviewFlow = ai.defineFlow(
