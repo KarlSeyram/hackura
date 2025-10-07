@@ -19,6 +19,7 @@ import { generateShareableLinkWithPreview } from '@/ai/flows/generate-shareable-
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
+import { FacebookIcon, WhatsAppIcon, XIcon } from '@/components/icons';
 
 interface ShareButtonProps {
   product: Ebook;
@@ -74,7 +75,6 @@ export default function ShareButton({ product }: ShareButtonProps) {
   }, [hasCopied]);
 
   const handleShareClick = () => {
-    // Always open the dialog for a consistent experience on all devices.
     setIsDialogOpen(true);
   };
 
@@ -86,6 +86,20 @@ export default function ShareButton({ product }: ShareButtonProps) {
       description: 'The content has been copied to your clipboard.',
     });
   };
+
+  const openShareWindow = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer,width=600,height=400');
+  }
+
+  const encodedUrl = encodeURIComponent(shareableContent.url);
+  const encodedText = encodeURIComponent(shareableContent.description);
+
+  const shareLinks = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
+    whatsapp: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`
+  };
+
 
   return (
     <>
@@ -99,12 +113,24 @@ export default function ShareButton({ product }: ShareButtonProps) {
           <DialogHeader>
             <DialogTitle>Share "{product.title}"</DialogTitle>
             <DialogDescription>
-              Copy the text below to share it on your favorite platform.
+              Share this ebook with your friends and colleagues.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+             <div className="flex justify-center gap-4">
+                <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => openShareWindow(shareLinks.facebook)}>
+                    <FacebookIcon className="h-6 w-6 fill-foreground" />
+                </Button>
+                 <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => openShareWindow(shareLinks.whatsapp)}>
+                    <WhatsAppIcon className="h-7 w-7 fill-foreground" />
+                </Button>
+                 <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => openShareWindow(shareLinks.twitter)}>
+                    <XIcon className="h-6 w-6 fill-foreground" />
+                </Button>
+             </div>
+
               <div className="space-y-2">
-                  <Label htmlFor="share-description">Share Text</Label>
+                  <Label htmlFor="share-description" className="sr-only">Share Text</Label>
                   {isLoading ? (
                     <div className="h-[78px] w-full flex items-center justify-center rounded-md border bg-muted">
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -114,7 +140,7 @@ export default function ShareButton({ product }: ShareButtonProps) {
                   )}
               </div>
               <div className="space-y-2">
-                   <Label htmlFor="share-url">URL</Label>
+                   <Label htmlFor="share-url" className="sr-only">URL</Label>
                    <div className="flex items-center gap-2">
                       <Input id="share-url" readOnly value={shareableContent.url} />
                       <Button variant="outline" size="icon" onClick={() => copyToClipboard(shareableContent.url)}>
