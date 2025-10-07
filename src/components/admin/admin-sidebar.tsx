@@ -8,7 +8,8 @@ import {
   UploadCloud,
   Inbox,
   Home,
-  Tag
+  Tag,
+  LineChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -26,6 +27,7 @@ const adminNavItems = [
   { href: '/admin/upload', label: 'Upload', icon: UploadCloud },
   { href: '/admin/requests', label: 'Requests', icon: Inbox },
   { href: '/admin/discounts', label: 'Discounts', icon: Tag },
+  { href: '/admin/analytics', label: 'Analytics', icon: LineChart },
 ];
 
 export function AdminSidebar() {
