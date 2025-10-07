@@ -7,36 +7,26 @@ import {
 } from "@/components/ui/sidebar";
 import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { AuthError, PostgrestError } from "@supabase/supabase-js";
 
 async function checkAdminRole() {
   const supabase = createAdminClient();
-  let user, error: AuthError | null;
+  
+  // Correctly destructure the response from getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  try {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
-    error = data.error;
-  } catch (e: any) {
-    user = null;
-    error = e;
+  if (authError || !user) {
+    redirect('/login');
   }
 
-  if (error || !user) {
-    redirect('/');
-  }
+  // Check for the admin role in the user_roles table
+  const { data: roleData, error: roleError } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
 
-  try {
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (roleError || roleData?.role !== 'admin') {
-      redirect('/');
-    }
-  } catch(e) {
+  if (roleError || roleData?.role !== 'admin') {
+    // If user has no admin role, redirect them away from admin pages.
     redirect('/');
   }
 }
