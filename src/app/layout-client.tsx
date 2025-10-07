@@ -4,8 +4,9 @@
 import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
+import { Suspense } from 'react';
 
-export function LayoutClient({ children }: { children: React.ReactNode }) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith('/admin');
 
@@ -15,5 +16,14 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       <main className="flex-1">{children}</main>
       {!isAdminPage && <Footer />}
     </div>
+  );
+}
+
+
+export function LayoutClient({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LayoutContent>{children}</LayoutContent>
+    </Suspense>
   );
 }
