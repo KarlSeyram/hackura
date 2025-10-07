@@ -1,82 +1,114 @@
 /**
- * @description This ruleset enforces a strict user-ownership model for cart items, public read access with admin-only writes for ebooks and services, and admin-only access for contact requests.
- * @dataStructure
- *   - /ebooks/{ebookId}: Stores ebook data. Publicly readable, admin-writeable.
- *   - /services/{serviceId}: Stores cybersecurity service data. Publicly readable, admin-writeable.
- *   - /contact_requests/{contactRequestId}: Stores contact form submissions. Publicly createable, admin-readable.
- *   - /users/{userId}/cart_items/{cartItemId}: Stores cart items for a specific user. User-owned data.
- * @keySecurityDecisions
- *   - Ebooks and services are publicly readable, but only admins can create, update, or delete them. Admin status is not explicitly checked in these rules (TODO: Implement admin role check).
- *   - Contact requests are publicly creatable, but only admins can read them (TODO: Implement admin role check).
- *   - User listing is disallowed in all collections.
- * @denormalizationForAuthorization Not applicable. Authorization is primarily path-based.
- * @structuralSegregation Data with different access requirements is stored in separate collections.
+ * @fileoverview Firestore Security Rules for CyberShelf.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a user-ownership model for user profiles and cart items,
+ * and public read access with owner-only writes for ebooks and services.
+ * Access to contact requests is restricted to admins.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information.
+ * - /ebooks/{ebookId}: Stores ebook data.
+ * - /services/{serviceId}: Stores cybersecurity service data.
+ * - /contact_requests/{contactRequestId}: Stores contact form submissions.
+ * - /users/{userId}/cart_items/{cartItemId}: Stores cart items for a specific user.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own profile data.
+ * - Ebooks and services are publicly readable, but writes are restricted (admin role to be implemented).
+ * - Contact requests are only accessible by admins (admin role to be implemented).
+ * - Users can only access their own cart items.
+ * - Listing of users and contact requests is disallowed.
+ *
+ * Denormalization for Authorization:
+ *  - Currently not used, but could be used in the future for more complex authorization scenarios.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows anyone to read ebook information, but restricts creation, updating, and deletion to admins.
+     * @description Secure access to user profiles. Users can read and write their own profile.
+     * @path /users/{userId}
+     * @allow (get, create, update, delete) - Authenticated user can access their own profile.
+     *   - auth.uid: "user123"
+     *   - userId: "user123"
+     * @deny (get, create, update, delete) - Authenticated user attempts to access another user's profile.
+     *   - auth.uid: "user123"
+     *   - userId: "user456"
+     * @principle Enforces document ownership for reads and writes.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Secure access to ebooks. Publicly readable, writes restricted to owners (to be implemented).
      * @path /ebooks/{ebookId}
-     * @allow (get, list) - Any user can read ebook information.
-     * @deny (create, update, delete) - Non-admin users cannot create, update, or delete ebooks.
-     * @principle Public read access with admin-only writes.
+     * @allow (get, list) - Any user can read ebook data.
+     * @allow (create, update, delete) - Only the owner can modify ebook data (to be implemented).
+     * @deny (create, update, delete) - Non-owner attempts to modify ebook data.
+     * @principle Public read access with owner-only writes (writes to be implemented with admin role).
      */
     match /ebooks/{ebookId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role validation.
+      allow create, update, delete: if false; // TODO: Add owner validation once the admin roles collection is created
     }
 
     /**
-     * @description Allows anyone to read service information, but restricts creation, updating, and deletion to admins.
+     * @description Secure access to services. Publicly readable, writes restricted to owners (to be implemented).
      * @path /services/{serviceId}
-     * @allow (get, list) - Any user can read service information.
-     * @deny (create, update, delete) - Non-admin users cannot create, update, or delete services.
-     * @principle Public read access with admin-only writes.
+     * @allow (get, list) - Any user can read service data.
+     * @allow (create, update, delete) - Only the owner can modify service data (to be implemented).
+     * @deny (create, update, delete) - Non-owner attempts to modify service data.
+     * @principle Public read access with owner-only writes (writes to be implemented with admin role).
      */
     match /services/{serviceId} {
       allow get, list: if true;
-      allow create, update, delete: if false;  // TODO: Add admin role validation.
+      allow create, update, delete: if false;  // TODO: Add owner validation once the admin roles collection is created
     }
 
     /**
-     * @description Allows anyone to create contact requests, but restricts reading, updating, and deletion to admins.
+     * @description Secure access to contact requests. Only accessible by admins (to be implemented).
      * @path /contact_requests/{contactRequestId}
-     * @allow (create) - Any user can create a contact request.
-     * @deny (get, list, update, delete) - Non-admin users cannot read, update, or delete contact requests.
-     * @principle Public write access with admin-only reads.
+     * @allow (create, update, delete) - Only the owner can modify contact requests (to be implemented).
+     * @deny (get, list, create, update, delete) - Non-owner attempts to access contact requests.
+     * @principle Restricts access to contact requests to admins.
      */
     match /contact_requests/{contactRequestId} {
-      allow create: if true;
-      allow get, list, update, delete: if false; // TODO: Add admin role validation.
+      allow get, list: if false;
+      allow create, update, delete: if false;  // TODO: Add owner validation once the admin roles collection is created
     }
 
     /**
-     * @description Allows a user to manage their own cart items.
+     * @description Secure access to cart items. Users can only access their own cart items.
      * @path /users/{userId}/cart_items/{cartItemId}
-     * @allow (create, get, list, update, delete) - The owner can manage their own cart items.
-     * @deny (create, get, list, update, delete) - Users cannot manage other users' cart items.
-     * @principle Enforces document ownership for writes.
+     * @allow (get, create, update, delete) - Authenticated user can access their own cart items.
+     *   - auth.uid: "user123"
+     *   - userId: "user123"
+     * @deny (get, create, update, delete) - Authenticated user attempts to access another user's cart items.
+     *   - auth.uid: "user123"
+     *   - userId: "user456"
+     * @principle Enforces document ownership for reads and writes.
      */
     match /users/{userId}/cart_items/{cartItemId} {
-      allow read, list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.ebookId is string;
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId) && resource != null;
     }
-  }
-
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-  function isExistingOwner(userId) {
-    return isSignedIn() && isOwner(userId) && resource != null;
   }
 }
