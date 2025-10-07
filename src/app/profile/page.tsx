@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, User, Mail } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { MyEbooksList } from '@/components/profile/my-ebooks-list';
 import { ChangePasswordDialog } from '@/components/profile/change-password-dialog';
 import { DeleteAccountDialog } from '@/components/profile/delete-account-dialog';
@@ -30,14 +31,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="container mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="space-y-2 mb-8">
         <h1 className="font-headline text-3xl font-bold tracking-tight">My Account</h1>
         <p className="text-muted-foreground">Manage your account settings and purchased ebooks.</p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-1 space-y-8">
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>Profile</CardTitle>
@@ -74,7 +75,7 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
         </div>
-        <div className="md:col-span-2">
+        <div>
            <Card>
                 <CardHeader>
                     <CardTitle>My Ebooks</CardTitle>
