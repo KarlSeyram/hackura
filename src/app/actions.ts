@@ -13,6 +13,7 @@ export async function recordPurchase(
 ) {
   const supabase = createAdminClient();
 
+  // 1. Prepare purchase records for insertion
   const purchaseRecords = cartItems.map(item => ({
     ebook_id: item.id,
     payment_ref: paymentReference,
@@ -21,6 +22,7 @@ export async function recordPurchase(
     discount_code: discountCode,
   }));
 
+  // 2. Insert records into the 'purchases' table
   if (purchaseRecords.length > 0) {
     const { error: insertError } = await supabase
       .from('purchases')
@@ -32,8 +34,22 @@ export async function recordPurchase(
     }
   }
 
+  // 3. Invoke the Edge Function to send a receipt email (non-blocking)
+  const { error: functionError } = await supabase.functions.invoke('send-receipt-email', {
+    body: { userId, cartItems, paymentReference, finalPrice, discountCode },
+  });
+
+  if (functionError) {
+    // Log the error but don't block the user's flow.
+    // The purchase is recorded, but the email failed.
+    // This should be monitored via server logs.
+    console.error('Failed to invoke send-receipt-email function:', functionError);
+  }
+
+  // 4. Revalidate paths to update cached data
   revalidatePath('/my-ebooks');
   revalidatePath(`/download/${paymentReference}`);
+
   return { success: true };
 }
 
