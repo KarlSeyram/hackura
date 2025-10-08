@@ -44,11 +44,7 @@ export function AdminSidebar() {
       <SidebarContent>
         <SidebarMenu>
           {adminNavItems.map(item => {
-            // Special check for users page to match /admin/users instead of just /admin
-            const isActive = item.href === '/admin/users' 
-              ? pathname === item.href 
-              : pathname.startsWith(item.href);
-
+            const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.href}>
