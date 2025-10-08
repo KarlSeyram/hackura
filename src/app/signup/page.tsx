@@ -24,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
   displayName: z.string().min(2, {
@@ -39,7 +40,7 @@ const formSchema = z.object({
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { auth, firestore, user, isLoading: isUserLoading } = useFirebase();
+  const { auth, user, isLoading: isUserLoading } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +60,24 @@ export default function SignUpPage() {
     }
   }, [user, isUserLoading, router]);
 
+  const upsertUserProfile = async (user: { uid: string; displayName?: string | null; email?: string | null; photoURL?: string | null; }) => {
+    const supabase = createBrowserClient();
+    const { error } = await supabase.from('users').upsert({
+      id: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+    }, { onConflict: 'id' });
+
+    if (error) {
+      console.error('Error upserting user profile:', error);
+      // Depending on the use case, you might want to handle this more gracefully
+    }
+  };
+
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -72,13 +89,8 @@ export default function SignUpPage() {
         displayName: values.displayName,
       });
 
-      // Create a document in Firestore 'users' collection
-      const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
-        displayName: values.displayName,
-        email: user.email,
-      }, { merge: true });
-
+      // Create a document in Supabase 'users' collection
+      await upsertUserProfile(user);
 
       router.push('/profile');
     } catch (error: any) {
@@ -89,7 +101,7 @@ export default function SignUpPage() {
   }
 
   async function handleGoogleSignIn() {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     setIsGoogleLoading(true);
     setError(null);
     try {
@@ -97,12 +109,8 @@ export default function SignUpPage() {
       const userCredential = await signInWithPopup(auth, provider);
       const { user } = userCredential;
 
-      // Create a document in Firestore 'users' collection if it's a new user
-       const userDocRef = doc(firestore, 'users', user.uid);
-       await setDoc(userDocRef, {
-        displayName: user.displayName,
-        email: user.email,
-      }, { merge: true });
+      // Create or update a document in Supabase 'users' collection
+      await upsertUserProfile(user);
 
       router.push('/profile');
     } catch (error: any) {
@@ -112,7 +120,7 @@ export default function SignUpPage() {
     }
   }
   
-  if (isUserLoading) {
+  if (isUserLoading || user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />

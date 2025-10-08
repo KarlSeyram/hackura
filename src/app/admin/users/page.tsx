@@ -32,7 +32,7 @@ async function getUsersWithRoles(): Promise<{ users: UserWithRole[]; error: stri
   const { data: usersData, error: usersError } = await supabase.from('users').select('*');
   if (usersError) {
     console.error("Error fetching users:", usersError);
-    return { users: [], error: 'Could not fetch users from the database.' };
+    return { users: [], error: 'Could not fetch users from the database. Have you created the `users` table in Supabase and run the SQL query?' };
   }
 
   // 2. Fetch all admin roles from the 'user_roles' table
@@ -43,10 +43,10 @@ async function getUsersWithRoles(): Promise<{ users: UserWithRole[]; error: stri
   
   if (rolesError) {
     console.error("Error fetching user roles:", rolesError);
-    return { users: [], error: 'Could not fetch user roles.' };
+    // This is not a fatal error; we can still show users.
   }
 
-  const adminIds = new Set(rolesData.map(r => r.user_id));
+  const adminIds = new Set(rolesData?.map(r => r.user_id) || []);
 
   // 3. Merge the data
   const combinedUsers: UserWithRole[] = usersData.map(user => ({
