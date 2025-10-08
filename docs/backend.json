@@ -194,7 +194,7 @@
       "description": "Assigns a role to a specific user.",
       "type": "object",
       "properties": {
-        "user_id": { "type": "string" },
+        "user_id": { "type": "string", "description": "The user's ID from Firebase Authentication." },
         "role": { "type": "string" }
       },
       "required": ["user_id", "role"]
@@ -248,7 +248,7 @@
     },
     "/user_roles/{userId}": {
       "schema": { "$ref": "#/entities/UserRole" },
-      "description": "Stores roles for users, like 'admin'. Keyed by user ID."
+      "description": "Stores roles for users, like 'admin'. Keyed by user ID, which is a string from Firebase Auth."
     }
   }
 }
