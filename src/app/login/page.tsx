@@ -13,6 +13,16 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -21,7 +31,9 @@ import { useRouter } from 'next/navigation';
 import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+
 
 const formSchema = z.object({
   email: z.string().email({
@@ -31,6 +43,90 @@ const formSchema = z.object({
     message: 'Password is required.',
   }),
 });
+
+const resetSchema = z.object({
+  email: z.string().email({
+    message: 'Please enter a valid email address.',
+  }),
+});
+
+
+function ForgotPasswordDialog() {
+  const { auth } = useFirebase();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof resetSchema>>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: { email: '' },
+  });
+
+  const onSubmit = async (values: z.infer<typeof resetSchema>) => {
+    if (!auth) return;
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, values.email);
+      toast({
+        title: 'Check Your Email',
+        description: `A password reset link has been sent to ${values.email}.`,
+      });
+      setIsDialogOpen(false);
+      form.reset();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to send password reset email. Please check the email address and try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button variant="link" className="px-0 h-auto text-sm">Forgot Password?</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+          <DialogDescription>
+            Enter your email address below and we'll send you a link to reset your password.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+             <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="you@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isLoading}>Cancel</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Reset Link
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -119,7 +215,10 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <div className="flex items-center justify-between">
+                         <FormLabel>Password</FormLabel>
+                         <ForgotPasswordDialog />
+                      </div>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
