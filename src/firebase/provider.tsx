@@ -58,7 +58,7 @@ export function FirebaseProvider({
   auth: Auth;
   firestore: Firestore;
 }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(auth.currentUser);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

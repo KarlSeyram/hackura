@@ -48,6 +48,8 @@ export default function AdminLoginPage() {
   });
 
   useEffect(() => {
+    // This effect is now handled by the layout, but we keep it
+    // as a fallback during the initial client-side load.
     if (!isUserLoading && user) {
       router.push('/admin/dashboard');
     }
@@ -59,7 +61,7 @@ export default function AdminLoginPage() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/admin/dashboard');
+      // The layout will handle the redirect on user state change.
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -74,7 +76,7 @@ export default function AdminLoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push('/admin/dashboard');
+      // The layout will handle the redirect on user state change.
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -82,6 +84,7 @@ export default function AdminLoginPage() {
     }
   }
   
+  // A minimal loading state while firebase initializes
   if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
