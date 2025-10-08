@@ -22,6 +22,7 @@ import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -48,10 +49,21 @@ export default function AdminLoginPage() {
   });
 
   useEffect(() => {
-    // This effect is now handled by the layout, but we keep it
-    // as a fallback during the initial client-side load.
+    // If the user is loaded and exists, check if they are an admin.
     if (!isUserLoading && user) {
-      router.push('/admin/dashboard');
+      const checkRoleAndRedirect = async () => {
+        const supabase = createBrowserClient();
+        const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.uid)
+            .single();
+
+        if (roleData?.role === 'admin') {
+          router.push('/admin/dashboard');
+        }
+      };
+      checkRoleAndRedirect();
     }
   }, [user, isUserLoading, router]);
 
@@ -61,9 +73,9 @@ export default function AdminLoginPage() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      // The layout will handle the redirect on user state change.
+      // The useEffect hook will handle the redirect on user state change.
     } catch (error: any) {
-      setError(error.message);
+      setError('Invalid email or password.');
     } finally {
       setIsLoading(false);
     }
@@ -76,16 +88,15 @@ export default function AdminLoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      // The layout will handle the redirect on user state change.
+      // The useEffect hook will handle the redirect on user state change.
     } catch (error: any) {
-      setError(error.message);
+      setError('Failed to sign in with Google.');
     } finally {
       setIsGoogleLoading(false);
     }
   }
   
-  // A minimal loading state while firebase initializes
-  if (isUserLoading) {
+  if (isUserLoading || user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -24,14 +23,14 @@ export default function AdminLayout({
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // If on the login page, do nothing.
-    if (pathname === '/admin/login') {
-        setIsAdmin(true); // Allow rendering of login page
-        return;
-    }
-    
     // If user state is still loading, wait.
     if (isLoading) {
+      return;
+    }
+
+    // If on the login page, allow access regardless of role. The login page will handle its own redirects.
+    if (pathname === '/admin/login') {
+      setIsAdmin(true); 
       return;
     }
 
@@ -41,10 +40,10 @@ export default function AdminLayout({
       return;
     }
     
-    // If user is logged in, check their role.
+    // If user is logged in, check their admin role.
     const checkRole = async () => {
         const supabase = createBrowserClient();
-        const { data: roleData, error: roleError } = await supabase
+        const { data: roleData } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', user.uid)
@@ -53,23 +52,22 @@ export default function AdminLayout({
         if (roleData?.role === 'admin') {
             setIsAdmin(true);
         } else {
-            setIsAdmin(false);
+            setIsAdmin(false); // User is not an admin
         }
     };
     checkRole();
 
   }, [user, isLoading, pathname]);
 
-  // Redirect non-admins away from admin pages.
+  // If the user has been checked and is not an admin, redirect them away.
   useEffect(() => {
     if (isAdmin === false) {
-      redirect('/');
+      redirect('/'); // Redirect non-admins to the home page
     }
   }, [isAdmin]);
 
-  // Show a loading state while we verify the user's role.
+  // Show a loading state while we verify the user's role, but not on the login page.
   if (isLoading || isAdmin === null) {
-      // Don't show loading screen for the login page itself
       if (pathname === '/admin/login') {
           return <main className="flex-1 bg-muted/40">{children}</main>;
       }
@@ -79,13 +77,13 @@ export default function AdminLayout({
           </div>
       );
   }
-
-  // If on login page and already logged in as admin, redirect to dashboard
-  if (pathname === '/admin/login' && isAdmin) {
-      redirect('/admin/dashboard');
+  
+  // Don't render the main admin layout for the login page
+  if (pathname === '/admin/login') {
+      return <main className="flex-1 bg-muted/40">{children}</main>;
   }
 
-  // Render the admin layout for authenticated admins.
+  // Render the full admin layout for authenticated admins.
   return (
     <SidebarProvider>
       <Sidebar>
