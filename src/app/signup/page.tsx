@@ -23,7 +23,6 @@ import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
@@ -82,15 +81,23 @@ export default function SignUpPage() {
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      const { user } = userCredential;
+      const { user: newUser } = userCredential;
 
       // Update Firebase Auth profile
-      await updateProfile(user, {
+      await updateProfile(newUser, {
         displayName: values.displayName,
       });
+      
+      // We need to construct a user object that matches what upsertUserProfile expects
+      const profileData = {
+        uid: newUser.uid,
+        displayName: values.displayName,
+        email: newUser.email,
+        photoURL: newUser.photoURL
+      };
 
       // Create a document in Supabase 'users' collection
-      await upsertUserProfile(user);
+      await upsertUserProfile(profileData);
 
       router.push('/profile');
     } catch (error: any) {
@@ -107,10 +114,12 @@ export default function SignUpPage() {
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
-      const { user } = userCredential;
+      
+      // We use the user object from the credential
+      const { user: signedInUser } = userCredential;
 
       // Create or update a document in Supabase 'users' collection
-      await upsertUserProfile(user);
+      await upsertUserProfile(signedInUser);
 
       router.push('/profile');
     } catch (error: any) {
