@@ -589,23 +589,34 @@ export async function submitSubscriber(prevState: any, formData: FormData): Prom
   const supabase = createAdminClient();
   const { email } = validatedFields.data;
 
-  // We use upsert to prevent errors if the email already exists.
-  // The `onConflict` option tells Supabase to do nothing if a row with the same email already exists.
-  const { error } = await supabase.from('subscribers').upsert(
+  // 1. Save the subscriber to the database
+  const { error: dbError } = await supabase.from('subscribers').upsert(
     { email },
     { onConflict: 'email', ignoreDuplicates: true }
   );
 
-  if (error) {
-    console.error("Error adding subscriber:", error);
+  if (dbError) {
+    console.error("Error adding subscriber:", dbError);
     return {
       errors: {},
       message: "Sorry, there was an issue with our system. Please try again later.",
     };
   }
 
-  // NOTE: In the next step, we'll trigger an Edge Function from this insert 
-  // to send a welcome email with a discount code.
+  // 2. Invoke the Edge Function to send the email
+  const { error: functionError } = await supabase.functions.invoke('send-welcome-email', {
+    body: { email },
+  });
+
+  if (functionError) {
+    console.error('Error invoking send-welcome-email function:', functionError);
+    // Even if the email fails, the user is still subscribed. 
+    // We can return a slightly different message.
+    return {
+      errors: {},
+      message: "You are subscribed, but we couldn't send the welcome email. Please contact support for your discount.",
+    };
+  }
   
   return {
     errors: {},
