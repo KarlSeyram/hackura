@@ -200,8 +200,8 @@ export default async function AnalyticsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {topPages.map((page, index) => (
-                                <TableRow key={index}>
+                            {topPages.map((page) => (
+                                <TableRow key={page.path}>
                                     <TableCell className="font-medium truncate max-w-sm">{page.title}</TableCell>
                                     <TableCell className="text-right">{page.views}</TableCell>
                                 </TableRow>
