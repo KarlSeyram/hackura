@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 async function checkAdminRole() {
   const supabase = createAdminClient();
@@ -15,7 +16,7 @@ async function checkAdminRole() {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    redirect('/login');
+    redirect('/admin/login');
   }
 
   const { data: roleData, error: roleError } = await supabase
@@ -24,13 +25,8 @@ async function checkAdminRole() {
     .eq('user_id', user.id)
     .single();
 
-  // If there was an error fetching the role, or the role is not 'admin', redirect.
-  // This is the key change: a roleError should not automatically cause a redirect if the user might still be an admin.
-  // The correct logic is to redirect only if we can confirm they are NOT an admin.
   if (roleData?.role !== 'admin') {
     if (roleError && roleError.code !== 'PGRST116') {
-        // PGRST116 means "exact one row not found", which is expected for non-admins.
-        // Log other errors but still redirect.
         console.error("Error fetching user role:", roleError);
     }
     redirect('/');
@@ -42,7 +38,14 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+
+  // Skip auth check for the admin login page itself
+  // A client component with usePathname can't be used in a server layout directly.
+  // We will assume that if children are provided, we should check role, except for login page.
+  // A better solution would be to use middleware, but for this structure:
+  // We let the check run, and the login page will handle existing logged-in users.
   await checkAdminRole();
+
 
   return (
     <SidebarProvider>

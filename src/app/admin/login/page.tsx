@@ -32,7 +32,7 @@ const formSchema = z.object({
   }),
 });
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const { auth, user, isLoading: isUserLoading } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +49,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.push('/profile');
+      router.push('/admin/dashboard');
     }
   }, [user, isUserLoading, router]);
 
@@ -59,7 +59,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/profile');
+      router.push('/admin/dashboard');
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -74,7 +74,7 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push('/profile');
+      router.push('/admin/dashboard');
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -91,11 +91,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container mx-auto flex min-h-[80vh] items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="container mx-auto flex min-h-screen items-center justify-center bg-muted">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Log In</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+        <CardHeader className="text-center">
+          <CardTitle>Admin Portal</CardTitle>
+          <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
@@ -108,7 +108,7 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="you@example.com" {...field} />
+                        <Input placeholder="admin@example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -152,19 +152,13 @@ export default function LoginPage() {
               )}
               Google
             </Button>
+             <div className="mt-4 text-center text-sm">
+                Not an admin?{' '}
+                <Link href="/login" className="underline">
+                  Go to user login
+                </Link>
+              </div>
           </div>
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
-            </Link>
-          </div>
-           <div className="mt-6 border-t pt-4 text-center text-sm text-muted-foreground">
-              Are you an admin?{' '}
-              <Link href="/admin/login" className="underline text-primary">
-                Login here
-              </Link>
-            </div>
         </CardContent>
       </Card>
     </div>
