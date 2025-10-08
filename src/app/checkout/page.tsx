@@ -320,17 +320,6 @@ export default function CheckoutPage() {
     currency: paystackCurrency,
   }).format(discountedPrice);
 
-  
-  if (!isClient || isUserLoading || !user) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <h2 className="font-headline text-2xl font-bold">Loading Checkout...</h2>
-          <p className="text-muted-foreground mt-2">Checking your authentication status.</p>
-      </div>
-    );
-  }
-
   if (paymentState === 'processing') {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
@@ -341,7 +330,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (cartCount === 0) {
+  if (cartCount === 0 && isClient) {
      return (
       <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 text-center">
         <p>Redirecting to store...</p>
@@ -395,8 +384,8 @@ export default function CheckoutPage() {
           <div className="space-y-6">
             <UserInfoForm 
               onFormChange={handleFormChange}
-              initialName={user.displayName || ''}
-              initialEmail={user.email || ''}
+              initialName={user?.displayName || ''}
+              initialEmail={user?.email || ''}
             />
 
             {!discount ? (
@@ -427,84 +416,90 @@ export default function CheckoutPage() {
                  </Button>
               </div>
             )}
-
-
-            <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
-                <AccordionItem value="paystack">
-                    <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                            <CreditCard />
-                            <span>Card & Mobile Money (GHS)</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                        {isClient && (
-                           <Button
-                              asChild
-                              className="w-full"
-                              disabled={!isFormValid || discountedPrice <= 0 || !paystackPublicKey}
-                            >
-                              <PaystackButton
-                                {...paystackComponentProps}
-                                className="w-full h-full disabled:cursor-not-allowed"
-                              />
-                            </Button>
-                        )}
-                    </AccordionContent>
-                </AccordionItem>
-                 <AccordionItem value="paypal">
-                    <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                           <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#00457C]"><title>PayPal</title><path d="M7.076 21.337H2.478L.002 3.141h4.943c.319 0 .618.17.787.45l2.426 3.863c.17.28.469.45.787.45h2.153c2.934 0 5.103 2.122 5.103 4.965 0 2.51-1.745 4.312-4.148 4.887l-2.404.576h-.697c-.304 0-.583.178-.737.458l-2.098 3.342zm11.751-13.076l-2.262 13.076H9.363l2.26-13.076h7.204z"/></svg>
-                            <span>Pay with PayPal (USD)</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                        {isClient && isFormValid && usdPrice > 0 && paypalClientId && paypalClientId !== 'test' ? (
-                          <PayPalButtons
-                            style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                            disabled={!isFormValid || usdPrice <= 0}
-                            createOrder={(data: CreateOrderData, actions) => {
-                                return actions.order.create({
-                                  intent: "CAPTURE",
-                                  purchase_units: [
-                                    {
-                                      amount: {
-                                        value: usdPrice.toFixed(2),
-                                        currency_code: 'USD',
+            
+            {(isUserLoading || !user) ? (
+                 <div className="flex items-center justify-center rounded-lg border bg-muted/50 p-6">
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
+                    <span>Checking authentication...</span>
+                 </div>
+            ) : (
+              <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
+                  <AccordionItem value="paystack">
+                      <AccordionTrigger>
+                          <div className="flex items-center gap-2">
+                              <CreditCard />
+                              <span>Card & Mobile Money (GHS)</span>
+                          </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4">
+                          {isClient && (
+                            <Button
+                                asChild
+                                className="w-full"
+                                disabled={!isFormValid || discountedPrice <= 0 || !paystackPublicKey}
+                              >
+                                <PaystackButton
+                                  {...paystackComponentProps}
+                                  className="w-full h-full disabled:cursor-not-allowed"
+                                />
+                              </Button>
+                          )}
+                      </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="paypal">
+                      <AccordionTrigger>
+                          <div className="flex items-center gap-2">
+                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#00457C]"><title>PayPal</title><path d="M7.076 21.337H2.478L.002 3.141h4.943c.319 0 .618.17.787.45l2.426 3.863c.17.28.469.45.787.45h2.153c2.934 0 5.103 2.122 5.103 4.965 0 2.51-1.745 4.312-4.148 4.887l-2.404.576h-.697c-.304 0-.583.178-.737.458l-2.098 3.342zm11.751-13.076l-2.262 13.076H9.363l2.26-13.076h7.204z"/></svg>
+                              <span>Pay with PayPal (USD)</span>
+                          </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4">
+                          {isClient && isFormValid && usdPrice > 0 && paypalClientId && paypalClientId !== 'test' ? (
+                            <PayPalButtons
+                              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                              disabled={!isFormValid || usdPrice <= 0}
+                              createOrder={(data: CreateOrderData, actions) => {
+                                  return actions.order.create({
+                                    intent: "CAPTURE",
+                                    purchase_units: [
+                                      {
+                                        amount: {
+                                          value: usdPrice.toFixed(2),
+                                          currency_code: 'USD',
+                                        },
+                                        description: 'Hackura Ebook Purchase',
                                       },
-                                      description: 'Hackura Ebook Purchase',
-                                    },
-                                  ],
-                                });
-                            }}
-                            onApprove={async (data: OnApproveData, actions) => {
-                              if (actions.order) {
-                                const details = await actions.order.capture();
-                                await handlePaypalPaymentSuccess(details);
-                              } else {
-                                toast({
-                                  variant: "destructive",
-                                  title: "PayPal Error",
-                                  description: "Could not finalize PayPal transaction.",
-                                });
-                              }
-                            }}
-                            onError={(err) => {
-                                console.error("PayPal Error:", err);
-                                toast({
+                                    ],
+                                  });
+                              }}
+                              onApprove={async (data: OnApproveData, actions) => {
+                                if (actions.order) {
+                                  const details = await actions.order.capture();
+                                  await handlePaypalPaymentSuccess(details);
+                                } else {
+                                  toast({
                                     variant: "destructive",
                                     title: "PayPal Error",
-                                    description: "An error occurred with the PayPal transaction. Please try again.",
-                                });
-                            }}
-                          />
-                        ) : (
-                          <p className="text-sm text-center text-muted-foreground">PayPal is not configured or the amount is too low for USD transaction.</p>
-                        )}
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+                                    description: "Could not finalize PayPal transaction.",
+                                  });
+                                }
+                              }}
+                              onError={(err) => {
+                                  console.error("PayPal Error:", err);
+                                  toast({
+                                      variant: "destructive",
+                                      title: "PayPal Error",
+                                      description: "An error occurred with the PayPal transaction. Please try again.",
+                                  });
+                              }}
+                            />
+                          ) : (
+                            <p className="text-sm text-center text-muted-foreground">PayPal is not configured or the amount is too low for USD transaction.</p>
+                          )}
+                      </AccordionContent>
+                  </AccordionItem>
+              </Accordion>
+            )}
 
              <Button variant="outline" asChild className="w-full">
                 <Link href="/store">
