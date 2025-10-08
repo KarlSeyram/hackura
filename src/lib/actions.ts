@@ -127,6 +127,7 @@ export async function submitContactRequest(prevState: FormState, formData: FormD
   const supabase = createAdminClient();
   const { name, email, service, message } = validatedFields.data;
 
+  // 1. Insert the contact request into the database
   const { error } = await supabase.from('contact_requests').insert({
     name,
     email,
@@ -142,6 +143,17 @@ export async function submitContactRequest(prevState: FormState, formData: FormD
     };
   }
 
+  // 2. Invoke the Edge Function to send an auto-reply (non-blocking)
+  const { error: functionError } = await supabase.functions.invoke('send-contact-reply', {
+    body: { name, email },
+  });
+
+  if (functionError) {
+    // Log the error but don't fail the entire operation, as the request was still saved.
+    console.error('Failed to invoke send-contact-reply function:', functionError);
+  }
+
+  // 3. Revalidate the path for the admin dashboard
   revalidatePath('/admin/requests');
 
   return {
