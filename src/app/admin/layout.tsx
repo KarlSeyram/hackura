@@ -5,7 +5,6 @@ import {
   Sidebar,
   SidebarInset,
   SidebarTrigger,
-  SidebarHeader,
 } from "@/components/ui/sidebar";
 import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -25,7 +24,15 @@ async function checkAdminRole() {
     .eq('user_id', user.id)
     .single();
 
-  if (roleError || roleData?.role !== 'admin') {
+  // If there was an error fetching the role, or the role is not 'admin', redirect.
+  // This is the key change: a roleError should not automatically cause a redirect if the user might still be an admin.
+  // The correct logic is to redirect only if we can confirm they are NOT an admin.
+  if (roleData?.role !== 'admin') {
+    if (roleError && roleError.code !== 'PGRST116') {
+        // PGRST116 means "exact one row not found", which is expected for non-admins.
+        // Log other errors but still redirect.
+        console.error("Error fetching user role:", roleError);
+    }
     redirect('/');
   }
 }
