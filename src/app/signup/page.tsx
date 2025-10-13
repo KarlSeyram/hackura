@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -22,7 +21,7 @@ import { useRouter } from 'next/navigation';
 import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser } from 'firebase/auth';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
@@ -59,7 +58,7 @@ export default function SignUpPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const upsertUserProfile = async (user: { uid: string; displayName?: string | null; email?: string | null; photoURL?: string | null; }) => {
+  const upsertUserProfile = async (user: FirebaseUser) => {
     const supabase = createBrowserClient();
     const { error } = await supabase.from('users').upsert({
       id: user.uid,
@@ -79,57 +78,38 @@ export default function SignUpPage() {
     if (!auth) return;
     setIsLoading(true);
     setError(null);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      const { user: newUser } = userCredential;
-
-      // Update Firebase Auth profile
-      await updateProfile(newUser, {
-        displayName: values.displayName,
+    
+    createUserWithEmailAndPassword(auth, values.email, values.password)
+      .then(async (userCredential) => {
+        const { user: newUser } = userCredential;
+        await updateProfile(newUser, { displayName: values.displayName });
+        await upsertUserProfile(newUser);
+        // Auth state listener will handle the redirect
+      })
+      .catch((error: any) => {
+        setError(error.message);
+        setIsLoading(false);
       });
-      
-      // We need to construct a user object that matches what upsertUserProfile expects
-      const profileData = {
-        uid: newUser.uid,
-        displayName: values.displayName,
-        email: newUser.email,
-        photoURL: newUser.photoURL
-      };
-
-      // Create a document in Supabase 'users' collection
-      await upsertUserProfile(profileData);
-
-      router.push('/profile');
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
   }
 
   async function handleGoogleSignIn() {
     if (!auth) return;
     setIsGoogleLoading(true);
     setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      
-      // We use the user object from the credential
-      const { user: signedInUser } = userCredential;
-
-      // Create or update a document in Supabase 'users' collection
-      await upsertUserProfile(signedInUser);
-
-      router.push('/profile');
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    const provider = new GoogleAuthProvider();
+    
+    signInWithPopup(auth, provider)
+      .then(async (userCredential) => {
+        await upsertUserProfile(userCredential.user);
+        // Auth state listener will handle the redirect
+      })
+      .catch((error: any) => {
+        setError(error.message);
+        setIsGoogleLoading(false);
+      });
   }
   
-  if (isUserLoading || user) {
+  if (isUserLoading || user) { // Keep loading screen while user state is resolving or if user exists
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -189,7 +169,7 @@ export default function SignUpPage() {
                 />
                 {error && <p className="text-sm text-destructive">{error}</p>}
                 <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {(isLoading || isGoogleLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign Up
                 </Button>
               </form>

@@ -153,32 +153,28 @@ export default function LoginPage() {
     if (!auth) return;
     setIsLoading(true);
     setError(null);
-    try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/profile');
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
+    
+    signInWithEmailAndPassword(auth, values.email, values.password)
+      .catch((error: any) => {
+        setError(error.message);
+        setIsLoading(false);
+      });
   }
 
   async function handleGoogleSignIn() {
     if (!auth) return;
     setIsGoogleLoading(true);
     setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push('/profile');
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    const provider = new GoogleAuthProvider();
+    
+    signInWithPopup(auth, provider)
+      .catch((error: any) => {
+        setError(error.message);
+        setIsGoogleLoading(false);
+      });
   }
   
-  if (isUserLoading) {
+  if (isUserLoading || user) { // Keep loading screen while user state is resolving or if user exists and redirect is pending
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -228,7 +224,7 @@ export default function LoginPage() {
                 />
                 {error && <p className="text-sm text-destructive">{error}</p>}
                 <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {(isLoading || isGoogleLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Log In
                 </Button>
               </form>
