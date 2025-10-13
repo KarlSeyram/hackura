@@ -19,6 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { MtnIcon, GoogleIcon } from '@/components/icons';
 import { useFirebase } from '@/firebase/provider';
 import * as ga from '@/lib/ga';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 
 
 function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
@@ -85,7 +86,7 @@ export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart, cartCount } = useCart();
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isLoading: isUserLoading } = useFirebase();
+  const { auth, user, isLoading: isUserLoading } = useFirebase();
 
   const [isClient, setIsClient] = useState(false);
   const [paymentState, setPaymentState] = useState<'idle' | 'processing'>('idle');
@@ -118,11 +119,15 @@ export default function CheckoutPage() {
         });
         router.push('/store');
       }
+      // If user is not logged in, start an anonymous session for them
+      if (!user && auth) {
+        initiateAnonymousSignIn(auth);
+      }
     }
-  }, [isClient, user, isUserLoading, cartCount, router, toast, paymentState]);
+  }, [isClient, user, auth, isUserLoading, cartCount, router, toast, paymentState]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !user.isAnonymous) {
       const initialName = user.displayName || '';
       const initialEmail = user.email || '';
       setName(initialName);
@@ -149,7 +154,7 @@ export default function CheckoutPage() {
       toast({
         variant: 'destructive',
         title: 'Authentication Error',
-        description: 'You must be logged in to complete a purchase.',
+        description: 'Could not create or find a user account for this purchase.',
       });
       return;
     }
@@ -178,7 +183,7 @@ export default function CheckoutPage() {
 
   const handlePaymentSuccess = async (reference: any) => {
     try {
-      if (!user) throw new Error('User not authenticated.');
+      if (!user) throw new Error('User not authenticated for purchase recording.');
       await recordPurchase({
         userId: user.uid,
         cartItems,
@@ -200,7 +205,7 @@ export default function CheckoutPage() {
 
   const handlePaypalPaymentSuccess = async (details: any) => {
     try {
-      if (!user) throw new Error('User not authenticated.');
+      if (!user) throw new Error('User not authenticated for purchase recording.');
       await recordPurchase({
         userId: user.uid,
         cartItems,
@@ -420,7 +425,7 @@ export default function CheckoutPage() {
             {(isUserLoading || !user) ? (
                  <div className="flex items-center justify-center rounded-lg border bg-muted/50 p-6">
                     <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
-                    <span>Checking authentication...</span>
+                    <span>Preparing secure checkout...</span>
                  </div>
             ) : (
               <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
