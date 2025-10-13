@@ -2,8 +2,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-// IMPORTANT: Replace 'welcome@your-verified-domain.com' with an email from the domain you verified on Resend.
-const FROM_EMAIL = 'welcome@your-verified-domain.com';
+// IMPORTANT: Replace with an email from the domain you verified on Resend.
+const FROM_EMAIL = 'welcome@hackura.store';
 
 Deno.serve(async (req) => {
   // 1. Ensure the request is a POST request

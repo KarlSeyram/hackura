@@ -4,7 +4,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { Resend } from 'npm:resend';
 
 // IMPORTANT: Replace with your verified Resend domain email
-const FROM_EMAIL = 'receipts@yourdomain.com';
+const FROM_EMAIL = 'receipts@hackura.store';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const resend = new Resend(RESEND_API_KEY);
 
