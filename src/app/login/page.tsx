@@ -33,6 +33,7 @@ import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 
 
 const formSchema = z.object({
@@ -153,12 +154,7 @@ export default function LoginPage() {
     if (!auth) return;
     setIsLoading(true);
     setError(null);
-    
-    signInWithEmailAndPassword(auth, values.email, values.password)
-      .catch((error: any) => {
-        setError(error.message);
-        setIsLoading(false);
-      });
+    initiateEmailSignIn(auth, values.email, values.password);
   }
 
   async function handleGoogleSignIn() {

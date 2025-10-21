@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser } from 'firebase/auth';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 
 const formSchema = z.object({
   displayName: z.string().min(2, {
@@ -79,17 +80,7 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError(null);
     
-    createUserWithEmailAndPassword(auth, values.email, values.password)
-      .then(async (userCredential) => {
-        const { user: newUser } = userCredential;
-        await updateProfile(newUser, { displayName: values.displayName });
-        await upsertUserProfile(newUser);
-        // Auth state listener will handle the redirect
-      })
-      .catch((error: any) => {
-        setError(error.message);
-        setIsLoading(false);
-      });
+    initiateEmailSignUp(auth, values.email, values.password);
   }
 
   async function handleGoogleSignIn() {
