@@ -9,7 +9,7 @@ import type { OnApproveData, CreateOrderData } from '@paypal/paypal-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingCart, Loader2, CreditCard, Tag, X } from 'lucide-react';
+import { ShoppingCart, Loader2, CreditCard, Tag, X, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,7 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { MtnIcon, GoogleIcon } from '@/components/icons';
 import { useFirebase } from '@/firebase/provider';
 import * as ga from '@/lib/ga';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 
 function UserInfoForm({ onFormChange, initialName, initialEmail }: { onFormChange: (name: string, email: string, isValid: boolean) => void, initialName: string, initialEmail: string }) {
@@ -119,12 +119,8 @@ export default function CheckoutPage() {
         });
         router.push('/store');
       }
-      // If user is not logged in, start an anonymous session for them
-      if (!user && auth) {
-        initiateAnonymousSignIn(auth);
-      }
     }
-  }, [isClient, user, auth, isUserLoading, cartCount, router, toast, paymentState]);
+  }, [isClient, isUserLoading, cartCount, router, toast, paymentState]);
 
   useEffect(() => {
     if (user && !user.isAnonymous) {
@@ -154,7 +150,7 @@ export default function CheckoutPage() {
       toast({
         variant: 'destructive',
         title: 'Authentication Error',
-        description: 'Could not create or find a user account for this purchase.',
+        description: 'Could not find a user account for this purchase.',
       });
       return;
     }
@@ -385,133 +381,146 @@ export default function CheckoutPage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
-          <div className="space-y-6">
-            <UserInfoForm 
-              onFormChange={handleFormChange}
-              initialName={user?.displayName || ''}
-              initialEmail={user?.email || ''}
-            />
+           {isUserLoading ? (
+               <div className="flex items-center justify-center rounded-lg border bg-muted/50 p-6 h-full">
+                  <Loader2 className="mr-2 h-8 w-8 animate-spin"/>
+               </div>
+           ) : user ? (
+            <>
+              <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
+              <div className="space-y-6">
+                <UserInfoForm 
+                  onFormChange={handleFormChange}
+                  initialName={user?.displayName || ''}
+                  initialEmail={user?.email || ''}
+                />
 
-            {!discount ? (
-              <div className="flex items-end gap-2">
-                <div className="flex-grow space-y-2">
-                  <Label htmlFor="promo-code">Promo Code</Label>
-                  <Input 
-                    id="promo-code" 
-                    placeholder="Enter code" 
-                    value={promoCode} 
-                    onChange={e => setPromoCode(e.target.value)} 
-                    disabled={isApplyingDiscount}
-                  />
-                </div>
-                <Button onClick={handleApplyDiscount} disabled={!promoCode || isApplyingDiscount}>
-                  {isApplyingDiscount && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Apply
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
-                 <div className="flex items-center gap-2 font-medium text-green-600">
-                    <Tag className="h-4 w-4"/>
-                    <span>Code "{discount.code}" applied!</span>
-                 </div>
-                 <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={removeDiscount}>
-                    <X className="h-4 w-4"/>
-                 </Button>
-              </div>
-            )}
-            
-            {(isUserLoading || !user) ? (
-                 <div className="flex items-center justify-center rounded-lg border bg-muted/50 p-6">
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
-                    <span>Preparing secure checkout...</span>
-                 </div>
-            ) : (
-              <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
-                  <AccordionItem value="paystack">
-                      <AccordionTrigger>
-                          <div className="flex items-center gap-2">
-                              <CreditCard />
-                              <span>Card & Mobile Money (GHS)</span>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                          {isClient && (
-                            <Button
-                                asChild
-                                className="w-full"
-                                disabled={!isFormValid || discountedPrice <= 0 || !paystackPublicKey}
-                              >
-                                <PaystackButton
-                                  {...paystackComponentProps}
-                                  className="w-full h-full disabled:cursor-not-allowed"
-                                />
-                              </Button>
-                          )}
-                      </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="paypal">
-                      <AccordionTrigger>
-                          <div className="flex items-center gap-2">
-                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#00457C]"><title>PayPal</title><path d="M7.076 21.337H2.478L.002 3.141h4.943c.319 0 .618.17.787.45l2.426 3.863c.17.28.469.45.787.45h2.153c2.934 0 5.103 2.122 5.103 4.965 0 2.51-1.745 4.312-4.148 4.887l-2.404.576h-.697c-.304 0-.583.178-.737.458l-2.098 3.342zm11.751-13.076l-2.262 13.076H9.363l2.26-13.076h7.204z"/></svg>
-                              <span>Pay with PayPal (USD)</span>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4">
-                          {isClient && isFormValid && usdPrice > 0 && paypalClientId && paypalClientId !== 'test' ? (
-                            <PayPalButtons
-                              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                              disabled={!isFormValid || usdPrice <= 0}
-                              createOrder={(data: CreateOrderData, actions) => {
-                                  return actions.order.create({
-                                    intent: "CAPTURE",
-                                    purchase_units: [
-                                      {
-                                        amount: {
-                                          value: usdPrice.toFixed(2),
-                                          currency_code: 'USD',
+                {!discount ? (
+                  <div className="flex items-end gap-2">
+                    <div className="flex-grow space-y-2">
+                      <Label htmlFor="promo-code">Promo Code</Label>
+                      <Input 
+                        id="promo-code" 
+                        placeholder="Enter code" 
+                        value={promoCode} 
+                        onChange={e => setPromoCode(e.target.value)} 
+                        disabled={isApplyingDiscount}
+                      />
+                    </div>
+                    <Button onClick={handleApplyDiscount} disabled={!promoCode || isApplyingDiscount}>
+                      {isApplyingDiscount && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Apply
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
+                    <div className="flex items-center gap-2 font-medium text-green-600">
+                        <Tag className="h-4 w-4"/>
+                        <span>Code "{discount.code}" applied!</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={removeDiscount}>
+                        <X className="h-4 w-4"/>
+                    </Button>
+                  </div>
+                )}
+                
+                <Accordion type="single" collapsible defaultValue="paystack" className="w-full">
+                    <AccordionItem value="paystack">
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                                <CreditCard />
+                                <span>Card & Mobile Money (GHS)</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4">
+                            {isClient && (
+                              <Button
+                                  asChild
+                                  className="w-full"
+                                  disabled={!isFormValid || discountedPrice <= 0 || !paystackPublicKey}
+                                >
+                                  <PaystackButton
+                                    {...paystackComponentProps}
+                                    className="w-full h-full disabled:cursor-not-allowed"
+                                  />
+                                </Button>
+                            )}
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="paypal">
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                              <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 fill-[#00457C]"><title>PayPal</title><path d="M7.076 21.337H2.478L.002 3.141h4.943c.319 0 .618.17.787.45l2.426 3.863c.17.28.469.45.787.45h2.153c2.934 0 5.103 2.122 5.103 4.965 0 2.51-1.745 4.312-4.148 4.887l-2.404.576h-.697c-.304 0-.583.178-.737.458l-2.098 3.342zm11.751-13.076l-2.262 13.076H9.363l2.26-13.076h7.204z"/></svg>
+                                <span>Pay with PayPal (USD)</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4">
+                            {isClient && isFormValid && usdPrice > 0 && paypalClientId && paypalClientId !== 'test' ? (
+                              <PayPalButtons
+                                style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                                disabled={!isFormValid || usdPrice <= 0}
+                                createOrder={(data: CreateOrderData, actions) => {
+                                    return actions.order.create({
+                                      intent: "CAPTURE",
+                                      purchase_units: [
+                                        {
+                                          amount: {
+                                            value: usdPrice.toFixed(2),
+                                            currency_code: 'USD',
+                                          },
+                                          description: 'Hackura Ebook Purchase',
                                         },
-                                        description: 'Hackura Ebook Purchase',
-                                      },
-                                    ],
-                                  });
-                              }}
-                              onApprove={async (data: OnApproveData, actions) => {
-                                if (actions.order) {
-                                  const details = await actions.order.capture();
-                                  await handlePaypalPaymentSuccess(details);
-                                } else {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "PayPal Error",
-                                    description: "Could not finalize PayPal transaction.",
-                                  });
-                                }
-                              }}
-                              onError={(err) => {
-                                  console.error("PayPal Error:", err);
-                                  toast({
+                                      ],
+                                    });
+                                }}
+                                onApprove={async (data: OnApproveData, actions) => {
+                                  if (actions.order) {
+                                    const details = await actions.order.capture();
+                                    await handlePaypalPaymentSuccess(details);
+                                  } else {
+                                    toast({
                                       variant: "destructive",
                                       title: "PayPal Error",
-                                      description: "An error occurred with the PayPal transaction. Please try again.",
-                                  });
-                              }}
-                            />
-                          ) : (
-                            <p className="text-sm text-center text-muted-foreground">PayPal is not configured or the amount is too low for USD transaction.</p>
-                          )}
-                      </AccordionContent>
-                  </AccordionItem>
-              </Accordion>
-            )}
-
-             <Button variant="outline" asChild className="w-full">
-                <Link href="/store">
-                    <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
-                </Link>
-            </Button>
-          </div>
+                                      description: "Could not finalize PayPal transaction.",
+                                    });
+                                  }
+                                }}
+                                onError={(err) => {
+                                    console.error("PayPal Error:", err);
+                                    toast({
+                                        variant: "destructive",
+                                        title: "PayPal Error",
+                                        description: "An error occurred with the PayPal transaction. Please try again.",
+                                    });
+                                }}
+                              />
+                            ) : (
+                              <p className="text-sm text-center text-muted-foreground">PayPal is not configured or the amount is too low for USD transaction.</p>
+                            )}
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+                <Button variant="outline" asChild className="w-full">
+                  <Link href="/store">
+                      <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
+                  </Link>
+              </Button>
+              </div>
+            </>
+           ) : (
+             <Card className="flex flex-col items-center justify-center text-center p-8 h-full">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><LogIn /> Please Log In</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground mb-4">You need an account to complete your purchase. Please log in or create a new account.</p>
+                    <div className="flex gap-4 justify-center">
+                        <Button asChild><Link href="/login">Log In</Link></Button>
+                        <Button asChild variant="secondary"><Link href="/signup">Sign Up</Link></Button>
+                    </div>
+                </CardContent>
+             </Card>
+           )}
         </div>
       </div>
     </div>
