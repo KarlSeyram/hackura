@@ -1,15 +1,18 @@
 
-import { createAdminClient } from '@/lib/supabase/server';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import type { UserWithRole } from './definitions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 
 
 async function getUsersWithRoles(): Promise<{ users: UserWithRole[]; error: string | null }> {
-  const supabase = createAdminClient();
+  const supabase = createBrowserClient();
 
   // 1. Fetch all users from the public 'users' table
   const { data: usersData, error: usersError } = await supabase.from('users').select('*');
@@ -43,8 +46,31 @@ async function getUsersWithRoles(): Promise<{ users: UserWithRole[]; error: stri
   return { users: combinedUsers, error: null };
 }
 
-export default async function UserManagementPage() {
-  const { users, error } = await getUsersWithRoles();
+export default function UserManagementPage() {
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { users, error } = await getUsersWithRoles();
+      if (error) {
+        setError(error);
+      } else {
+        setUsers(users);
+      }
+      setIsLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+       <div className="flex h-[50vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   if (error) {
     return (
