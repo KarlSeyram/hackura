@@ -1,6 +1,6 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { Resend } from 'npm:resend';
+import { Resend } from 'resend';
 
 // IMPORTANT: Replace with your verified Resend domain email
 const FROM_EMAIL = 'support@hackura.store';

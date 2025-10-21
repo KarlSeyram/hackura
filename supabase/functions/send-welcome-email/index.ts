@@ -1,11 +1,13 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { Resend } from 'resend';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 // IMPORTANT: Replace with an email from the domain you verified on Resend.
 const FROM_EMAIL = 'welcome@hackura.store';
 
 Deno.serve(async (req) => {
+  const resend = new Resend(RESEND_API_KEY);
   // 1. Ensure the request is a POST request
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
@@ -39,28 +41,24 @@ Deno.serve(async (req) => {
     `;
 
     // 4. Send the email using the Resend API
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
+    const { data, error } = await resend.emails.send({
         from: `Hackura <${FROM_EMAIL}>`,
         to,
         subject,
         html,
-      }),
     });
 
-    const data = await res.json();
 
-    if (!res.ok) {
-        console.error('Resend API Error:', data);
+    if (error) {
+        console.error('Resend API Error:', error);
+        return new Response(JSON.stringify(error), {
+          status: 422,
+          headers: { 'Content-Type': 'application/json' },
+        });
     }
 
     return new Response(JSON.stringify(data), {
-      status: res.status,
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
 
