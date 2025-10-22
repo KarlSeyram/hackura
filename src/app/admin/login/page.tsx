@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -18,10 +19,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { GoogleIcon } from '@/components/icons';
-import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
@@ -37,14 +36,13 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { auth, user, isLoading: isUserLoading } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'karlseyram2@gmail.com',
+      password: 'admin123',
     },
   });
 
@@ -81,21 +79,6 @@ export default function AdminLoginPage() {
     }
   }
 
-  async function handleGoogleSignIn() {
-    if (!auth) return;
-    setIsGoogleLoading(true);
-    setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // The useEffect hook will handle the redirect on user state change.
-    } catch (error: any) {
-      setError('Failed to sign in with Google.');
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  }
-  
   if (isUserLoading || user) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -142,30 +125,12 @@ export default function AdminLoginPage() {
                   )}
                 />
                 {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Log In
                 </Button>
               </form>
             </Form>
-             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-             <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading || isGoogleLoading}>
-              {isGoogleLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <GoogleIcon className="mr-2 h-5 w-5" />
-              )}
-              Google
-            </Button>
              <div className="mt-4 text-center text-sm">
                 Not an admin?{' '}
                 <Link href="/login" className="underline">
