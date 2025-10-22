@@ -1,7 +1,7 @@
+
 // @ts-ignore
 declare const Deno: any;
 
-// Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Resend } from 'resend';
 
@@ -10,8 +10,16 @@ const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KE
 const FROM_EMAIL = 'welcome@hackura.store';
 
 Deno.serve(async (req: Request) => {
+  if (!RESEND_API_KEY) {
+    console.error('FATAL: RESEND_API_KEY is not set in environment variables.');
+    return new Response(JSON.stringify({ error: 'Server configuration error: Email service is not configured.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const resend = new Resend(RESEND_API_KEY);
-  // 1. Ensure the request is a POST request
+  
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
       status: 405,
@@ -20,7 +28,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // 2. Extract the email from the request body
     const { email: to } = await req.json();
     if (!to) {
       return new Response(JSON.stringify({ error: '`email` field is required' }), {
@@ -29,7 +36,6 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 3. Define the email subject and HTML content with the discount code
     const subject = 'Welcome to Hackura! Here’s Your 20% Discount!';
     const html = `
       <div style="font-family: sans-serif; line-height: 1.6;">
@@ -43,7 +49,6 @@ Deno.serve(async (req: Request) => {
       </div>
     `;
 
-    // 4. Send the email using the Resend API
     const { data, error } = await resend.emails.send({
         from: `Hackura <${FROM_EMAIL}>`,
         to,
@@ -51,10 +56,13 @@ Deno.serve(async (req: Request) => {
         html,
     });
 
-
     if (error) {
-        console.error('Resend API Error:', error);
-        return new Response(JSON.stringify(error), {
+        // Provide more detailed logs for easier debugging in Supabase
+        console.error('Resend API Error:', JSON.stringify(error, null, 2));
+        return new Response(JSON.stringify({ 
+            error: 'Failed to send welcome email.',
+            details: error.message
+        }), {
           status: 422,
           headers: { 'Content-Type': 'application/json' },
         });
