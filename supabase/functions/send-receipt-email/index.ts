@@ -9,6 +9,7 @@ import { Resend } from 'resend';
 
 // IMPORTANT: Replace with your verified Resend domain email
 const FROM_EMAIL = 'receipts@hackura.store';
+// @ts-ignore
 const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
 
 interface CartItem {
@@ -49,9 +50,14 @@ Deno.serve(async (req: Request) => {
     const { userId, cartItems, paymentReference, finalPrice } = payload;
 
     // 2. Initialize Supabase Admin Client to fetch user email
+    // @ts-ignore
+    const supabaseURL = typeof Deno !== 'undefined' ? Deno.env.get('SUPABASE_URL') : process.env.SUPABASE_URL;
+    // @ts-ignore
+    const supabaseServiceKey = typeof Deno !== 'undefined' ? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') : process.env.SUPABASE_SERVICE_ROLE_KEY;
+
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      supabaseURL!,
+      supabaseServiceKey!
     );
 
     const { data: userData, error: userError } = await supabase
@@ -69,7 +75,9 @@ Deno.serve(async (req: Request) => {
     // 3. Format email content
     const subject = `Your Hackura Order Confirmation (#${paymentReference})`;
     const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'GHS' }).format(finalPrice);
-    const siteUrl = Deno.env.get('VERCEL_URL') ? `https://${Deno.env.get('VERCEL_URL')}` : 'http://localhost:9002';
+    // @ts-ignore
+    const siteUrl = typeof Deno !== 'undefined' ? Deno.env.get('VERCEL_URL') : process.env.VERCEL_URL;
+    const fullSiteUrl = siteUrl ? `https://${siteUrl}` : 'http://localhost:9002';
 
 
     const html = `
@@ -78,7 +86,7 @@ Deno.serve(async (req: Request) => {
         <p>Hi ${displayName || 'there'},</p>
         <p>We've received your order and are getting it ready for you. You can access all your purchased ebooks anytime from your library.</p>
         <div style="text-align: center; margin: 20px 0;">
-            <a href="${siteUrl}/my-ebooks" style="background-color: #2C3E50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">Go to My Library</a>
+            <a href="${fullSiteUrl}/my-ebooks" style="background-color: #2C3E50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px;">Go to My Library</a>
         </div>
         <h2 style="color: #2C3E50; border-bottom: 2px solid #F0F4F8; padding-bottom: 10px;">Order Summary</h2>
         <p><strong>Order ID:</strong> ${paymentReference}</p>

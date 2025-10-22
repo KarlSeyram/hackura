@@ -5,6 +5,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Resend } from 'resend';
 
+// @ts-ignore
 const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
 // IMPORTANT: Replace with an email from the domain you verified on Resend.
 const FROM_EMAIL = 'welcome@hackura.store';

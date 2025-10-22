@@ -8,6 +8,7 @@ import { Resend } from 'resend';
 
 // IMPORTANT: Replace with your verified Resend domain email
 const FROM_EMAIL = 'support@hackura.store';
+// @ts-ignore
 const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
 
 interface ContactPayload {
