@@ -3,7 +3,7 @@
 // deno-lint-ignore no-explicit-any
 //
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { Resend } from 'resend';
+import { Resend } from 'npm:resend';
 
 // @ts-ignore
 const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
