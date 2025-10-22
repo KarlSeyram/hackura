@@ -1,7 +1,7 @@
-
 // @ts-ignore
-declare const Deno: any;
-
+// deno-lint-ignore-file
+// deno-lint-ignore no-explicit-any
+//
 // Setup type definitions for built-in Supabase Runtime APIs
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from '@supabase/supabase-js';
@@ -10,7 +10,6 @@ import { Resend } from 'resend';
 // IMPORTANT: Replace with your verified Resend domain email
 const FROM_EMAIL = 'receipts@hackura.store';
 const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
-const resend = new Resend(RESEND_API_KEY);
 
 interface CartItem {
   id: string;
@@ -28,6 +27,15 @@ interface PurchasePayload {
 }
 
 Deno.serve(async (req: Request) => {
+  if (!RESEND_API_KEY) {
+    console.error('FATAL: RESEND_API_KEY is not set in environment variables.');
+    return new Response(JSON.stringify({ error: 'Server configuration error: Email service is not configured.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const resend = new Resend(RESEND_API_KEY);
+
   // 1. Basic validation
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
@@ -101,8 +109,8 @@ Deno.serve(async (req: Request) => {
     });
 
     if (error) {
-      console.error('Resend API Error:', error);
-      return new Response(JSON.stringify({ error: 'Failed to send receipt email' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      console.error('Resend API Error:', JSON.stringify(error, null, 2));
+      return new Response(JSON.stringify({ error: 'Failed to send receipt email', details: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({ message: 'Receipt sent successfully', data }), {

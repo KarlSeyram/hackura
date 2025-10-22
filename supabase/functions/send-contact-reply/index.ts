@@ -1,7 +1,7 @@
-
 // @ts-ignore
-declare const Deno: any;
-
+// deno-lint-ignore-file
+// deno-lint-ignore no-explicit-any
+//
 // Setup type definitions for built-in Supabase Runtime APIs
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { Resend } from 'resend';
@@ -9,7 +9,6 @@ import { Resend } from 'resend';
 // IMPORTANT: Replace with your verified Resend domain email
 const FROM_EMAIL = 'support@hackura.store';
 const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
-const resend = new Resend(RESEND_API_KEY);
 
 interface ContactPayload {
   name: string;
@@ -17,6 +16,15 @@ interface ContactPayload {
 }
 
 Deno.serve(async (req: Request) => {
+  if (!RESEND_API_KEY) {
+    console.error('FATAL: RESEND_API_KEY is not set in environment variables.');
+    return new Response(JSON.stringify({ error: 'Server configuration error: Email service is not configured.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const resend = new Resend(RESEND_API_KEY);
+
   // 1. Basic validation
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
@@ -42,11 +50,6 @@ Deno.serve(async (req: Request) => {
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
         <h1 style="color: #2C3E50;">Thank You, ${name}!</h1>
         <p>This is an automated confirmation that we have successfully received your message. Our team will review your inquiry and get back to you as soon as possible.</p>
-        <p><strong>Here's a copy of what we received:</strong></p>
-        <blockquote style="border-left: 4px solid #eee; padding-left: 15px; margin-left: 0; color: #555;">
-            <p>Name: ${name}</p>
-            <p>Email: ${to}</p>
-        </blockquote>
         <p>If you need to add any more details, please reply directly to this email.</p>
         <br>
         <p>Best regards,</p>
@@ -63,8 +66,8 @@ Deno.serve(async (req: Request) => {
     });
 
     if (error) {
-      console.error('Resend API Error:', error);
-      return new Response(JSON.stringify({ error: 'Failed to send confirmation email' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      console.error('Resend API Error:', JSON.stringify(error, null, 2));
+      return new Response(JSON.stringify({ error: 'Failed to send confirmation email', details: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({ message: 'Auto-reply sent successfully', data }), {

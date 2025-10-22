@@ -1,7 +1,7 @@
-
 // @ts-ignore
-declare const Deno: any;
-
+// deno-lint-ignore-file
+// deno-lint-ignore no-explicit-any
+//
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Resend } from 'resend';
 
