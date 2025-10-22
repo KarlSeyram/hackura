@@ -15,7 +15,7 @@ interface ContactPayload {
   email: string;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // 1. Basic validation
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
