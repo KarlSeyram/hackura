@@ -1,8 +1,11 @@
+// @ts-ignore
+declare const Deno: any;
+
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Resend } from 'resend';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
+const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
 // IMPORTANT: Replace with an email from the domain you verified on Resend.
 const FROM_EMAIL = 'welcome@hackura.store';
 
@@ -64,7 +67,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (err: any) {
      console.error('Server Error:', err);
-     return new Response(JSON.stringify({ error: 'An internal server error occurred' }), {
+     return new Response(JSON.stringify({ error: err.message || 'An internal server error occurred' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
