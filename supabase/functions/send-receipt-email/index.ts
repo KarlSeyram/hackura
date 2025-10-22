@@ -1,3 +1,4 @@
+
 // Setup type definitions for built-in Supabase Runtime APIs
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from '@supabase/supabase-js';
@@ -23,7 +24,7 @@ interface PurchasePayload {
   discountCode?: string;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // 1. Basic validation
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
@@ -106,7 +107,7 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-  } catch (err) {
+  } catch (err: any) {
     console.error('Function Error:', err);
     return new Response(JSON.stringify({ error: err.message || 'An internal server error occurred' }), {
       status: 500,

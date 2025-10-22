@@ -1,3 +1,4 @@
+
 // @ts-ignore
 declare const Deno: any;
 
@@ -71,7 +72,7 @@ Deno.serve(async (req: Request) => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-  } catch (err) {
+  } catch (err: any) {
     console.error('Function Error:', err);
     return new Response(JSON.stringify({ error: err.message || 'An internal server error occurred' }), {
       status: 500,

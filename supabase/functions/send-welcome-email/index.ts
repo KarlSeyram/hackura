@@ -6,7 +6,7 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 // IMPORTANT: Replace with an email from the domain you verified on Resend.
 const FROM_EMAIL = 'welcome@hackura.store';
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const resend = new Resend(RESEND_API_KEY);
   // 1. Ensure the request is a POST request
   if (req.method !== 'POST') {
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-  } catch (err) {
+  } catch (err: any) {
      console.error('Server Error:', err);
      return new Response(JSON.stringify({ error: 'An internal server error occurred' }), {
       status: 500,
