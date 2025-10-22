@@ -1,4 +1,7 @@
 
+// @ts-ignore
+declare const Deno: any;
+
 // Setup type definitions for built-in Supabase Runtime APIs
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from '@supabase/supabase-js';
@@ -6,7 +9,7 @@ import { Resend } from 'resend';
 
 // IMPORTANT: Replace with your verified Resend domain email
 const FROM_EMAIL = 'receipts@hackura.store';
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const RESEND_API_KEY = typeof Deno !== 'undefined' ? Deno.env.get('RESEND_API_KEY') : process.env.RESEND_API_KEY;
 const resend = new Resend(RESEND_API_KEY);
 
 interface CartItem {
