@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -22,7 +23,6 @@ import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { useFirebase } from '@/firebase/provider';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser } from 'firebase/auth';
-import { createBrowserClient } from '@/lib/supabase/client';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 
 const formSchema = z.object({
@@ -59,29 +59,22 @@ export default function SignUpPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const upsertUserProfile = async (user: FirebaseUser) => {
-    const supabase = createBrowserClient();
-    const { error } = await supabase.from('users').upsert({
-      id: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL,
-    }, { onConflict: 'id' });
-
-    if (error) {
-      console.error('Error upserting user profile:', error);
-      // Depending on the use case, you might want to handle this more gracefully
-    }
-  };
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!auth) return;
     setIsLoading(true);
     setError(null);
-    
-    initiateEmailSignUp(auth, values.email, values.password);
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await updateProfile(userCredential.user, { displayName: values.displayName });
+      // The onAuthStateChanged listener will handle redirects and further actions.
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   }
+
 
   async function handleGoogleSignIn() {
     if (!auth) return;
@@ -90,10 +83,6 @@ export default function SignUpPage() {
     const provider = new GoogleAuthProvider();
     
     signInWithPopup(auth, provider)
-      .then(async (userCredential) => {
-        await upsertUserProfile(userCredential.user);
-        // Auth state listener will handle the redirect
-      })
       .catch((error: any) => {
         setError(error.message);
         setIsGoogleLoading(false);

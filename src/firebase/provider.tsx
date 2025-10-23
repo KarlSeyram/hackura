@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -5,6 +6,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 /**
  * Defines the shape of the context that will be provided to the app.
@@ -63,8 +65,22 @@ export function FirebaseProvider({
 
   useEffect(() => {
     // Set up the authentication state listener.
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        // Upsert user profile into Supabase 'users' table
+        const supabase = createBrowserClient();
+        const { error } = await supabase.from('users').upsert({
+          id: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        }, { onConflict: 'id' });
+
+        if (error) {
+          console.error('Error upserting user profile into Supabase:', error);
+        }
+      }
       setIsLoading(false);
     });
 
