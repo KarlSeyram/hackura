@@ -24,7 +24,8 @@ async function getProduct(id: string): Promise<Ebook | null> {
         imageUrl: data.image_url,
         category: data.category || 'General',
         imageHint: '',
-        isDisabled: data.is_disabled
+        isDisabled: data.is_disabled,
+        file_name: data.file_name || ''
     };
     return ebook;
 }
