@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { uploadFromGoogleDrive } from '@/ai/flows/upload-from-google-drive';
 import { createAdminClient } from '@/lib/supabase/server';
+import { getFirebaseAdmin } from '@/lib/firebase/admin';
 
 function slugify(text: string): string {
     const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõőṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;'
@@ -56,6 +57,21 @@ const productSchema = z.object({
       "Only .pdf, .epub, and .zip formats are supported."
     ),
 });
+
+const adSchema = z.object({
+  title: z.string().min(1, 'Title is required.'),
+  description: z.string().min(1, 'Description is required.'),
+  link: z.string().url('A valid URL is required.'),
+  image: z
+    .any()
+    .refine((file) => file?.size > 0, 'Image is required.')
+    .refine((file) => file?.size <= MAX_IMAGE_SIZE, `Max image size is 5MB.`)
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file?.type),
+      "Only .jpg, .png, and .webp formats are supported."
+    ),
+});
+
 
 const driveFileSchema = z.object({
     id: z.string(),
@@ -659,6 +675,65 @@ export async function submitSubscriber(prevState: any, formData: FormData): Prom
   };
 }
 
-    
 
+export async function createAd(prevState: any, formData: FormData) {
+    const supabase = createAdminClient();
+    const admin = await getFirebaseAdmin();
     
+    // This is a placeholder for getting the authenticated admin user's ID.
+    // In a real app, you would get this from the user's session.
+    // For now, we'll simulate it. This part needs to be implemented correctly with your auth provider.
+    const adminId = 'simulated-admin-id';
+
+    const validatedFields = adSchema.safeParse({
+        title: formData.get('title'),
+        description: formData.get('description'),
+        link: formData.get('link'),
+        image: formData.get('image'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Please correct the form errors.',
+        };
+    }
+
+    const { title, description, link, image } = validatedFields.data;
+    
+    const imageFileExtension = image.name.split('.').pop();
+    const imageFileName = `${slugify(title)}-${Date.now()}.${imageFileExtension}`;
+
+    // Upload ad image
+    const { data: imageData, error: imageError } = await supabase.storage
+        .from('ads-images')
+        .upload(imageFileName, image, { upsert: true });
+
+    if (imageError || !imageData) {
+        return { message: `Failed to upload ad image: ${imageError?.message}`, errors: {} };
+    }
+    const { data: { publicUrl: imageUrl } } = supabase.storage.from('ads-images').getPublicUrl(imageData.path);
+
+    // Insert ad record into database
+    const { error: dbError } = await supabase.from('ads').insert({
+        title,
+        description,
+        link,
+        image_url: imageUrl,
+        admin_id: adminId, // Replace with actual authenticated admin ID
+    });
+
+    if (dbError) {
+        // Clean up storage if db insert fails
+        await supabase.storage.from('ads-images').remove([imageFileName]);
+        return { message: `Failed to save ad: ${dbError.message}`, errors: {} };
+    }
+
+    revalidatePath('/admin/ads');
+    revalidatePath('/ads');
+
+    return {
+        message: 'Ad created successfully!',
+        errors: {},
+    };
+}

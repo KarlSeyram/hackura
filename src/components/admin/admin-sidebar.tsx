@@ -10,6 +10,7 @@ import {
   Home,
   Tag,
   Users,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -28,6 +29,7 @@ const adminNavItems = [
   { href: '/admin/requests', label: 'Requests', icon: Inbox },
   { href: '/admin/discounts', label: 'Discounts', icon: Tag },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/ads', label: 'Ads', icon: Megaphone },
 ];
 
 export function AdminSidebar() {

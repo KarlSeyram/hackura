@@ -198,6 +198,22 @@
         "role": { "type": "string" }
       },
       "required": ["user_id", "role"]
+    },
+    "Ad": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ad",
+      "description": "Represents a promotional advertisement.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "image_url": { "type": "string", "format": "uri" },
+        "link": { "type": "string", "format": "uri" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "admin_id": { "type": "string", "description": "The user ID of the admin who created the ad."}
+      },
+      "required": ["title", "image_url", "link", "admin_id"]
     }
   },
   "auth": {
@@ -249,6 +265,10 @@
     "/user_roles/{userId}": {
       "schema": { "$ref": "#/entities/UserRole" },
       "description": "Stores roles for users, like 'admin'. Keyed by user ID, which is a string from Firebase Auth."
+    },
+     "/ads/{adId}": {
+      "schema": { "$ref": "#/entities/Ad" },
+      "description": "Stores promotional ads. Readable by public, writable only by admins."
     }
   }
 }

@@ -110,5 +110,22 @@ service cloud.firestore {
       allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
+
+    /**
+     * @description Controls access to ad documents.
+     * @path /ads/{adId}
+     * @allow (get, list) - Everyone can read ads.
+     * @allow (create, update, delete) - Only authenticated admin user can manage ads.
+     * @principle Public read, admin-only write.
+     */
+    match /ads/{adId} {
+        function isAdmin() {
+            return exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) &&
+                   get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == 'admin';
+        }
+
+        allow get, list: if true;
+        allow create, update, delete: if request.auth != null && isAdmin();
+    }
   }
 }

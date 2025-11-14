@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, User, LogOut, Library } from 'lucide-react';
+import { Menu, User, LogOut, Library, Megaphone } from 'lucide-react';
 import { CartIcon } from '@/components/cart/cart-icon';
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/store', label: 'Store' },
   { href: '/services', label: 'Services' },
+  { href: '/ads', label: 'Promotions' },
   { href: '/contact', 'label': 'Contact' },
 ];
 
