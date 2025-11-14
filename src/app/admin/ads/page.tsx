@@ -78,21 +78,21 @@ function AdForm({ ad, onFinished }: { ad?: Ad, onFinished: () => void }) {
         <input type="hidden" name="id" value={ad?.id} />
         <div className="space-y-2">
           <Label htmlFor="title">Ad Title</Label>
-          <Input id="title" name="title" defaultValue={ad?.title} placeholder="e.g., Summer Sale" required />
+          <Input id="title" name="title" defaultValue={ad?.title ?? ''} placeholder="e.g., Summer Sale" required />
           {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
-          <Textarea id="description" name="description" defaultValue={ad?.description} placeholder="A short, catchy description." />
+          <Textarea id="description" name="description" defaultValue={ad?.description ?? ''} placeholder="A short, catchy description." />
         </div>
         <div className="space-y-2">
           <Label htmlFor="link">Link URL</Label>
-          <Input id="link" name="link" type="url" defaultValue={ad?.link} placeholder="https://example.com/promotion" required />
+          <Input id="link" name="link" type="url" defaultValue={ad?.link ?? ''} placeholder="https://example.com/promotion" required />
           {state?.errors?.link && <p className="text-sm text-destructive">{state.errors.link[0]}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="image_url">Image URL</Label>
-          <Input id="image_url" name="image_url" type="url" defaultValue={ad?.image_url} placeholder="https://example.com/image.png" />
+          <Input id="image_url" name="image_url" type="url" defaultValue={ad?.image_url ?? ''} placeholder="https://example.com/image.png" />
            {state?.errors?.image_url && <p className="text-sm text-destructive">{state.errors.image_url[0]}</p>}
         </div>
         <DialogFooter>
