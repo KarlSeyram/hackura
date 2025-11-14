@@ -78,4 +78,14 @@ export type Discount = {
     is_active: boolean;
     expires_at: string | null;
     created_at: string;
-}
+};
+
+export type Ad = {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  link: string;
+  created_at: string;
+  admin_id: string;
+};

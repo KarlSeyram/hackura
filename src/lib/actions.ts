@@ -59,17 +59,11 @@ const productSchema = z.object({
 });
 
 const adSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, 'Title is required.'),
-  description: z.string().min(1, 'Description is required.'),
+  description: z.string().optional(),
   link: z.string().url('A valid URL is required.'),
-  image: z
-    .any()
-    .refine((file) => file?.size > 0, 'Image is required.')
-    .refine((file) => file?.size <= MAX_IMAGE_SIZE, `Max image size is 5MB.`)
-    .refine(
-      (file) => ACCEPTED_IMAGE_TYPES.includes(file?.type),
-      "Only .jpg, .png, and .webp formats are supported."
-    ),
+  image_url: z.string().url('A valid image URL is required.').optional().or(z.literal('')),
 });
 
 
@@ -676,64 +670,70 @@ export async function submitSubscriber(prevState: any, formData: FormData): Prom
 }
 
 
-export async function createAd(prevState: any, formData: FormData) {
+export async function createOrUpdateAd(prevState: any, formData: FormData) {
+  const supabase = createAdminClient();
+  const admin = await getFirebaseAdmin();
+  
+  // In a real app, you'd get this from a secure session.
+  // This is a placeholder.
+  const adminId = 'simulated-admin-id';
+  
+  const id = formData.get('id') as string;
+  const isEdit = !!id;
+
+  const validatedFields = adSchema.safeParse({
+    id,
+    title: formData.get('title'),
+    description: formData.get('description'),
+    link: formData.get('link'),
+    image_url: formData.get('image_url'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please correct the form errors.',
+    };
+  }
+
+  const { title, description, link, image_url } = validatedFields.data;
+
+  const dataToUpsert = {
+    title,
+    description: description || null,
+    link,
+    image_url: image_url || null,
+    admin_id: adminId,
+  };
+
+  if (isEdit) {
+    const { error } = await supabase.from('ads').update(dataToUpsert).eq('id', id);
+    if (error) {
+      return { message: `Failed to update ad: ${error.message}`, errors: {} };
+    }
+  } else {
+    const { error } = await supabase.from('ads').insert(dataToUpsert);
+    if (error) {
+      return { message: `Failed to create ad: ${error.message}`, errors: {} };
+    }
+  }
+
+  revalidatePath('/admin/ads');
+  revalidatePath('/ads');
+
+  return {
+    message: `Ad has been ${isEdit ? 'updated' : 'created'} successfully!`,
+    errors: {},
+  };
+}
+
+export async function deleteAd(id: string): Promise<{ success: boolean; message: string; }> {
     const supabase = createAdminClient();
-    const admin = await getFirebaseAdmin();
-    
-    // This is a placeholder for getting the authenticated admin user's ID.
-    // In a real app, you would get this from the user's session.
-    // For now, we'll simulate it. This part needs to be implemented correctly with your auth provider.
-    const adminId = 'simulated-admin-id';
-
-    const validatedFields = adSchema.safeParse({
-        title: formData.get('title'),
-        description: formData.get('description'),
-        link: formData.get('link'),
-        image: formData.get('image'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Please correct the form errors.',
-        };
+    const { error } = await supabase.from('ads').delete().eq('id', id);
+    if (error) {
+        return { success: false, message: 'Failed to delete ad.' };
     }
-
-    const { title, description, link, image } = validatedFields.data;
-    
-    const imageFileExtension = image.name.split('.').pop();
-    const imageFileName = `${slugify(title)}-${Date.now()}.${imageFileExtension}`;
-
-    // Upload ad image
-    const { data: imageData, error: imageError } = await supabase.storage
-        .from('ads-images')
-        .upload(imageFileName, image, { upsert: true });
-
-    if (imageError || !imageData) {
-        return { message: `Failed to upload ad image: ${imageError?.message}`, errors: {} };
-    }
-    const { data: { publicUrl: imageUrl } } = supabase.storage.from('ads-images').getPublicUrl(imageData.path);
-
-    // Insert ad record into database
-    const { error: dbError } = await supabase.from('ads').insert({
-        title,
-        description,
-        link,
-        image_url: imageUrl,
-        admin_id: adminId, // Replace with actual authenticated admin ID
-    });
-
-    if (dbError) {
-        // Clean up storage if db insert fails
-        await supabase.storage.from('ads-images').remove([imageFileName]);
-        return { message: `Failed to save ad: ${dbError.message}`, errors: {} };
-    }
-
     revalidatePath('/admin/ads');
     revalidatePath('/ads');
-
-    return {
-        message: 'Ad created successfully!',
-        errors: {},
-    };
+    return { success: true, message: 'Ad deleted successfully.' };
 }
