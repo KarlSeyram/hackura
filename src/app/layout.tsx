@@ -12,6 +12,9 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { AnalyticsProvider } from '@/components/analytics/analytics-provider';
 import { Suspense } from 'react';
+import { getAds } from '@/lib/data';
+import type { Ad } from '@/lib/definitions';
+
 
 const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:9002';
 
@@ -21,13 +24,17 @@ export const metadata: Metadata = {
   description: 'Your one-stop shop for tech and cybersecurity ebooks.',
 };
 
+export const revalidate = 5;
+
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const ads: Ad[] = await getAds();
+  
   return (
     <html lang="en" className="dark">
       <head>
@@ -60,17 +67,11 @@ export default function RootLayout({
         )}
       </head>
       <body>
-        <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            crossOrigin="anonymous"
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3524835634132252"
-        />
         <FirebaseClientProvider>
           <CartProvider>
             <Suspense fallback={<div>Loading...</div>}>
               <AnalyticsProvider>
-                <LayoutClient>
+                <LayoutClient ads={ads}>
                   {children}
                 </LayoutClient>
               </AnalyticsProvider>
@@ -86,3 +87,4 @@ export default function RootLayout({
     </html>
   );
 }
+
