@@ -12,6 +12,7 @@ import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { getFreeDownloadUrl } from '@/app/actions';
 import ShareButton from './share-button';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductCardProps {
   product: Ebook;
@@ -67,6 +68,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint={product.imageHint}
           />
+           {product.price === 0 && (
+            <Badge className="absolute top-2 left-2">Free</Badge>
+          )}
         </div>
       </Link>
       <CardContent className="flex-1 p-3">

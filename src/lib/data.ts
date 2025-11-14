@@ -12,7 +12,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
 
     let query = supabase
       .from("ebooks")
-      .select("id, title, description, price, image_url, category, is_disabled")
+      .select("id, title, description, price, image_url, category, is_disabled, file_name")
       .order("created_at", { ascending: false });
 
     if (!includeDisabled) {
@@ -39,6 +39,7 @@ export async function getEbooks(options: { includeDisabled?: boolean } = {}): Pr
       imageHint: '',
       category: ebook.category || 'General',
       isDisabled: ebook.is_disabled,
+      file_name: ebook.file_name || '',
     }));
 
     return fetchedEbooks;

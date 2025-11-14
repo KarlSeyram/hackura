@@ -9,7 +9,7 @@ export type Ebook = {
   price: number;
   imageUrl: string;
   imageHint: string;
-  file_name?: string; // file_name can be optional on the base type
+  file_name: string; 
   category: string;
   isDisabled: boolean;
 };
