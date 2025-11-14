@@ -6,6 +6,29 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { HomeClient } from './home-client';
 import { Separator } from '@/components/ui/separator';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function RecommendationsFallback() {
+    return (
+         <section className="mt-16">
+            <h2 className="font-headline text-3xl font-bold tracking-tight mb-8">
+                Recommended For You
+            </h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="flex flex-col space-y-3">
+                    <Skeleton className="h-[250px] w-full rounded-lg" />
+                </div>
+                 <div className="flex flex-col space-y-3">
+                    <Skeleton className="h-[250px] w-full rounded-lg" />
+                </div>
+                 <div className="flex flex-col space-y-3">
+                    <Skeleton className="h-[250px] w-full rounded-lg" />
+                </div>
+            </div>
+        </section>
+    )
+}
 
 export default async function Home() {
   const ebooks = await getEbooks();
@@ -27,7 +50,9 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeClient allEbooks={ebooks} featuredEbooks={featuredEbooks} />
+      <Suspense fallback={<RecommendationsFallback />}>
+        <HomeClient allEbooks={ebooks} />
+      </Suspense>
       
       <Separator className="my-16" />
 
@@ -36,14 +61,9 @@ export default async function Home() {
           Featured Ebooks
         </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredEbooks.map((ebook: Ebook) => (
-            <ProductCard key={ebook.id} product={ebook} />
-          ))}
-        </div>
-        <div className="mt-12 text-center">
-            <Button asChild size="lg" variant="outline">
-                <Link href="/store">View All Products</Link>
-            </Button>
+            {featuredEbooks.map((ebook: Ebook) => (
+                <ProductCard key={ebook.id} product={ebook} />
+            ))}
         </div>
       </section>
     </div>

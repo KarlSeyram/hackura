@@ -6,13 +6,26 @@ import { Loader2 } from 'lucide-react';
 import type { Ebook } from '@/lib/definitions';
 import { suggestEbooks } from '@/ai/flows/suggest-ebooks';
 import ProductCard from '@/components/products/product-card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface HomeClientProps {
   allEbooks: Ebook[];
-  featuredEbooks: Ebook[];
 }
 
-export function HomeClient({ allEbooks, featuredEbooks }: HomeClientProps) {
+function ProductSkeleton() {
+    return (
+        <div className="flex flex-col space-y-3">
+            <Skeleton className="h-[250px] w-full rounded-lg" />
+            <div className="space-y-2">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+            </div>
+        </div>
+    )
+}
+
+export function HomeClient({ allEbooks }: HomeClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [suggestions, setSuggestions] = useState<Ebook[]>([]);
   const [isClient, setIsClient] = useState(false);
@@ -49,8 +62,23 @@ export function HomeClient({ allEbooks, featuredEbooks }: HomeClientProps) {
     getSuggestions();
   }, [allEbooks, isClient]);
 
-  if (!isClient || isLoading || suggestions.length === 0) {
-    return null; // Don't show the section if not on client, loading, or no suggestions
+  if (isLoading) {
+    return (
+         <section className="mt-16">
+            <h2 className="font-headline text-3xl font-bold tracking-tight mb-8">
+                Recommended For You
+            </h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <ProductSkeleton />
+                <ProductSkeleton />
+                <ProductSkeleton />
+            </div>
+        </section>
+    );
+  }
+
+  if (suggestions.length === 0) {
+      return null;
   }
 
   return (
