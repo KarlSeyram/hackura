@@ -1,4 +1,3 @@
-
 import type { LucideProps, LucideIcon } from 'lucide-react';
 import type { FC } from 'react';
 
@@ -65,12 +64,6 @@ export type Review = {
     comment: string;
 };
 
-export type QuizQuestion = {
-  id: string;
-  text: string;
-  options: { id: string; text: string }[];
-};
-
 export type Discount = {
     id: string;
     code: string;
@@ -87,5 +80,5 @@ export type Ad = {
   image_url: string | null;
   link: string;
   created_at: string;
-  admin_id: string;
+  admin_id: string | null;
 };
