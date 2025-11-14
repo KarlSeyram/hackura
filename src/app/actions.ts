@@ -225,3 +225,36 @@ export async function applyDiscount(code: string): Promise<{
     },
   };
 }
+
+export async function getFreeDownloadUrl(ebookId: string): Promise<{ url?: string; error?: string }> {
+  const supabase = createAdminClient();
+
+  const { data: ebook, error: dbError } = await supabase
+    .from('ebooks')
+    .select('file_name, price')
+    .eq('id', ebookId)
+    .single();
+
+  if (dbError || !ebook) {
+    return { error: 'Ebook not found.' };
+  }
+
+  if (ebook.price !== 0) {
+    return { error: 'This ebook is not free.' };
+  }
+  
+  if (!ebook.file_name) {
+      return { error: 'File path is missing for this ebook.' };
+  }
+
+  const { data, error: urlError } = await supabase.storage
+    .from('ebook-files')
+    .createSignedUrl(ebook.file_name, 3600); // 1 hour expiry
+
+  if (urlError) {
+    console.error('Error creating signed URL for free ebook:', urlError);
+    return { error: 'Could not create download link. Please try again.' };
+  }
+
+  return { url: data.signedUrl };
+}
