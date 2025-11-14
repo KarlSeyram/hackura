@@ -32,7 +32,7 @@ export async function createOrUpdateAd(formData: FormData) {
     const filePath = `ads-images/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("ebook-files") // Assuming you use the same bucket, or change to "ads-images"
+      .from("ebook-files") // Using the same bucket as per previous setup
       .upload(filePath, image, { upsert: true });
 
     if (uploadError) {
@@ -46,11 +46,15 @@ export async function createOrUpdateAd(formData: FormData) {
     imageUrl = urlData.publicUrl;
   }
   
+  // Prepare data for Supabase, ensuring the current user's ID is included as admin_id
+  const { data: { user } } = await supabase.auth.getUser();
+  
   const dataToUpsert = {
     title,
     description: description || null,
     link,
     image_url: imageUrl || null,
+    admin_id: user?.id
   };
 
   // 2. Insert or update the record in the 'ads' table

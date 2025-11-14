@@ -116,9 +116,11 @@ function AdForm({ ad, onFinished }: { ad: Ad | null; onFinished: () => void }) {
         <Label htmlFor="image">Image</Label>
         <Input id="image" name="image" type="file" accept="image/*" />
         {ad?.image_url && (
-          <p className="text-xs text-muted-foreground">
-            Leave blank to keep the current image.
-          </p>
+          <div className="mt-2 text-sm text-muted-foreground">
+            <p>Current image:</p>
+             <Image src={ad.image_url} alt="Current ad image" width={100} height={56} className="rounded-md object-cover" />
+            <p>Leave file input blank to keep this image.</p>
+          </div>
         )}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -219,7 +221,10 @@ export default function AdsPage() {
       </div>
 
       {/* Dialog for Create/Edit */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+          setIsDialogOpen(isOpen);
+          if (!isOpen) setSelectedAd(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
