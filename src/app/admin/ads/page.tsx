@@ -6,7 +6,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import { Loader2, Pen, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createOrUpdateAd, deleteAd } from '@/lib/actions';
-import { createAdminClient } from '@/lib/supabase/server';
+import { getAds } from '@/lib/data';
 import type { Ad } from '@/lib/definitions';
 
 import { Input } from '@/components/ui/input';
@@ -187,15 +187,6 @@ export default function AdsManagementPage() {
   useEffect(() => {
     async function fetchAds() {
       setIsLoading(true);
-      // This is a client component, so we must fetch data via an action or API route.
-      // For simplicity, we'll create an ad-hoc server action inside this file.
-      const getAds = async () => {
-          'use server';
-          const { createAdminClient } = await import('@/lib/supabase/server');
-          const supabase = createAdminClient();
-          const { data } = await supabase.from('ads').select('*').order('created_at', { ascending: false });
-          return data || [];
-      }
       const adsData = await getAds();
       setAds(adsData);
       setIsLoading(false);

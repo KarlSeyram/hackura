@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { Ebook, Review } from './definitions';
+import type { Ebook, Review, Ad } from './definitions';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export async function getEbooks(options: { includeDisabled?: boolean } = {}): Promise<Ebook[]> {
@@ -91,4 +91,19 @@ export async function submitReview(ebookId: string, rating: number, comment: str
     }
 
     return { success: true, message: 'Thank you for your review!' };
+}
+
+export async function getAds(): Promise<Ad[]> {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+        .from('ads')
+        .select('*')
+        .order('created_at', { ascending: false });
+    
+    if (error) {
+        console.error("Error fetching ads:", error);
+        return [];
+    }
+
+    return data || [];
 }
