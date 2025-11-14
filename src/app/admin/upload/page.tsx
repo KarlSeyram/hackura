@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
@@ -16,9 +17,15 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Upload Product
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Uploading...
+        </>
+      ) : (
+        'Upload Product'
+      )}
     </Button>
   );
 }
@@ -50,7 +57,7 @@ export default function UploadProductPage() {
 
   useEffect(() => {
     if (state.message) {
-      if (state.errors && Object.keys(state.errors).length > 0) {
+      if (Object.keys(state.errors).length > 0) {
         toast({
           variant: 'destructive',
           title: 'Upload Failed',
@@ -70,7 +77,7 @@ export default function UploadProductPage() {
 
 
   return (
-    <>
+    <div className="max-w-2xl mx-auto">
       <div className="flex-1 space-y-4">
         <h2 className="font-headline text-3xl font-bold tracking-tight">Upload New Product</h2>
         <Card>
@@ -92,16 +99,18 @@ export default function UploadProductPage() {
                 <Textarea id="description" name="description" placeholder="A brief but engaging description of the ebook." rows={5} />
                 {state.errors?.description?.[0] && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Price ({paystackCurrency})</Label>
-                <Input id="price" name="price" type="number" placeholder="e.g., 49.99" step="0.01" />
-                {state.errors?.price?.[0] && <p className="text-sm text-destructive">{state.errors.price[0]}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Input id="category" name="category" placeholder="e.g., Offensive Security" />
-                {state.errors?.category?.[0] && <p className="text-sm text-destructive">{state.errors.category[0]}</p>}
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                    <Label htmlFor="price">Price ({paystackCurrency})</Label>
+                    <Input id="price" name="price" type="number" placeholder="e.g., 49.99 or 0 for free" step="0.01" />
+                    {state.errors?.price?.[0] && <p className="text-sm text-destructive">{state.errors.price[0]}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input id="category" name="category" placeholder="e.g., Offensive Security" />
+                    {state.errors?.category?.[0] && <p className="text-sm text-destructive">{state.errors.category[0]}</p>}
+                  </div>
+               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="image">Ebook Cover Image</Label>
@@ -119,6 +128,8 @@ export default function UploadProductPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
+
+    

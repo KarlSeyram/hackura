@@ -6,6 +6,21 @@ import { revalidatePath } from 'next/cache';
 import { uploadFromGoogleDrive } from '@/ai/flows/upload-from-google-drive';
 import { createAdminClient } from '@/lib/supabase/server';
 
+function slugify(text: string): string {
+    const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõőṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;'
+    const b = 'aaaaaaaaaacccddeeeeeeeegghiiilmnnnnoooooooooprrsssssttuuuuuuuuuwxyyzzz------'
+    const p = new RegExp(a.split('').join('|'), 'g')
+
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+        .replace(/&/g, '-and-') // Replace & with 'and'
+        .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+        .replace(/\-\-+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim - from start of text
+        .replace(/-+$/, '') // Trim - from end of text
+}
+
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -22,7 +37,7 @@ const ACCEPTED_FILE_TYPES = ["application/pdf", "application/epub+zip", "applica
 const productSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
-  price: z.coerce.number().min(0, 'Price must be a positive number.'),
+  price: z.coerce.number().min(0, 'Price must be a non-negative number.'),
   category: z.string().min(1, 'Category is required.'),
   image: z
     .any()
@@ -73,7 +88,7 @@ const updateProductSchema = z.object({
   id: z.string(),
   title: z.string().min(1, 'Title is required.').trim(),
   description: z.string().min(10, 'Description must be at least 10 characters.').trim(),
-  price: z.coerce.number().min(0, 'Price must be a positive number.'),
+  price: z.coerce.number().min(0, 'Price must be a non-negative number.'),
   category: z.string().min(1, 'Category is required.').trim(),
 });
 
@@ -183,11 +198,20 @@ export async function uploadProduct(prevState: any, formData: FormData) {
 
     const { title, description, price, category, image, file } = validatedFields.data;
     
+    const fileExtension = file.name.split('.').pop();
+    const slug = slugify(title);
+    
+    // Determine subdirectory based on price
+    const ebookFolder = price === 0 ? 'free' : 'paid';
+    const ebookFileName = `${ebookFolder}/${slug}.${fileExtension}`;
+    
+    const imageFileExtension = image.name.split('.').pop();
+    const imageFileName = `${slug}.${imageFileExtension}`;
+
     // 1. Upload cover image
-    const imageFileName = `${Date.now()}-${image.name}`;
     const { error: imageError, data: imageData } = await supabase.storage
         .from('ebook-covers')
-        .upload(imageFileName, image);
+        .upload(imageFileName, image, { upsert: true });
 
     if (imageError || !imageData) {
         return { message: `Failed to upload cover image: ${imageError?.message}`, errors: {} };
@@ -196,10 +220,9 @@ export async function uploadProduct(prevState: any, formData: FormData) {
 
 
     // 2. Upload ebook file
-    const ebookFileName = `${Date.now()}-${file.name}`;
     const { error: fileError } = await supabase.storage
         .from('ebook-files')
-        .upload(ebookFileName, file);
+        .upload(ebookFileName, file, { upsert: true });
     
     if (fileError) {
         // Clean up uploaded image if file upload fails
@@ -214,7 +237,7 @@ export async function uploadProduct(prevState: any, formData: FormData) {
         price,
         category,
         image_url: imageUrl,
-        file_name: ebookFileName,
+        file_name: ebookFileName, // Store the full path including subfolder
         is_disabled: false,
     });
 
@@ -635,5 +658,7 @@ export async function submitSubscriber(prevState: any, formData: FormData): Prom
     message: 'Check your inbox for a welcome message and a 20% discount!',
   };
 }
+
+    
 
     
