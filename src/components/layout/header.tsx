@@ -104,7 +104,6 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
             <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={32} height={32} />
-            <span className="font-headline text-lg font-bold">Hackura</span>
         </Link>
         
         <nav className="hidden md:flex md:gap-6">
@@ -135,7 +134,6 @@ export default function Header() {
               <nav className="grid gap-6 text-lg font-medium mt-8">
                 <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
                   <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={32} height={32} />
-                  <span>Hackura</span>
                 </Link>
                 {navLinks.map(link => (
                   <Link
