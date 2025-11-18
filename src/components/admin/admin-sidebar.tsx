@@ -22,6 +22,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
+import Image from 'next/image';
 
 const adminNavItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -39,7 +40,7 @@ export function AdminSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className="h-6 w-6 text-primary"><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'></path></svg>
+            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={24} height={24} />
           <span className="font-headline text-lg font-bold">Hackura</span>
         </div>
       </SidebarHeader>
