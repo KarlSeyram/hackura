@@ -40,7 +40,7 @@ export function AdminSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={40} height={40} />
+            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={60} height={60} />
         </div>
       </SidebarHeader>
       <SidebarContent>
