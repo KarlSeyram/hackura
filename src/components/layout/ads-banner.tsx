@@ -42,10 +42,10 @@ export function AdsBanner({ ads }: AdsBannerProps) {
                 href={ad.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-12 w-full items-center justify-center gap-4 px-4"
+                className="flex h-16 w-full items-center justify-center gap-4 px-4 no-underline"
               >
                 {ad.image_url && (
-                  <div className="relative h-8 w-8 flex-shrink-0">
+                  <div className="relative h-12 w-12 flex-shrink-0">
                     <Image
                       src={ad.image_url}
                       alt={ad.title}
@@ -55,8 +55,8 @@ export function AdsBanner({ ads }: AdsBannerProps) {
                   </div>
                 )}
                 <div className="flex-grow text-center">
-                  <p className="text-sm font-semibold">{ad.title}</p>
-                  {ad.description && <p className="hidden text-xs md:block">{ad.description}</p>}
+                  <p className="text-base font-semibold">{ad.title}</p>
+                  {ad.description && <p className="hidden text-sm md:block">{ad.description}</p>}
                 </div>
               </Link>
             </CarouselItem>
