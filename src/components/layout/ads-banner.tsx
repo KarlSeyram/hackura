@@ -45,7 +45,7 @@ export function AdsBanner({ ads }: AdsBannerProps) {
                 className="flex h-16 w-full items-center justify-center gap-4 px-4 no-underline"
               >
                 {ad.image_url && (
-                  <div className="relative h-12 w-12 flex-shrink-0">
+                  <div className="relative h-12 w-24 flex-shrink-0">
                     <Image
                       src={ad.image_url}
                       alt={ad.title}
