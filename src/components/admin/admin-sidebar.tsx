@@ -30,7 +30,6 @@ const adminNavItems = [
   { href: '/admin/requests', label: 'Requests', icon: Inbox },
   { href: '/admin/discounts', label: 'Discounts', icon: Tag },
   { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/ads', label: 'Ads', icon: Megaphone },
 ];
 
 export function AdminSidebar() {
@@ -40,7 +39,7 @@ export function AdminSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={60} height={60} />
+            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={100} height={100} />
         </div>
       </SidebarHeader>
       <SidebarContent>

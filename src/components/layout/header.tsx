@@ -23,7 +23,6 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/store', label: 'Store' },
   { href: '/services', label: 'Services' },
-  { href: '/ads', label: 'Promotions' },
   { href: '/contact', 'label': 'Contact' },
 ];
 
@@ -102,7 +101,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/">
-            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={80} height={80} />
+            <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={100} height={100} />
         </Link>
         
         <nav className="hidden md:flex md:gap-6">
@@ -132,7 +131,7 @@ export default function Header() {
             <SheetContent side="left">
               <nav className="grid gap-6 text-lg font-medium mt-8">
                 <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                  <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={80} height={80} />
+                  <Image src="https://sylhuiocyaznvdhnayjz.supabase.co/storage/v1/object/public/logo/logo.png" alt="Hackura Logo" width={100} height={100} />
                 </Link>
                 {navLinks.map(link => (
                   <Link
